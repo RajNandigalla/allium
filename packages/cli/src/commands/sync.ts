@@ -2,9 +2,11 @@ import chalk from 'chalk';
 import ora from 'ora';
 import fs from 'fs-extra';
 import path from 'path';
-import { ModelValidator } from '../validators/model-validator';
-import { generatePrismaSchema } from '../generators/prisma-generator';
-import { generateModuleFiles } from '../generators/module-generator';
+import {
+  ModelValidator,
+  generatePrismaSchema,
+  generateModuleFiles,
+} from '@allium/core';
 
 export const sync = async () => {
   const spinner = ora('Syncing models...').start();

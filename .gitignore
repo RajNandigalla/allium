@@ -9,6 +9,10 @@ dist/
 build/
 *.tsbuildinfo
 
+# Nx
+.nx/
+.nx/cache/
+
 # Environment variables
 .env
 .env.local
@@ -20,7 +24,6 @@ build/
 *.swp
 *.swo
 *~
-.DS_Store
 
 # Logs
 logs/
@@ -42,3 +45,8 @@ temp/
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated projects (for testing)
+test-*/
+my-*/
+*-test/

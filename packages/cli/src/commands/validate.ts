@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import ora from 'ora';
-import { ModelValidator } from '../validators/model-validator';
+import { ModelValidator } from '@allium/core';
 
 export const validate = async () => {
   const spinner = ora('Validating models...').start();

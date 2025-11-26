@@ -2,15 +2,17 @@
   "name": "allium",
   "version": "1.0.0",
   "description": "CLI scaffolding tool for creating APIs",
-  "main": "dist/index.js",
-  "bin": {
-    "allium": "./dist/index.js"
-  },
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "nx run-many -t build",
+    "build:cli": "nx build @allium/cli",
+    "build:core": "nx build @allium/core",
+    "clean": "nx run-many -t clean && rm -rf dist node_modules/.cache",
+    "dev": "nx run @allium/cli:dev",
+    "allium": "allium"
   },
   "keywords": [],
   "author": "",
@@ -26,8 +28,11 @@
     "ora": "^5.4.1"
   },
   "devDependencies": {
+    "@allium/cli": "*",
+    "@nx/js": "^22.1.2",
     "@types/fs-extra": "^11.0.4",
     "@types/inquirer": "^9.0.9",
+    "nx": "^22.1.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
