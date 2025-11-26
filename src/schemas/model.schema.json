@@ -1,0 +1,139 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Allium Model Schema",
+    "type": "object",
+    "required": [
+        "name",
+        "fields"
+    ],
+    "properties": {
+        "name": {
+            "type": "string",
+            "pattern": "^[A-Z][a-zA-Z0-9]*$",
+            "description": "Model name in PascalCase"
+        },
+        "fields": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/field"
+            },
+            "minItems": 1
+        },
+        "relations": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/relation"
+            },
+            "default": []
+        },
+        "api": {
+            "$ref": "#/definitions/apiConfig"
+        }
+    },
+    "definitions": {
+        "field": {
+            "type": "object",
+            "required": [
+                "name",
+                "type"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-zA-Z0-9]*$"
+                },
+                "type": {
+                    "enum": [
+                        "String",
+                        "Int",
+                        "Float",
+                        "Boolean",
+                        "DateTime",
+                        "Json"
+                    ]
+                },
+                "required": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "unique": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "default": {
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "boolean"
+                        }
+                    ]
+                }
+            }
+        },
+        "relation": {
+            "type": "object",
+            "required": [
+                "name",
+                "model",
+                "type"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-zA-Z0-9]*$"
+                },
+                "model": {
+                    "type": "string",
+                    "description": "Referenced model name"
+                },
+                "type": {
+                    "enum": [
+                        "1:1",
+                        "1:n",
+                        "n:m"
+                    ]
+                },
+                "foreignKey": {
+                    "type": "string",
+                    "description": "Custom foreign key field name"
+                },
+                "references": {
+                    "type": "string",
+                    "default": "id",
+                    "description": "Referenced field in related model"
+                }
+            }
+        },
+        "apiConfig": {
+            "type": "object",
+            "properties": {
+                "prefix": {
+                    "type": "string",
+                    "pattern": "^/.*"
+                },
+                "operations": {
+                    "type": "array",
+                    "items": {
+                        "enum": [
+                            "create",
+                            "read",
+                            "update",
+                            "delete"
+                        ]
+                    },
+                    "default": [
+                        "create",
+                        "read",
+                        "update",
+                        "delete"
+                    ]
+                }
+            }
+        }
+    }
+}
