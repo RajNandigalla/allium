@@ -1,53 +1,97 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { ModelDefinition, Field } from '../types/model';
+import {
+  detectOverrides,
+  getGeneratedPath,
+  getModuleIndexPath,
+} from '../utils/override-detector';
+import { generateModuleIndex } from './index-generator';
+import {
+  generateBaseController,
+  generateBaseRoutes,
+  generateBaseResolver,
+} from './base-generator';
 
 export async function generateModuleFiles(
   projectRoot: string,
   model: ModelDefinition
 ) {
-  const modulePath = path.join(
-    projectRoot,
-    'src',
-    'modules',
-    model.name.toLowerCase()
-  );
-  fs.mkdirSync(modulePath, { recursive: true });
+  const modelLower = model.name.toLowerCase();
 
-  // Generate Service
+  // Detect existing overrides
+  const overrides = detectOverrides(projectRoot, model.name);
+  model.hasOverrides = overrides;
+
+  // Generate to hidden directory
+  const generatedPath = getGeneratedPath(projectRoot, model.name);
+  fs.mkdirSync(generatedPath, { recursive: true });
+
+  // Generate all files to .allium/generated
   const serviceContent = generateService(model);
   fs.writeFileSync(
-    path.join(modulePath, `${model.name.toLowerCase()}.service.ts`),
+    path.join(generatedPath, `${modelLower}.service.ts`),
     serviceContent
   );
 
-  // Generate Controller
   const controllerContent = generateController(model);
   fs.writeFileSync(
-    path.join(modulePath, `${model.name.toLowerCase()}.controller.ts`),
+    path.join(generatedPath, `${modelLower}.controller.ts`),
     controllerContent
   );
 
-  // Generate Schema
   const schemaContent = generateSchema(model);
   fs.writeFileSync(
-    path.join(modulePath, `${model.name.toLowerCase()}.schema.ts`),
+    path.join(generatedPath, `${modelLower}.schema.ts`),
     schemaContent
   );
 
-  // Generate Routes
   const routesContent = generateRoutes(model);
   fs.writeFileSync(
-    path.join(modulePath, `${model.name.toLowerCase()}.routes.ts`),
+    path.join(generatedPath, `${modelLower}.routes.ts`),
     routesContent
   );
 
-  // Generate GraphQL Resolvers
   const resolverContent = generateResolver(model);
   fs.writeFileSync(
-    path.join(modulePath, `${model.name.toLowerCase()}.resolver.ts`),
+    path.join(generatedPath, `${modelLower}.resolver.ts`),
     resolverContent
   );
+
+  // Create public module directory
+  const publicModulePath = path.join(projectRoot, 'src', 'modules', modelLower);
+  fs.mkdirSync(publicModulePath, { recursive: true });
+
+  // Generate index.ts that exports the right implementation
+  const indexContent = generateModuleIndex(model, overrides);
+  const indexPath = getModuleIndexPath(projectRoot, model.name);
+  fs.writeFileSync(indexPath, indexContent);
+
+  // Create .gitignore in .allium if it doesn't exist
+  const alliumPath = path.join(projectRoot, '.allium');
+  const gitignorePath = path.join(alliumPath, '.gitignore');
+  if (!fs.existsSync(gitignorePath)) {
+    fs.writeFileSync(gitignorePath, 'generated/\n');
+  }
+
+  // Generate base controller (shared across all models)
+  const basePath = path.join(projectRoot, '.allium', 'generated', 'base');
+  fs.mkdirSync(basePath, { recursive: true });
+
+  const baseControllerPath = path.join(basePath, 'base.controller.ts');
+  if (!fs.existsSync(baseControllerPath)) {
+    fs.writeFileSync(baseControllerPath, generateBaseController());
+  }
+
+  const baseRoutesPath = path.join(basePath, 'base.routes.ts');
+  if (!fs.existsSync(baseRoutesPath)) {
+    fs.writeFileSync(baseRoutesPath, generateBaseRoutes());
+  }
+
+  const baseResolverPath = path.join(basePath, 'base.resolver.ts');
+  if (!fs.existsSync(baseResolverPath)) {
+    fs.writeFileSync(baseResolverPath, generateBaseResolver());
+  }
 }
 
 function generateService(model: ModelDefinition): string {
@@ -66,15 +110,15 @@ export class ${modelName}Service {
     return prisma.${modelLower}.findMany();
   }
 
-  async findById(id: number) {
+  async findById(id: string) {
     return prisma.${modelLower}.findUnique({ where: { id } });
   }
 
-  async update(id: number, data: Update${modelName}Input) {
+  async update(id: string, data: Update${modelName}Input) {
     return prisma.${modelLower}.update({ where: { id }, data });
   }
 
-  async delete(id: number) {
+  async delete(id: string) {
     return prisma.${modelLower}.delete({ where: { id } });
   }
 }
@@ -87,42 +131,18 @@ function generateController(model: ModelDefinition): string {
   const modelName = model.name;
   const modelLower = modelName.toLowerCase();
 
-  return `import { FastifyReply, FastifyRequest } from 'fastify';
+  return `import { createCrudController } from '../../../base/base.controller';
 import { ${modelLower}Service } from './${modelLower}.service';
-import { Create${modelName}Input, Update${modelName}Input } from './${modelLower}.schema';
 
-export async function create${modelName}Handler(
-  request: FastifyRequest<{ Body: Create${modelName}Input }>,
-  reply: FastifyReply
-) {
-  const ${modelLower} = await ${modelLower}Service.create(request.body);
-  return ${modelLower};
-}
+// Create controller using generic factory
+const controller = createCrudController(${modelLower}Service, '${modelName}');
 
-export async function get${modelName}sHandler() {
-  return ${modelLower}Service.findAll();
-}
-
-export async function get${modelName}Handler(
-  request: FastifyRequest<{ Params: { id: string } }>
-) {
-  const id = parseInt(request.params.id);
-  return ${modelLower}Service.findById(id);
-}
-
-export async function update${modelName}Handler(
-  request: FastifyRequest<{ Params: { id: string }; Body: Update${modelName}Input }>
-) {
-  const id = parseInt(request.params.id);
-  return ${modelLower}Service.update(id, request.body);
-}
-
-export async function delete${modelName}Handler(
-  request: FastifyRequest<{ Params: { id: string } }>
-) {
-  const id = parseInt(request.params.id);
-  return ${modelLower}Service.delete(id);
-}
+// Export individual handlers
+export const create${modelName}Handler = controller.create;
+export const get${modelName}sHandler = controller.findAll;
+export const get${modelName}Handler = controller.findById;
+export const update${modelName}Handler = controller.update;
+export const delete${modelName}Handler = controller.delete;
 `;
 }
 
@@ -145,8 +165,16 @@ ${fieldSchemas}
 
 export const update${modelName}Schema = create${modelName}Schema.partial();
 
+export const read${modelName}Schema = create${modelName}Schema.extend({
+  id: z.string().uuid(),
+  uuid: z.string().uuid(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
 export type Create${modelName}Input = z.infer<typeof create${modelName}Schema>;
 export type Update${modelName}Input = z.infer<typeof update${modelName}Schema>;
+export type Read${modelName}Output = z.infer<typeof read${modelName}Schema>;
 `;
 }
 
@@ -159,9 +187,9 @@ function generateRoutes(model: ModelDefinition): string {
     'update',
     'delete',
   ];
-  const prefix = model.api?.prefix || `/api/${modelLower}s`;
 
-  let routes = `import { FastifyInstance } from 'fastify';
+  return `import { FastifyInstance } from 'fastify';
+import { createCrudRoutes } from '../../../base/base.routes';
 import {
   create${modelName}Handler,
   get${modelName}sHandler,
@@ -169,72 +197,35 @@ import {
   update${modelName}Handler,
   delete${modelName}Handler,
 } from './${modelLower}.controller';
-import { create${modelName}Schema, update${modelName}Schema } from './${modelLower}.schema';
+import { create${modelName}Schema, update${modelName}Schema, read${modelName}Schema } from './${modelLower}.schema';
 
-export async function ${modelLower}Routes(app: FastifyInstance) {
+export const ${modelLower}Routes = createCrudRoutes(
+  {
+    create: create${modelName}Handler,
+    findAll: get${modelName}sHandler,
+    findById: get${modelName}Handler,
+    update: update${modelName}Handler,
+    delete: delete${modelName}Handler,
+  },
+  {
+    create: create${modelName}Schema,
+    update: update${modelName}Schema,
+    read: read${modelName}Schema,
+  },
+  '${modelName}',
+  ${JSON.stringify(operations)}
+);
 `;
-
-  if (operations.includes('create')) {
-    routes += `  app.post('/', {
-    schema: { body: create${modelName}Schema }
-  }, create${modelName}Handler);
-
-`;
-  }
-
-  if (operations.includes('read')) {
-    routes += `  app.get('/', get${modelName}sHandler);
-
-  app.get('/:id', get${modelName}Handler);
-
-`;
-  }
-
-  if (operations.includes('update')) {
-    routes += `  app.put('/:id', {
-    schema: { body: update${modelName}Schema }
-  }, update${modelName}Handler);
-
-`;
-  }
-
-  if (operations.includes('delete')) {
-    routes += `  app.delete('/:id', delete${modelName}Handler);
-
-`;
-  }
-
-  routes += `}\n`;
-  return routes;
 }
 
 function generateResolver(model: ModelDefinition): string {
   const modelName = model.name;
   const modelLower = modelName.toLowerCase();
 
-  return `import { ${modelLower}Service } from './${modelLower}.service';
+  return `import { createCrudResolver } from '../../../base/base.resolver';
+import { ${modelLower}Service } from './${modelLower}.service';
 
-export const ${modelLower}Resolvers = {
-  Query: {
-    ${modelLower}s: async () => {
-      return ${modelLower}Service.findAll();
-    },
-    ${modelLower}: async (_: any, { id }: { id: number }) => {
-      return ${modelLower}Service.findById(id);
-    },
-  },
-  Mutation: {
-    create${modelName}: async (_: any, { input }: { input: any }) => {
-      return ${modelLower}Service.create(input);
-    },
-    update${modelName}: async (_: any, { id, input }: { id: number; input: any }) => {
-      return ${modelLower}Service.update(id, input);
-    },
-    delete${modelName}: async (_: any, { id }: { id: number }) => {
-      return ${modelLower}Service.delete(id);
-    },
-  },
-};
+export const ${modelLower}Resolvers = createCrudResolver(${modelLower}Service, '${modelName}');
 `;
 }
 

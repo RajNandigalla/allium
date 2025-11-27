@@ -4,6 +4,7 @@ import { init } from './commands/init';
 import { generate } from './commands/generate';
 import { validate } from './commands/validate';
 import { sync } from './commands/sync';
+import { override } from './commands/override';
 import figlet from 'figlet';
 import chalk from 'chalk';
 
@@ -23,13 +24,19 @@ program
     '-d, --db <database>',
     'Database type (postgresql, mysql, mongodb, sqlite)'
   )
+  .option('-p, --path <path>', 'Directory where the project should be created')
   .action(init);
 
 program
-  .command('generate')
+  .command('generate [type]')
   .alias('g')
-  .description('Generate a new API resource (creates JSON model file)')
+  .description('Generate resources (model, override, controller, route)')
   .option('--definition <json>', 'JSON definition of the model')
+  .option('-m, --model <name>', 'Model name (for overrides)')
+  .option(
+    '-l, --layer <layer>',
+    'Layer to override (service, controller, routes)'
+  )
   .action(generate);
 
 program
@@ -41,5 +48,12 @@ program
   .command('sync')
   .description('Generate code from model definitions')
   .action(sync);
+
+program
+  .command('override <model> <layer>')
+  .description(
+    'Create an override file for a model layer (service, controller, routes)'
+  )
+  .action((model, layer) => override({ model, layer }));
 
 program.parse(process.argv);

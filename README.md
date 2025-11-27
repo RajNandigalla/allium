@@ -24,10 +24,14 @@ The command-line interface for Allium.
 
 **Commands:**
 
-- `allium init` - Initialize a new project
-- `allium generate` - Create model JSON definitions
-- `allium validate` - Validate model definitions
-- `allium sync` - Generate code from models
+- `allium init` - Initialize a new project with best-practice structure.
+- `allium generate [type]` - Generate resources:
+  - `model` (default) - Create model definitions with **Quick Mode** (e.g., `name:String email:String:unique`).
+  - `override` - Create overrides with **auto-suggestions** for available models.
+  - `controller` - Scaffold a generic controller.
+  - `route` - Scaffold a generic route.
+- `allium validate` - Validate model definitions.
+- `allium sync` - Generate code from models (Prisma, Fastify, Zod, Swagger).
 
 ### `@allium/core`
 
@@ -39,6 +43,14 @@ Shared core functionality used by the CLI and future UI.
 - JSON schema validator
 - Prisma schema generator
 - Module code generator (REST, GraphQL, Services)
+
+## ✨ Key Features
+
+- **🚀 Production-Ready Stack**: Fastify, Prisma, TypeScript, Zod.
+- **📄 Auto-Swagger**: Generated APIs come with fully wired OpenAPI/Swagger documentation.
+- **⚡ Quick Generation**: Define models rapidly with shorthand syntax.
+- **🛡️ Type-Safe**: End-to-end type safety from database to API response.
+- **🆔 UUID-Based IDs**: All models automatically include `id` (uuid primary key), `uuid`, `createdAt`, and `updatedAt` fields.
 
 ## 🚀 Development
 

@@ -4,7 +4,52 @@ import fs from 'fs-extra';
 import path from 'path';
 import { ModelDefinition, Field, Relation } from '@allium/core';
 
-export const generate = async (options: { definition?: string }) => {
+export const generate = async (
+  type: string | undefined,
+  options: { definition?: string; model?: string; layer?: string }
+) => {
+  let genType = type;
+
+  // If no type provided, prompt user to select
+  if (!genType) {
+    const { selectedType } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'selectedType',
+        message: 'What would you like to generate?',
+        choices: [
+          { name: 'Model', value: 'model' },
+          { name: 'Override (Service/Controller/Routes)', value: 'override' },
+          { name: 'Controller', value: 'controller' },
+          { name: 'Route', value: 'route' },
+        ],
+      },
+    ]);
+    genType = selectedType;
+  }
+
+  switch (genType) {
+    case 'model':
+      await generateModel(options);
+      break;
+    case 'override':
+      await generateOverride(options);
+      break;
+    case 'controller':
+      await generateController();
+      break;
+    case 'route':
+      await generateRoute();
+      break;
+    default:
+      console.log(chalk.red(`Unknown generator type: ${genType}`));
+      console.log(
+        chalk.yellow('Available types: model, override, controller, route')
+      );
+  }
+};
+
+async function generateModel(options: { definition?: string }) {
   let modelDef: ModelDefinition;
 
   if (options.definition) {
@@ -31,9 +76,82 @@ export const generate = async (options: { definition?: string }) => {
     ]);
 
     const fields: Field[] = [];
-    let addMoreFields = true;
 
-    console.log(chalk.blue('\nDefine Fields:'));
+    // Quick definition mode
+    const { quickDef } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'quickDef',
+        message:
+          'Quick Fields (e.g. name:String email:String:unique) [Enter to skip]:',
+      },
+    ]);
+
+    if (quickDef && quickDef.trim().length > 0) {
+      const parts = quickDef.trim().split(/\s+/);
+      for (const part of parts) {
+        const [name, type, ...modifiers] = part.split(':');
+
+        if (!name || !type) {
+          console.log(
+            chalk.yellow(`Skipping invalid field definition: ${part}`)
+          );
+          continue;
+        }
+
+        const validTypes = [
+          'String',
+          'Int',
+          'Float',
+          'Boolean',
+          'DateTime',
+          'Json',
+        ];
+        const normalizedType = validTypes.find(
+          (t) => t.toLowerCase() === type.toLowerCase()
+        );
+
+        if (!normalizedType) {
+          console.log(
+            chalk.yellow(
+              `Invalid type '${type}' for field '${name}'. Supported: ${validTypes.join(
+                ', '
+              )}`
+            )
+          );
+          continue;
+        }
+
+        fields.push({
+          name,
+          type: normalizedType as any,
+          required: !modifiers.includes('?') && !modifiers.includes('optional'),
+          unique: modifiers.includes('unique') || modifiers.includes('uniq'),
+        });
+      }
+      console.log(
+        chalk.green(`\nParsed ${fields.length} fields from quick definition.`)
+      );
+    }
+
+    // Interactive mode fallback
+    let addMoreFields = fields.length === 0;
+
+    if (!addMoreFields) {
+      const { addMore } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'addMore',
+          message: 'Do you want to add more fields interactively?',
+          default: false,
+        },
+      ]);
+      addMoreFields = addMore;
+    }
+
+    if (addMoreFields) {
+      console.log(chalk.blue('\nDefine Fields Interactively:'));
+    }
 
     while (addMoreFields) {
       const field = await inquirer.prompt([
@@ -137,7 +255,7 @@ export const generate = async (options: { definition?: string }) => {
     };
   }
 
-  // Save model to .allium/models/{ModelName}.json
+  // Save model
   const projectRoot = process.cwd();
   const modelsDir = path.join(projectRoot, '.allium', 'models');
   fs.mkdirSync(modelsDir, { recursive: true });
@@ -149,4 +267,174 @@ export const generate = async (options: { definition?: string }) => {
   console.log(chalk.yellow('\nNext steps:'));
   console.log('  1. Run: allium validate (to validate all models)');
   console.log('  2. Run: allium sync (to generate code from models)');
-};
+}
+
+async function generateOverride(options: { model?: string; layer?: string }) {
+  const projectRoot = process.cwd();
+  const modelsDir = path.join(projectRoot, '.allium', 'models');
+
+  // Get available models for suggestions
+  let availableModels: string[] = [];
+  if (fs.existsSync(modelsDir)) {
+    availableModels = fs
+      .readdirSync(modelsDir)
+      .filter((file) => file.endsWith('.json'))
+      .map((file) => path.basename(file, '.json'));
+  }
+
+  const questions = [];
+
+  if (!options.model) {
+    if (availableModels.length > 0) {
+      questions.push({
+        type: 'list',
+        name: 'model',
+        message: 'Which model do you want to override?',
+        choices: availableModels,
+      });
+    } else {
+      questions.push({
+        type: 'input',
+        name: 'model',
+        message: 'Which model do you want to override?',
+        validate: (input: string) => !!input || 'Model name is required',
+      });
+    }
+  }
+
+  if (!options.layer) {
+    questions.push({
+      type: 'list',
+      name: 'layer',
+      message: 'Which layer do you want to override?',
+      choices: ['service', 'controller', 'routes'],
+    });
+  }
+
+  const answers = await inquirer.prompt(questions);
+  const modelName = options.model || answers.model;
+  const layer = options.layer || answers.layer;
+
+  const modelLower = modelName.toLowerCase();
+  const overridePath = path.join(
+    projectRoot,
+    'src',
+    'modules',
+    modelLower,
+    'overrides'
+  );
+
+  fs.mkdirSync(overridePath, { recursive: true });
+
+  const fileName = `${modelLower}.${layer}.ts`;
+  const filePath = path.join(overridePath, fileName);
+
+  if (fs.existsSync(filePath)) {
+    console.log(chalk.yellow(`Override already exists: ${filePath}`));
+    return;
+  }
+
+  let template = '';
+  const generatedPath = `../../../../.allium/generated/modules/${modelLower}/${modelLower}.${layer}`;
+
+  if (layer === 'service') {
+    template = generateServiceOverride(modelName, generatedPath);
+  } else if (layer === 'controller') {
+    template = generateControllerOverride(modelName, generatedPath);
+  } else if (layer === 'routes') {
+    template = generateRoutesOverride(modelName, generatedPath);
+  }
+
+  fs.writeFileSync(filePath, template);
+
+  console.log(chalk.green(`✓ Created override: ${filePath}`));
+  console.log(chalk.blue('\nNext steps:'));
+  console.log(`  1. Edit ${filePath}`);
+  console.log(`  2. Run 'allium sync' to regenerate index exports`);
+}
+
+async function generateController() {
+  console.log(chalk.blue('Generating generic controller...'));
+  // Placeholder for generic controller generation logic
+  // Could prompt for name and create a basic controller file
+  const { name } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'name',
+      message: 'Controller Name:',
+    },
+  ]);
+  console.log(chalk.green(`Created controller: ${name}`));
+}
+
+async function generateRoute() {
+  console.log(chalk.blue('Generating generic route...'));
+  // Placeholder for generic route generation logic
+  const { name } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'name',
+      message: 'Route Name:',
+    },
+  ]);
+  console.log(chalk.green(`Created route: ${name}`));
+}
+
+// --- Template Generators (Copied/Adapted from override.ts) ---
+
+function generateServiceOverride(
+  modelName: string,
+  generatedPath: string
+): string {
+  const className = `${modelName}Service`;
+  const generatedClassName = `Generated${className}`;
+
+  return `import { ${className} as ${generatedClassName} } from '${generatedPath}';
+
+/**
+ * ${modelName} Service Override
+ */
+export class ${className} extends ${generatedClassName} {
+  // Add custom methods or override existing ones here
+}
+
+export const ${modelName.toLowerCase()}Service = new ${className}();
+`;
+}
+
+function generateControllerOverride(
+  modelName: string,
+  generatedPath: string
+): string {
+  return `import * as generatedController from '${generatedPath}';
+
+/**
+ * ${modelName} Controller Override
+ */
+
+export * from '${generatedPath}';
+
+// Example: Override a specific handler
+// export async function create${modelName}Handler(req, reply) {
+//   return generatedController.create${modelName}Handler(req, reply);
+// }
+`;
+}
+
+function generateRoutesOverride(
+  modelName: string,
+  generatedPath: string
+): string {
+  const modelLower = modelName.toLowerCase();
+  return `import { FastifyInstance } from 'fastify';
+import { ${modelLower}Routes as generated${modelName}Routes } from '${generatedPath}';
+
+/**
+ * ${modelName} Routes Override
+ */
+export async function ${modelLower}Routes(app: FastifyInstance) {
+  await generated${modelName}Routes(app);
+  // Add custom routes here
+}
+`;
+}

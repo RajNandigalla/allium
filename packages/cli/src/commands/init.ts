@@ -5,7 +5,11 @@ import path from 'path';
 import ora from 'ora';
 import { execSync } from 'child_process';
 
-export const init = async (options: { name?: string; db?: string }) => {
+export const init = async (options: {
+  name?: string;
+  db?: string;
+  path?: string;
+}) => {
   const questions = [];
 
   if (!options.name) {
@@ -30,7 +34,20 @@ export const init = async (options: { name?: string; db?: string }) => {
 
   const projectName = options.name || answers.projectName;
   const database = options.db || answers.database;
-  const projectPath = path.join(process.cwd(), projectName);
+
+  // Resolve path - note: in yarn workspaces, relative paths resolve from workspace root
+  const basePath = options.path ? path.resolve(options.path) : process.cwd();
+  const projectPath = path.join(basePath, projectName);
+
+  // Helpful message if using relative path in workspace
+  if (options.path && !path.isAbsolute(options.path)) {
+    console.log(
+      chalk.yellow(
+        `Note: Relative paths resolve from workspace root when using yarn.`
+      )
+    );
+    console.log(chalk.yellow(`Creating project in: ${projectPath}\n`));
+  }
 
   if (fs.existsSync(projectPath)) {
     console.log(chalk.red(`Directory ${projectName} already exists.`));
@@ -41,7 +58,7 @@ export const init = async (options: { name?: string; db?: string }) => {
 
   try {
     // 1. Create directory
-    fs.mkdirSync(projectPath);
+    fs.mkdirSync(projectPath, { recursive: true });
 
     // 2. Create package.json
     const packageJson: any = {
@@ -76,11 +93,11 @@ export const init = async (options: { name?: string; db?: string }) => {
     };
 
     if (database === 'sqlite') {
-      packageJson.dependencies['@prisma/adapter-better-sqlite3'] = '^5.5.2'; // Update version as needed
-      packageJson.dependencies['better-sqlite3'] = '^9.0.0';
+      packageJson.dependencies['@prisma/adapter-better-sqlite3'] = '^7.0.0';
+      packageJson.dependencies['better-sqlite3'] = '^11.0.0';
       packageJson.devDependencies['@types/better-sqlite3'] = '^7.6.0';
     } else if (database === 'postgresql') {
-      packageJson.dependencies['@prisma/adapter-pg'] = '^5.5.2';
+      packageJson.dependencies['@prisma/adapter-pg'] = '^7.0.0';
       packageJson.dependencies['pg'] = '^8.11.0';
       packageJson.devDependencies['@types/pg'] = '^8.10.0';
     }
@@ -96,14 +113,14 @@ export const init = async (options: { name?: string; db?: string }) => {
         target: 'ES2020',
         module: 'commonjs',
         outDir: './dist',
-        rootDir: './src',
+        rootDir: '.',
         strict: true,
         esModuleInterop: true,
         skipLibCheck: true,
         forceConsistentCasingInFileNames: true,
       },
-      include: ['src/**/*'],
-      exclude: ['node_modules'],
+      include: ['src/**/*', '.allium/**/*'],
+      exclude: ['node_modules', 'dist', '.allium/models'],
     };
 
     fs.writeFileSync(
@@ -280,7 +297,24 @@ export default fp(async (fastify) => {
     );
 
     // 8. Create .env
-    const envContent = `DATABASE_URL="file:./dev.db"`; // Default for sqlite, others need change
+    let envContent = '';
+
+    switch (database) {
+      case 'postgresql':
+        envContent = `DATABASE_URL="postgresql://user:password@localhost:5432/${projectName}?schema=public"`;
+        break;
+      case 'mysql':
+        envContent = `DATABASE_URL="mysql://user:password@localhost:3306/${projectName}"`;
+        break;
+      case 'mongodb':
+        envContent = `DATABASE_URL="mongodb://localhost:27017/${projectName}"`;
+        break;
+      case 'sqlite':
+      default:
+        envContent = `DATABASE_URL="file:./dev.db"`;
+        break;
+    }
+
     fs.writeFileSync(path.join(projectPath, '.env'), envContent);
 
     spinner.succeed(

@@ -1,0 +1,112 @@
+{
+    "models": [
+        {
+            "name": "User",
+            "fields": [
+                {
+                    "name": "email",
+                    "type": "String",
+                    "unique": true
+                },
+                {
+                    "name": "name",
+                    "type": "String"
+                },
+                {
+                    "name": "age",
+                    "type": "Int",
+                    "required": false
+                }
+            ],
+            "api": {
+                "prefix": "/api/users",
+                "operations": [
+                    "create",
+                    "read",
+                    "update",
+                    "delete"
+                ]
+            },
+            "service": {
+                "methods": {
+                    "findAll": {
+                        "pagination": true
+                    },
+                    "delete": {
+                        "softDelete": true
+                    }
+                },
+                "hooks": {
+                    "beforeCreate": "hashPassword",
+                    "afterCreate": "sendWelcomeEmail"
+                },
+                "customMethods": [
+                    {
+                        "name": "findByEmail",
+                        "description": "Find user by email address"
+                    },
+                    {
+                        "name": "verifyEmail",
+                        "description": "Verify user's email address"
+                    }
+                ]
+            },
+            "routes": {
+                "create": {
+                    "middleware": [
+                        "validateEmail",
+                        "checkDuplicate"
+                    ],
+                    "rateLimit": {
+                        "max": 5,
+                        "timeWindow": "1m"
+                    }
+                },
+                "findAll": {
+                    "auth": [
+                        "admin",
+                        "moderator"
+                    ]
+                }
+            },
+            "controller": {
+                "validation": {
+                    "create": {
+                        "email": "z.string().email()",
+                        "age": "z.number().min(18).max(120)"
+                    }
+                }
+            }
+        },
+        {
+            "name": "Product",
+            "fields": [
+                {
+                    "name": "productName",
+                    "type": "String"
+                },
+                {
+                    "name": "productCategory",
+                    "type": "String"
+                },
+                {
+                    "name": "description",
+                    "type": "String",
+                    "required": false
+                },
+                {
+                    "name": "status",
+                    "type": "String"
+                }
+            ],
+            "api": {
+                "prefix": "/api/products",
+                "operations": [
+                    "create",
+                    "read",
+                    "update"
+                ]
+            }
+        }
+    ]
+}

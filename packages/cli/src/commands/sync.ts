@@ -35,11 +35,22 @@ export const sync = async () => {
 
     // Step 3: Generate Prisma schema
     spinner.text = 'Generating Prisma schema...';
-    const prismaSchema = generatePrismaSchema(schema);
-    fs.writeFileSync(
-      path.join(projectRoot, 'prisma', 'schema.prisma'),
-      prismaSchema
-    );
+
+    // Read existing schema to preserve the database provider
+    const schemaPath = path.join(projectRoot, 'prisma', 'schema.prisma');
+    let existingProvider: string | undefined;
+
+    if (fs.existsSync(schemaPath)) {
+      const existingSchema = fs.readFileSync(schemaPath, 'utf-8');
+      // Extract provider from existing schema using regex
+      const providerMatch = existingSchema.match(/provider\s*=\s*"([^"]+)"/);
+      if (providerMatch && providerMatch[1] !== 'prisma-client-js') {
+        existingProvider = providerMatch[1];
+      }
+    }
+
+    const prismaSchema = generatePrismaSchema(schema, existingProvider);
+    fs.writeFileSync(schemaPath, prismaSchema);
 
     // Step 4: Generate module files
     spinner.text = 'Generating modules...';

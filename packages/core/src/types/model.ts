@@ -31,11 +31,78 @@ export interface ApiConfig {
   operations?: ApiOperation[];
 }
 
+// Route-level configuration
+export interface RouteConfig {
+  path?: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  middleware?: string[];
+  rateLimit?: {
+    max: number;
+    timeWindow: string;
+  };
+  auth?: boolean | string[];
+  customHandler?: string;
+}
+
+// Service method configuration
+export interface ServiceMethodConfig {
+  enabled?: boolean;
+  pagination?: boolean;
+  softDelete?: boolean;
+}
+
+// Service-level configuration
+export interface ServiceConfig {
+  methods?: {
+    [methodName: string]: ServiceMethodConfig;
+  };
+  hooks?: {
+    beforeCreate?: string;
+    afterCreate?: string;
+    beforeUpdate?: string;
+    afterUpdate?: string;
+    beforeDelete?: string;
+    afterDelete?: string;
+  };
+  customMethods?: Array<{
+    name: string;
+    description?: string;
+  }>;
+}
+
+// Controller-level configuration
+export interface ControllerConfig {
+  validation?: {
+    create?: Record<string, string>;
+    update?: Record<string, string>;
+  };
+  transform?: {
+    input?: string;
+    output?: string;
+  };
+  errorHandling?: {
+    custom?: boolean;
+    handler?: string;
+  };
+}
+
+// Override detection info
+export interface OverrideInfo {
+  service?: boolean;
+  controller?: boolean;
+  routes?: boolean;
+  customMethods?: string[];
+}
+
 export interface ModelDefinition {
   name: string;
   fields: Field[];
   relations?: Relation[];
   api?: ApiConfig;
+  routes?: Record<string, RouteConfig>;
+  service?: ServiceConfig;
+  controller?: ControllerConfig;
+  hasOverrides?: OverrideInfo;
 }
 
 export interface AlliumSchema {
