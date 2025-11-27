@@ -9,7 +9,6 @@ export function generatePrismaSchema(schema: AlliumSchema): string {
 
 datasource db {
   provider = env("DATABASE_PROVIDER")
-  url      = env("DATABASE_URL")
 }
 
 `;

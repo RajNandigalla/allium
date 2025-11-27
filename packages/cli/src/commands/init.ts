@@ -44,7 +44,7 @@ export const init = async (options: { name?: string; db?: string }) => {
     fs.mkdirSync(projectPath);
 
     // 2. Create package.json
-    const packageJson = {
+    const packageJson: any = {
       name: projectName,
       version: '1.0.0',
       scripts: {
@@ -56,14 +56,15 @@ export const init = async (options: { name?: string; db?: string }) => {
       },
       dependencies: {
         fastify: '^4.24.3',
-        '@prisma/client': '^5.5.2',
+        '@prisma/client': '^5.5.2', // Should be updated to 6/7 compatible if available, keeping existing version for now or assuming user handles upgrade
         'fastify-plugin': '^4.5.1',
         '@fastify/swagger': '^8.12.0',
         '@fastify/swagger-ui': '^1.10.1',
-        mercurius: '^13.3.0', // GraphQL adapter for Fastify
+        mercurius: '^13.3.0',
         graphql: '^16.8.1',
         zod: '^3.22.4',
         'fastify-type-provider-zod': '^1.1.9',
+        dotenv: '^16.3.1',
       },
       devDependencies: {
         typescript: '^5.2.2',
@@ -73,6 +74,16 @@ export const init = async (options: { name?: string; db?: string }) => {
         prisma: '^5.5.2',
       },
     };
+
+    if (database === 'sqlite') {
+      packageJson.dependencies['@prisma/adapter-better-sqlite3'] = '^5.5.2'; // Update version as needed
+      packageJson.dependencies['better-sqlite3'] = '^9.0.0';
+      packageJson.devDependencies['@types/better-sqlite3'] = '^7.6.0';
+    } else if (database === 'postgresql') {
+      packageJson.dependencies['@prisma/adapter-pg'] = '^5.5.2';
+      packageJson.dependencies['pg'] = '^8.11.0';
+      packageJson.devDependencies['@types/pg'] = '^8.10.0';
+    }
 
     fs.writeFileSync(
       path.join(projectPath, 'package.json'),
@@ -180,7 +191,6 @@ start();
 
 datasource db {
   provider = "${database}"
-  url      = env("DATABASE_URL")
 }
 `;
     fs.writeFileSync(
@@ -188,17 +198,73 @@ datasource db {
       prismaSchema
     );
 
-    // 7. Create src/plugins/prisma.ts
-    const prismaPlugin = `import fp from 'fastify-plugin';
-import { PrismaClient } from '@prisma/client';
+    // 7. Create prisma.config.ts
+    const prismaConfig = `import 'dotenv/config';
+import { defineConfig } from '@prisma/config';
 
+export default defineConfig({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
+`;
+    fs.writeFileSync(path.join(projectPath, 'prisma.config.ts'), prismaConfig);
+
+    // 8. Create src/plugins/prisma.ts
+    let prismaPlugin = `import fp from 'fastify-plugin';
+import { PrismaClient } from '@prisma/client';
+import 'dotenv/config';
+`;
+
+    if (database === 'sqlite') {
+      prismaPlugin += `import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
+import Database from 'better-sqlite3';
+
+const connection = new Database(process.env.DATABASE_URL!.replace('file:', ''));
+const adapter = new PrismaBetterSqlite3(connection);
+const prisma = new PrismaClient({ adapter });
+`;
+    } else if (database === 'postgresql') {
+      prismaPlugin += `import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
+
+const connection = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(connection);
+const prisma = new PrismaClient({ adapter });
+`;
+    } else if (database === 'mongodb') {
+      prismaPlugin += `
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
+`;
+    } else {
+      // Fallback for others
+      prismaPlugin += `
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
+`;
+    }
+
+    prismaPlugin += `
 declare module 'fastify' {
   interface FastifyInstance {
     prisma: PrismaClient;
   }
 }
 
-export const prisma = new PrismaClient();
+export { prisma };
 
 export default fp(async (fastify) => {
   fastify.decorate('prisma', prisma);
