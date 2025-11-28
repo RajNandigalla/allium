@@ -8,7 +8,8 @@ import { FastifyInstance } from 'fastify';
  *
  * @see https://github.com/fastify/fastify-helmet
  */
-export default fp(async (fastify: FastifyInstance) => {
+export default fp(async (fastify: FastifyInstance, opts: any) => {
+  const helmetConfig = opts.helmet || {};
   await fastify.register(helmet, {
     // Disable contentSecurityPolicy in development for Swagger UI
     contentSecurityPolicy: false,
@@ -16,5 +17,6 @@ export default fp(async (fastify: FastifyInstance) => {
     crossOriginEmbedderPolicy: false,
     crossOriginOpenerPolicy: false,
     crossOriginResourcePolicy: false,
+    ...helmetConfig,
   });
 });

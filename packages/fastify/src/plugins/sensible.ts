@@ -7,6 +7,9 @@ import { FastifyInstance } from 'fastify';
  *
  * @see https://github.com/fastify/fastify-sensible
  */
-export default fp<FastifySensibleOptions>(async (fastify: FastifyInstance) => {
-  fastify.register(sensible);
-});
+export default fp<FastifySensibleOptions>(
+  async (fastify: FastifyInstance, opts: any) => {
+    const sensibleConfig = opts.sensible || {};
+    fastify.register(sensible, sensibleConfig);
+  }
+);

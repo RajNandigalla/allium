@@ -8,12 +8,14 @@ import { FastifyInstance } from 'fastify';
  *
  * @see https://github.com/fastify/fastify-rate-limit
  */
-export default fp(async (fastify: FastifyInstance) => {
+export default fp(async (fastify: FastifyInstance, opts: any) => {
+  const rateLimitConfig = opts.rateLimit || {};
   await fastify.register(rateLimit, {
     max: 100, // Maximum 100 requests
     timeWindow: '1 minute', // Per 1 minute window
     cache: 10000, // Cache size for tracking IPs
     allowList: ['127.0.0.1'], // Whitelist localhost
     redis: undefined, // Can be configured with Redis for distributed rate limiting
+    ...rateLimitConfig,
   } as RateLimitPluginOptions);
 });

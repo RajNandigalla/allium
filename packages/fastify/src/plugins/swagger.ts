@@ -11,11 +11,14 @@ import { FastifyInstance } from 'fastify';
  * @see https://github.com/fastify/fastify-swagger-ui
  */
 export default fp(
-  async (fastify: FastifyInstance) => {
-    // Register Swagger
-    await fastify.register(swagger, {
-      mode: 'dynamic',
-      openapi: {
+  async (fastify: FastifyInstance, opts: any) => {
+    // Extract swagger config from opts (if provided)
+    const swaggerConfig = opts.swagger || {};
+
+    // Merge with defaults
+    const config = {
+      mode: swaggerConfig.mode || 'dynamic',
+      openapi: swaggerConfig.openapi || {
         openapi: '3.0.0',
         info: {
           title: 'Allium API',
@@ -42,7 +45,11 @@ export default fp(
           },
         },
       },
-    });
+      ...swaggerConfig,
+    };
+
+    // Register Swagger
+    await fastify.register(swagger, config);
 
     // Register Swagger UI
     await fastify.register(swaggerUI, {

@@ -67,6 +67,27 @@ export async function generateModuleFiles(
   const indexPath = getModuleIndexPath(projectRoot, model.name);
   fs.writeFileSync(indexPath, indexContent);
 
+  // Generate registerModel TypeScript file in src/models/
+  const modelsDir = path.join(projectRoot, 'src', 'models');
+  fs.mkdirSync(modelsDir, { recursive: true });
+
+  const modelFileName = `${modelLower}.model.ts`;
+  const modelFilePath = path.join(modelsDir, modelFileName);
+
+  // Only create if it doesn't exist (don't overwrite user customizations)
+  if (!fs.existsSync(modelFilePath)) {
+    const modelContent = `import { registerModel } from '@allium/core';
+
+export const ${model.name} = registerModel('${model.name}', {
+  // Add hooks here
+  // beforeCreate: async (data, context) => {
+  //   return data;
+  // },
+});
+`;
+    fs.writeFileSync(modelFilePath, modelContent);
+  }
+
   // Create .gitignore in .allium if it doesn't exist
   const alliumPath = path.join(projectRoot, '.allium');
   const gitignorePath = path.join(alliumPath, '.gitignore');

@@ -261,9 +261,20 @@ async function generateModel(options: { definition?: string }) {
 
   // Save model
   const projectRoot = process.cwd();
-  const modelsDir = path.join(projectRoot, 'src', 'models');
 
-  // Ensure directory exists
+  // 1. Save JSON definition to .allium/models/
+  const alliumModelsDir = path.join(projectRoot, '.allium', 'models');
+  fs.ensureDirSync(alliumModelsDir);
+
+  const jsonFileName = `${modelDef.name.toLowerCase()}.json`;
+  const jsonFilePath = path.join(alliumModelsDir, jsonFileName);
+  fs.writeFileSync(jsonFilePath, JSON.stringify(modelDef, null, 2));
+  console.log(
+    chalk.green(`✓ Created model definition: .allium/models/${jsonFileName}`)
+  );
+
+  // 2. Save TypeScript file to src/models/
+  const modelsDir = path.join(projectRoot, 'src', 'models');
   fs.ensureDirSync(modelsDir);
 
   const modelFileName = `${modelDef.name.toLowerCase()}.model.ts`;
@@ -282,26 +293,67 @@ export const ${modelDef.name} = registerModel('${modelDef.name}', {
   fs.writeFileSync(modelFilePath, modelContent);
   console.log(chalk.green(`✓ Created model file: src/models/${modelFileName}`));
 
-  // Also append to Prisma schema if it doesn't exist
-  // (This part is complex to do robustly without a parser, but we can append a basic block)
-  // For now, let's just tell the user to update schema.prisma
-  console.log(
-    chalk.yellow(
-      `\nDon't forget to add the model to your prisma/schema.prisma:`
-    )
-  );
-  console.log(
-    chalk.cyan(`
+  // 3. Auto-update Prisma schema
+  const schemaPath = path.join(projectRoot, 'prisma', 'schema.prisma');
+
+  if (fs.existsSync(schemaPath)) {
+    let schemaContent = fs.readFileSync(schemaPath, 'utf-8');
+
+    // Check if model already exists in schema
+    const modelRegex = new RegExp(`model\\s+${modelDef.name}\\s*{`, 'i');
+
+    if (!modelRegex.test(schemaContent)) {
+      // Generate Prisma model block
+      const prismaModel = `
 model ${modelDef.name} {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  // Add your fields here
+${modelDef.fields
+  .map((f) => {
+    const fieldType =
+      f.type === 'Int' || f.type === 'Float'
+        ? f.type
+        : f.type === 'DateTime'
+        ? 'DateTime'
+        : f.type === 'Boolean'
+        ? 'Boolean'
+        : f.type === 'Json'
+        ? 'Json'
+        : 'String';
+    const optional = f.required ? '' : '?';
+    const unique = f.unique ? ' @unique' : '';
+    return `  ${f.name.padEnd(10)} ${fieldType}${optional}${unique}`;
+  })
+  .join('\n')}
 }
-`)
-  );
+`;
+
+      // Append to schema
+      schemaContent += prismaModel;
+      fs.writeFileSync(schemaPath, schemaContent);
+      console.log(
+        chalk.green(
+          `✓ Updated prisma/schema.prisma with ${modelDef.name} model`
+        )
+      );
+    } else {
+      console.log(
+        chalk.yellow(
+          `⚠ Model ${modelDef.name} already exists in schema.prisma, skipping update`
+        )
+      );
+    }
+  } else {
+    console.log(
+      chalk.yellow('⚠ prisma/schema.prisma not found, skipping schema update')
+    );
+  }
+
   console.log(chalk.yellow('\nNext steps:'));
   console.log('  1. Run: allium sync (to generate code from models)');
+  console.log('  2. Run: npx prisma generate');
+  console.log('  3. Run: npx prisma db push');
 }
 
 async function generateOverride(options: { model?: string; layer?: string }) {

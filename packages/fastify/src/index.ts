@@ -10,7 +10,7 @@ export { default as modelRoutesPlugin } from './framework/model-routes';
 export type { ModelRoutesPluginOptions } from './framework/model-routes';
 
 // Convenience function for quick setup
-export { createAlliumApp } from './server';
+export { initAllium } from './server';
 export type { AlliumServerConfig } from './server';
 
 // Re-export app for compatibility
