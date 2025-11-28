@@ -261,16 +261,47 @@ async function generateModel(options: { definition?: string }) {
 
   // Save model
   const projectRoot = process.cwd();
-  const modelsDir = path.join(projectRoot, '.allium', 'models');
-  fs.mkdirSync(modelsDir, { recursive: true });
+  const modelsDir = path.join(projectRoot, 'src', 'models');
 
-  const modelPath = path.join(modelsDir, `${modelDef.name}.json`);
-  fs.writeFileSync(modelPath, JSON.stringify(modelDef, null, 2));
+  // Ensure directory exists
+  fs.ensureDirSync(modelsDir);
 
-  console.log(chalk.green(`\n✔ Model definition saved to ${modelPath}`));
+  const modelFileName = `${modelDef.name.toLowerCase()}.model.ts`;
+  const modelFilePath = path.join(modelsDir, modelFileName);
+
+  const modelContent = `import { registerModel } from '@allium/core';
+
+export const ${modelDef.name} = registerModel('${modelDef.name}', {
+  // Add hooks here
+  // beforeCreate: async (data, context) => {
+  //   return data;
+  // },
+});
+`;
+
+  fs.writeFileSync(modelFilePath, modelContent);
+  console.log(chalk.green(`✓ Created model file: src/models/${modelFileName}`));
+
+  // Also append to Prisma schema if it doesn't exist
+  // (This part is complex to do robustly without a parser, but we can append a basic block)
+  // For now, let's just tell the user to update schema.prisma
+  console.log(
+    chalk.yellow(
+      `\nDon't forget to add the model to your prisma/schema.prisma:`
+    )
+  );
+  console.log(
+    chalk.cyan(`
+model ${modelDef.name} {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // Add your fields here
+}
+`)
+  );
   console.log(chalk.yellow('\nNext steps:'));
-  console.log('  1. Run: allium validate (to validate all models)');
-  console.log('  2. Run: allium sync (to generate code from models)');
+  console.log('  1. Run: allium sync (to generate code from models)');
 }
 
 async function generateOverride(options: { model?: string; layer?: string }) {

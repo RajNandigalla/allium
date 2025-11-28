@@ -56,20 +56,61 @@ export function generateRoutes(
   app.get(basePath, async (request, reply) => {
     try {
       const context = createHookContext(request, prisma, services);
+      const queryParams = request.query as Record<string, any>;
+
+      // Pagination
+      const page = Number(queryParams.page) || 1;
+      const limit = Number(queryParams.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      // Sorting
+      let orderBy = undefined;
+      if (queryParams.sort) {
+        const sortField = queryParams.sort as string;
+        if (sortField.startsWith('-')) {
+          orderBy = { [sortField.substring(1)]: 'desc' };
+        } else {
+          orderBy = { [sortField]: 'asc' };
+        }
+      } else {
+        // Default sort by createdAt if exists, else id
+        orderBy = { createdAt: 'desc' }; // Fallback handled by Prisma if field doesn't exist? No, unsafe.
+        // Safer default: undefined or check metadata
+        orderBy = undefined;
+      }
+
+      // Filtering (exclude special params)
+      const { page: _p, limit: _l, sort: _s, ...filters } = queryParams;
 
       // Build query
-      let query: any = {};
+      let query: any = {
+        skip,
+        take: limit,
+        where: filters, // Basic equality filtering
+        orderBy,
+      };
 
       // Execute beforeFind hook
       query = await hookExecutor.executeBeforeFind(model, query, context);
 
       // Fetch records
       let results = await (prisma as any)[modelName].findMany(query);
+      const total = await (prisma as any)[modelName].count({
+        where: query.where,
+      });
 
       // Execute afterFind hook
       results = await hookExecutor.executeAfterFind(model, results, context);
 
-      return results;
+      return {
+        data: results,
+        meta: {
+          total,
+          page,
+          limit,
+          pages: Math.ceil(total / limit),
+        },
+      };
     } catch (error) {
       handleError(error, reply);
     }

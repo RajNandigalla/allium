@@ -14,9 +14,6 @@ export interface AlliumAppConfig {
   /** Registered models */
   models: ModelDefinition[];
 
-  /** Prisma client instance (optional, will create if not provided) */
-  prisma?: PrismaClient;
-
   /** Custom services to inject into hook context */
   services?: Record<string, any>;
 
@@ -33,6 +30,15 @@ export interface AlliumAppConfig {
   schemaPath?: string;
   /** Global API prefix (default: '/api') */
   prefix?: string;
+  /** Fastify plugins to register */
+  plugins?: Array<(app: FastifyInstance) => Promise<void> | void>;
+  /** Prisma configuration */
+  prisma?:
+    | PrismaClient
+    | {
+        datasourceUrl?: string;
+        [key: string]: any;
+      };
 }
 
 /**
@@ -45,6 +51,9 @@ export interface AlliumAppConfig {
  *
  * const app = await createAlliumApp({
  *   models: [Product],
+ *   plugins: [
+ *     async (app) => app.register(require('@fastify/cors')),
+ *   ]
  * });
  *
  * await app.listen({ port: 3000 });
@@ -59,8 +68,20 @@ export async function createAlliumApp(
     ...config.fastify,
   });
 
+  // Register user plugins
+  if (config.plugins) {
+    for (const plugin of config.plugins) {
+      await plugin(app);
+    }
+  }
+
   // Initialize Prisma
-  const prisma = config.prisma || new PrismaClient();
+  let prisma: PrismaClient;
+  if (config.prisma instanceof PrismaClient) {
+    prisma = config.prisma;
+  } else {
+    prisma = new PrismaClient(config.prisma);
+  }
   app.decorate('prisma', prisma);
 
   // Introspect Prisma schema and enrich models

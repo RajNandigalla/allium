@@ -75,7 +75,7 @@ export const init = async (options: {
         '@allium/core': '^0.1.0',
         '@allium/fastify': '^0.1.0',
         '@prisma/client': '^7.0.0',
-        fastify: '^4.24.3',
+        fastify: '^5.0.0',
         dotenv: '^16.3.1',
       },
       devDependencies: {
@@ -128,24 +128,21 @@ export const init = async (options: {
     fs.mkdirSync(path.join(projectPath, 'src', 'models'));
 
     // 5. Create app.ts
-    const appTs = `import { createAlliumApp } from '@allium/fastify';
-import 'dotenv/config';
-
-// Import models
-// import { Product } from './models/product.model';
+    const appTs = `import 'dotenv/config';
+import { createAlliumApp } from '@allium/fastify';
+import { User } from './models/user.model';
 
 const start = async () => {
   try {
     const app = await createAlliumApp({
-      models: [
-        // Product,
-      ],
-      swagger: true,
+      models: [User],
+      prisma: {
+        datasourceUrl: process.env.DATABASE_URL
+      }
     });
 
-    const port = Number(process.env.PORT) || 3000;
-    await app.listen({ port });
-    console.log(\`Server running on http://localhost:\${port}\`);
+    await app.listen({ port: 3000 });
+    console.log('Server running at http://localhost:3000');
   } catch (err) {
     console.error(err);
     process.exit(1);
@@ -179,7 +176,6 @@ export const User = registerModel('User', {
 
 datasource db {
   provider = "${database}"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -194,6 +190,18 @@ model User {
       path.join(projectPath, 'prisma', 'schema.prisma'),
       prismaSchema
     );
+
+    // Create prisma.config.ts for Prisma 7
+    const prismaConfig = `export default {
+  prisma: {
+    schema: 'prisma/schema.prisma',
+  },
+  datasource: {
+    url: process.env.DATABASE_URL,
+  },
+};
+`;
+    fs.writeFileSync(path.join(projectPath, 'prisma.config.ts'), prismaConfig);
 
     // 8. Create .env
     let envContent = '';
