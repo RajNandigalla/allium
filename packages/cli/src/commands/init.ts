@@ -62,7 +62,7 @@ export const init = async (options: {
 
     // 2. Create package.json
     const packageJson: any = {
-      name: projectName,
+      name: `@allium/${projectName}`,
       version: '1.0.0',
       scripts: {
         dev: 'ts-node-dev --respawn --transpile-only src/app.ts',
@@ -72,8 +72,8 @@ export const init = async (options: {
         'prisma:push': 'prisma db push',
       },
       dependencies: {
-        '@allium/core': '^0.1.0',
-        '@allium/fastify': '^0.1.0',
+        '@allium/core': '*',
+        '@allium/fastify': '*',
         '@prisma/client': '^7.0.0',
         fastify: '^5.0.0',
         dotenv: '^16.3.1',
@@ -104,18 +104,16 @@ export const init = async (options: {
 
     // 3. Create tsconfig.json
     const tsConfig = {
+      extends: '../../tsconfig.json',
       compilerOptions: {
-        target: 'ES2020',
-        module: 'commonjs',
         outDir: './dist',
-        rootDir: '.',
-        strict: true,
-        esModuleInterop: true,
+        rootDir: './src',
+        composite: true,
         skipLibCheck: true,
-        forceConsistentCasingInFileNames: true,
       },
       include: ['src/**/*'],
       exclude: ['node_modules', 'dist'],
+      references: [{ path: '../core' }, { path: '../fastify' }],
     };
 
     fs.writeFileSync(
@@ -190,18 +188,6 @@ model User {
       path.join(projectPath, 'prisma', 'schema.prisma'),
       prismaSchema
     );
-
-    // Create prisma.config.ts for Prisma 7
-    const prismaConfig = `export default {
-  prisma: {
-    schema: 'prisma/schema.prisma',
-  },
-  datasource: {
-    url: process.env.DATABASE_URL,
-  },
-};
-`;
-    fs.writeFileSync(path.join(projectPath, 'prisma.config.ts'), prismaConfig);
 
     // 8. Create .env
     let envContent = '';

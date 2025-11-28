@@ -1,12 +1,8 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "fastify-tsconfig",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "composite": true,
-    "skipLibCheck": true
+    "outDir": "dist",
+    "sourceMap": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"],
-  "references": [{ "path": "../core" }]
+  "include": ["src/**/*.ts"]
 }
