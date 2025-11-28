@@ -2,7 +2,11 @@ import inquirer from 'inquirer';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
-import { ModelDefinition, Field, Relation } from '@allium/core';
+import {
+  OldModelDefinition as ModelDefinition,
+  Field,
+  Relation,
+} from '@allium/core';
 
 export const generate = async (
   type: string | undefined,

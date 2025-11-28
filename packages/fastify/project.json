@@ -1,0 +1,21 @@
+{
+    "name": "@allium/fastify",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/fastify/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@nx/js:tsc",
+            "outputs": [
+                "{options.outputPath}"
+            ],
+            "options": {
+                "outputPath": "packages/fastify/dist",
+                "main": "packages/fastify/src/index.ts",
+                "tsConfig": "packages/fastify/tsconfig.json",
+                "assets": []
+            }
+        }
+    },
+    "tags": []
+}
