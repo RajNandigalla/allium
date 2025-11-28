@@ -23,6 +23,21 @@ export default fp<ModelRoutesPluginOptions>(
   async (fastify: FastifyInstance, opts: ModelRoutesPluginOptions) => {
     const { models, routePrefix = '/api' } = opts;
 
+    // Validate models array
+    if (!models || !Array.isArray(models)) {
+      fastify.log.warn(
+        'No models provided to model-routes plugin. Skipping route generation.'
+      );
+      return;
+    }
+
+    if (models.length === 0) {
+      fastify.log.warn(
+        'Empty models array provided to model-routes plugin. Skipping route generation.'
+      );
+      return;
+    }
+
     for (const model of models) {
       await generateModelRoutes(fastify, model, { routePrefix });
     }

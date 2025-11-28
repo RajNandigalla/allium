@@ -1,6 +1,6 @@
 import fp from 'fastify-plugin';
-import swagger, { FastifySwaggerOptions } from '@fastify/swagger';
-import swaggerUI, { FastifySwaggerUiOptions } from '@fastify/swagger-ui';
+import swagger from '@fastify/swagger';
+import swaggerUI from '@fastify/swagger-ui';
 import { FastifyInstance } from 'fastify';
 
 /**
@@ -14,6 +14,7 @@ export default fp(
   async (fastify: FastifyInstance) => {
     // Register Swagger
     await fastify.register(swagger, {
+      mode: 'dynamic',
       openapi: {
         openapi: '3.0.0',
         info: {
@@ -41,7 +42,7 @@ export default fp(
           },
         },
       },
-    } as FastifySwaggerOptions);
+    });
 
     // Register Swagger UI
     await fastify.register(swaggerUI, {
@@ -52,7 +53,7 @@ export default fp(
       },
       staticCSP: true,
       transformStaticCSP: (header: string) => header,
-    } as FastifySwaggerUiOptions);
+    });
   },
   { name: 'swagger' }
 );

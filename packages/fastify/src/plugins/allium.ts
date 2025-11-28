@@ -49,6 +49,21 @@ export default fp<AlliumPluginOptions>(
 
     fastify.log.info('Initializing Allium plugin...');
 
+    // Validate models array
+    if (!models || !Array.isArray(models)) {
+      fastify.log.warn(
+        'No models provided to Allium plugin. Skipping initialization.'
+      );
+      return;
+    }
+
+    if (models.length === 0) {
+      fastify.log.warn(
+        'Empty models array provided to Allium plugin. Skipping initialization.'
+      );
+      return;
+    }
+
     // 0. Introspect models to populate metadata
     // This must be done before registering schemas
     const introspector = new SchemaIntrospector();

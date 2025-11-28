@@ -17,6 +17,21 @@ export default fp<ModelSchemasPluginOptions>(
   async (fastify: FastifyInstance, opts: ModelSchemasPluginOptions) => {
     const { models } = opts;
 
+    // Validate models array
+    if (!models || !Array.isArray(models)) {
+      fastify.log.warn(
+        'No models provided to model-schemas plugin. Skipping schema registration.'
+      );
+      return;
+    }
+
+    if (models.length === 0) {
+      fastify.log.warn(
+        'Empty models array provided to model-schemas plugin. Skipping schema registration.'
+      );
+      return;
+    }
+
     registerSwaggerSchemas(fastify, models);
     fastify.log.info(`Registered Swagger schemas for ${models.length} models`);
   },
