@@ -294,7 +294,12 @@ export const ${modelDef.name} = registerModel('${modelDef.name}', {
   console.log(chalk.green(`✓ Created model file: src/models/${modelFileName}`));
 
   // 3. Auto-update Prisma schema
-  const schemaPath = path.join(projectRoot, 'prisma', 'schema.prisma');
+  const schemaPath = path.join(
+    projectRoot,
+    '.allium',
+    'prisma',
+    'schema.prisma'
+  );
 
   if (fs.existsSync(schemaPath)) {
     let schemaContent = fs.readFileSync(schemaPath, 'utf-8');
@@ -352,8 +357,8 @@ ${modelDef.fields
 
   console.log(chalk.yellow('\nNext steps:'));
   console.log('  1. Run: allium sync (to generate code from models)');
-  console.log('  2. Run: npx prisma generate');
-  console.log('  3. Run: npx prisma db push');
+  console.log('  2. Run: allium db generate');
+  console.log('  3. Run: allium db push');
 }
 
 async function generateOverride(options: { model?: string; layer?: string }) {

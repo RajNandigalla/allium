@@ -50,14 +50,20 @@ export function registerSwaggerSchemas(
   models: ModelDefinition[]
 ): void {
   for (const model of models) {
-    if (!model.metadata?.fields) {
+    // Support both model.fields (from schema.json) and model.metadata.fields (from introspection)
+    const fields = (model as any).fields || model.metadata?.fields;
+
+    if (!fields || fields.length === 0) {
+      fastify.log.warn(
+        `No fields found for model ${model.name}, skipping schema registration`
+      );
       continue;
     }
 
-    const properties = generateProperties(model.metadata.fields);
-    const required = model.metadata.fields
-      .filter((f) => f.required)
-      .map((f) => f.name);
+    const properties = generateProperties(fields);
+    const required = fields
+      .filter((f: any) => f.required !== false) // required is true by default
+      .map((f: any) => f.name);
 
     // Register schema for the model
     fastify.addSchema({
@@ -70,6 +76,7 @@ export function registerSwaggerSchemas(
     // Register create schema (without id, createdAt, updatedAt)
     const createProperties = { ...properties };
     delete createProperties.id;
+    delete createProperties.uuid;
     delete createProperties.createdAt;
     delete createProperties.updatedAt;
 
@@ -78,7 +85,8 @@ export function registerSwaggerSchemas(
       type: 'object',
       properties: createProperties,
       required: required.filter(
-        (r) => r !== 'id' && r !== 'createdAt' && r !== 'updatedAt'
+        (r: string) =>
+          r !== 'id' && r !== 'uuid' && r !== 'createdAt' && r !== 'updatedAt'
       ),
     });
 

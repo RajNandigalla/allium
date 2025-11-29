@@ -68,14 +68,11 @@ export const init = async (options: {
         dev: 'ts-node-dev --respawn --transpile-only src/app.ts',
         build: 'tsc',
         start: 'node dist/app.js',
-        'prisma:generate': 'prisma generate',
-        'prisma:push': 'prisma db push',
       },
       dependencies: {
         '@allium/core': '*',
         '@allium/fastify': '*',
         '@prisma/client': '^7.0.0',
-        fastify: '^5.0.0',
         dotenv: '^16.3.1',
       },
       devDependencies: {
@@ -127,15 +124,21 @@ export const init = async (options: {
 
     // 5. Create app.ts
     const appTs = `import 'dotenv/config';
-import { createAlliumApp } from '@allium/fastify';
-import { User } from './models/user.model';
+import path from 'path';
+import { autoLoadModels } from '@allium/core';
+import { initAllium } from '@allium/fastify';
 
 const start = async () => {
   try {
-    const app = await createAlliumApp({
-      models: [User],
+    // Auto-load all models from src/models/
+    const models = await autoLoadModels(path.join(__dirname, 'models'));
+
+    const app = await initAllium({
+      models,
+      autoSync: true,
       prisma: {
-        datasourceUrl: process.env.DATABASE_URL
+        datasourceUrl: process.env.DATABASE_URL,
+        provider: '${database}'
       }
     });
 
@@ -166,8 +169,26 @@ export const User = registerModel('User', {
       exampleModel
     );
 
+    // 6b. Create example model JSON definition
+    const alliumModelsDir = path.join(projectPath, '.allium', 'models');
+    fs.mkdirSync(alliumModelsDir, { recursive: true });
+
+    const userJson = {
+      name: 'User',
+      fields: [
+        { name: 'email', type: 'String', unique: true },
+        { name: 'name', type: 'String', required: false },
+      ],
+    };
+
+    fs.writeFileSync(
+      path.join(alliumModelsDir, 'user.json'),
+      JSON.stringify(userJson, null, 2)
+    );
+
     // 7. Create Prisma schema
-    fs.mkdirSync(path.join(projectPath, 'prisma'));
+    const prismaDir = path.join(projectPath, '.allium', 'prisma');
+    fs.mkdirSync(prismaDir, { recursive: true });
     const prismaSchema = `generator client {
   provider = "prisma-client-js"
 }
@@ -184,10 +205,7 @@ model User {
   updatedAt DateTime @updatedAt
 }
 `;
-    fs.writeFileSync(
-      path.join(projectPath, 'prisma', 'schema.prisma'),
-      prismaSchema
-    );
+    fs.writeFileSync(path.join(prismaDir, 'schema.prisma'), prismaSchema);
 
     // 8. Create .env
     let envContent = '';
@@ -204,11 +222,22 @@ model User {
         break;
       case 'sqlite':
       default:
-        envContent = `DATABASE_URL="file:./dev.db"`;
+        envContent = `DATABASE_URL="file:./test.db"`;
         break;
     }
 
     fs.writeFileSync(path.join(projectPath, '.env'), envContent);
+
+    // 9. Create prisma.config.js
+    const prismaConfig = `require('dotenv').config();
+
+module.exports = {
+  datasource: {
+    url: process.env.DATABASE_URL,
+  },
+};
+`;
+    fs.writeFileSync(path.join(projectPath, 'prisma.config.js'), prismaConfig);
 
     spinner.succeed(
       chalk.green(`Project ${projectName} created successfully!`)
@@ -216,7 +245,7 @@ model User {
     console.log(chalk.yellow('\nNext steps:'));
     console.log(`  cd ${projectName}`);
     console.log('  npm install');
-    console.log('  npx prisma db push');
+    console.log('  npx allium db push');
     console.log('  npm run dev');
   } catch (error) {
     spinner.fail(chalk.red('Failed to scaffold project.'));

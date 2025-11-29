@@ -48,5 +48,5 @@ Thumbs.db
 
 # Generated projects (for testing)
 test-*/
-# my-*/
+my-*/
 *-test/

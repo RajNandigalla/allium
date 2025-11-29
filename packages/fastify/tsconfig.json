@@ -2,6 +2,8 @@
   "extends": "fastify-tsconfig",
   "compilerOptions": {
     "outDir": "dist",
+    "rootDir": "src",
+    "composite": true,
     "sourceMap": true
   },
   "include": ["src/**/*.ts"]

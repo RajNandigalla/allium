@@ -2,6 +2,10 @@ import Fastify, { FastifyServerOptions } from 'fastify';
 import { AlliumPluginOptions } from './plugins/allium';
 import { PrismaPluginOptions } from './plugins/prisma';
 import app from './app';
+import { generatePrismaSchema } from '@allium/core';
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 
 import { FastifyCorsOptions } from '@fastify/cors';
 import { FastifyHelmetOptions } from '@fastify/helmet';
@@ -61,6 +65,12 @@ export interface AlliumServerConfig extends AlliumPluginOptions {
    * Any additional plugin configurations
    */
   [key: string]: any;
+
+  /**
+   * Automatically generate Prisma schema and sync database on startup
+   * @default false
+   */
+  autoSync?: boolean;
 }
 
 /**
@@ -82,7 +92,7 @@ export interface AlliumServerConfig extends AlliumPluginOptions {
  *
  *   // Prisma configuration (required)
  *   prisma: {
- *     datasourceUrl: process.env.DATABASE_URL || 'file:./dev.db'
+ *     datasourceUrl: process.env.DATABASE_URL || 'file:./test.db'
  *   },
  *
  *   // Optional plugin configurations
@@ -111,8 +121,49 @@ export interface AlliumServerConfig extends AlliumPluginOptions {
  * ```
  */
 export async function initAllium(config: AlliumServerConfig) {
-  const { server, ...alliumConfig } = config;
+  const { server, autoSync, ...alliumConfig } = config;
+
+  if (autoSync) {
+    await syncDatabase(config);
+  }
+
   const fastify = Fastify(server || { logger: true });
   await fastify.register(app, alliumConfig);
   return fastify;
+}
+
+async function syncDatabase(config: AlliumServerConfig) {
+  const projectRoot = process.cwd();
+  const models = config.models || [];
+  const provider = config.prisma?.provider || 'postgresql';
+
+  // 1. Generate Prisma Schema
+  // Cast models to any to avoid type mismatch between runtime ModelDefinition and schema ModelDefinition
+  const schema = generatePrismaSchema({ models: models as any }, provider);
+
+  const prismaDir = path.join(projectRoot, '.allium', 'prisma');
+  if (!fs.existsSync(prismaDir)) {
+    fs.mkdirSync(prismaDir, { recursive: true });
+  }
+
+  const schemaPath = path.join(prismaDir, 'schema.prisma');
+  fs.writeFileSync(schemaPath, schema);
+
+  // 2. Sync Database
+  try {
+    console.log('Syncing database...');
+    // Generate client
+    execSync(`npx prisma generate --schema "${schemaPath}"`, {
+      stdio: 'inherit',
+    });
+
+    // Push to DB
+    execSync(`npx prisma db push --schema "${schemaPath}"`, {
+      stdio: 'inherit',
+    });
+    console.log('Database synced successfully.');
+  } catch (error) {
+    console.error('Failed to sync database:', error);
+    throw error;
+  }
 }

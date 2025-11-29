@@ -5,6 +5,7 @@ import { generate } from './commands/generate';
 import { validate } from './commands/validate';
 import { sync } from './commands/sync';
 import { override } from './commands/override';
+import { db } from './commands/db';
 import figlet from 'figlet';
 import chalk from 'chalk';
 
@@ -47,7 +48,13 @@ program
 program
   .command('sync')
   .description('Generate code from model definitions')
+  .option('--scaffold', 'Generate module scaffolding in src/modules')
   .action(sync);
+
+program
+  .command('db [command]')
+  .description('Database operations (push, generate, studio)')
+  .action(db);
 
 program
   .command('override <model> <layer>')

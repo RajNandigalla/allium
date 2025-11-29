@@ -110,8 +110,34 @@ node ../packages/cli/dist/index.js sync
 
 ## 📖 Documentation
 
+### Quick Reference
+
+**CLI Commands:**
+
+```bash
+allium init          # Create new project
+allium sync          # Generate schema from models
+allium validate      # Validate model definitions
+allium db generate   # Generate Prisma Client
+allium db push       # Push schema to database
+allium db studio     # Open database GUI
+```
+
+**Generated API Routes** (for each model):
+
+- `POST /api/{model}` - Create
+- `GET /api/{model}` - List (with pagination, sorting, filtering)
+- `GET /api/{model}/:id` - Get by ID
+- `PATCH /api/{model}/:id` - Update
+- `DELETE /api/{model}/:id` - Delete
+
+### Full Documentation
+
+- **[CLI Reference](./CLI_REFERENCE.md)** - Complete command reference, workflows, and examples
 - [Walkthrough](/.gemini/antigravity/brain/1d321bdf-9ebf-443b-88a4-69a31bbb78d6/walkthrough.md) - Complete feature walkthrough
 - [Roadmap](/ROADMAP.md) - Future plans and features
+- [Fastify Package README](./packages/fastify/README.md) - Fastify integration details
+- [Prisma Guide](./packages/fastify/PRISMA_GUIDE.md) - Prisma setup and usage
 
 ## 🛠️ Tech Stack
 

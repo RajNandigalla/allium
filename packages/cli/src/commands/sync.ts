@@ -8,7 +8,7 @@ import {
   generateModuleFiles,
 } from '@allium/core';
 
-export const sync = async () => {
+export const sync = async (options?: { scaffold?: boolean }) => {
   const spinner = ora('Syncing models...').start();
   const validator = new ModelValidator();
 
@@ -37,14 +37,37 @@ export const sync = async () => {
     spinner.text = 'Generating Prisma schema...';
 
     // Read existing schema to preserve the database provider
-    const schemaPath = path.join(projectRoot, 'prisma', 'schema.prisma');
+    const schemaPath = path.join(
+      projectRoot,
+      '.allium',
+      'prisma',
+      'schema.prisma'
+    );
+    // Ensure directory exists
+    fs.ensureDirSync(path.dirname(schemaPath));
     let existingProvider: string | undefined;
 
-    if (fs.existsSync(schemaPath)) {
+    // Try to read provider from prisma.config.js first
+    const prismaConfigPath = path.join(projectRoot, 'prisma.config.js');
+    if (fs.existsSync(prismaConfigPath)) {
+      try {
+        const prismaConfig = require(prismaConfigPath);
+        if (prismaConfig?.prisma?.provider) {
+          existingProvider = prismaConfig.prisma.provider;
+        }
+      } catch (error) {
+        // Ignore error if config cannot be loaded (e.g. missing dependencies)
+      }
+    }
+
+    // Fallback to existing schema if provider not found in config
+    if (!existingProvider && fs.existsSync(schemaPath)) {
       const existingSchema = fs.readFileSync(schemaPath, 'utf-8');
-      // Extract provider from existing schema using regex
-      const providerMatch = existingSchema.match(/provider\s*=\s*"([^"]+)"/);
-      if (providerMatch && providerMatch[1] !== 'prisma-client-js') {
+      // Extract provider from datasource block
+      const providerMatch = existingSchema.match(
+        /datasource\s+\w+\s+\{[\s\S]*?provider\s*=\s*"([^"]+)"/
+      );
+      if (providerMatch) {
         existingProvider = providerMatch[1];
       }
     }
@@ -52,10 +75,12 @@ export const sync = async () => {
     const prismaSchema = generatePrismaSchema(schema, existingProvider);
     fs.writeFileSync(schemaPath, prismaSchema);
 
-    // Step 4: Generate module files
-    spinner.text = 'Generating modules...';
-    for (const model of schema.models) {
-      await generateModuleFiles(projectRoot, model);
+    // Step 4: Generate module files (optional)
+    if (options?.scaffold) {
+      spinner.text = 'Generating modules...';
+      for (const model of schema.models) {
+        await generateModuleFiles(projectRoot, model);
+      }
     }
 
     spinner.succeed(
@@ -63,8 +88,8 @@ export const sync = async () => {
     );
 
     console.log(chalk.yellow('\nNext steps:'));
-    console.log('  1. Run: npx prisma generate');
-    console.log('  2. Run: npx prisma db push (or prisma migrate dev)');
+    console.log('  1. Run: allium db generate');
+    console.log('  2. Run: allium db push');
     console.log('  3. Register routes in src/app.ts');
   } catch (error) {
     spinner.fail(chalk.red('Sync failed'));

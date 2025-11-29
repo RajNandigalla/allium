@@ -7,7 +7,7 @@ export interface PrismaPluginOptions {
   /**
    * Database connection URL
    * Examples:
-   * - SQLite: "file:./dev.db"
+   * - SQLite: "file:./test.db"
    * - MongoDB: "mongodb://localhost:27017/mydb"
    */
   datasourceUrl?: string;
@@ -41,7 +41,7 @@ interface DatabaseClientFactory {
 const databaseProviders: Record<string, DatabaseClientFactory> = {
   sqlite: {
     createClient: (datasourceUrl, log) => {
-      const dbPath = datasourceUrl?.replace('file:', '') || './dev.db';
+      const dbPath = datasourceUrl?.replace('file:', '') || './test.db';
       const adapter = new PrismaBetterSqlite3({ url: dbPath });
 
       return new PrismaClient({
@@ -50,7 +50,7 @@ const databaseProviders: Record<string, DatabaseClientFactory> = {
       });
     },
     getConnectionMessage: (datasourceUrl) => {
-      const dbPath = datasourceUrl?.replace('file:', '') || './dev.db';
+      const dbPath = datasourceUrl?.replace('file:', '') || './test.db';
       return `Prisma connected to SQLite: ${dbPath}`;
     },
   },
