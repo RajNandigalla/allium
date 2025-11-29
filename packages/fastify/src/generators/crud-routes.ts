@@ -1,5 +1,9 @@
 import { FastifyInstance } from 'fastify';
-import { ModelDefinition, SchemaIntrospector } from '@allium/core';
+import {
+  ModelDefinition,
+  SchemaIntrospector,
+  ValidationError,
+} from '@allium/core';
 import { Prisma } from '@prisma/client';
 import {
   executeBeforeCreate,
@@ -99,6 +103,14 @@ export async function generateModelRoutes(
 
         return reply.status(201).send(result);
       } catch (error) {
+        if (error instanceof ValidationError) {
+          return (reply as any).status(400).send({
+            statusCode: 400,
+            error: 'Bad Request',
+            message: 'Validation failed',
+            errors: error.errors,
+          });
+        }
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
           if (error.code === 'P2002') {
             return (reply as any).status(409).send({
@@ -230,6 +242,14 @@ export async function generateModelRoutes(
 
         return result;
       } catch (error) {
+        if (error instanceof ValidationError) {
+          return (reply as any).status(400).send({
+            statusCode: 400,
+            error: 'Bad Request',
+            message: 'Validation failed',
+            errors: error.errors,
+          });
+        }
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
           if (error.code === 'P2025') {
             return reply.status(404).send({

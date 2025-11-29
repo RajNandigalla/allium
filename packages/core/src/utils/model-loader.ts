@@ -75,8 +75,60 @@ export async function autoLoadModels(
           );
           if (schemaModel) {
             console.log('[autoLoadModels] Hydrating model with schema data');
+            console.log(
+              '[autoLoadModels] Model fields before hydration:',
+              JSON.stringify((exportedModel as any).fields, null, 2)
+            );
+
+            // Merge fields: combine validation rules from both model and schema
+            const modelFields = (exportedModel as any).fields || [];
+            const schemaFields = schemaModel.fields || [];
+
+            console.log(
+              '[autoLoadModels] Schema fields:',
+              JSON.stringify(schemaFields, null, 2)
+            );
+
+            const mergedFields = schemaFields.map((schemaField: any) => {
+              const modelField = modelFields.find(
+                (f: any) => f.name === schemaField.name
+              );
+
+              // Merge validation: prefer schema validation if present, otherwise use model validation
+              const validation =
+                schemaField.validation || modelField?.validation;
+
+              console.log(
+                `[autoLoadModels] Merging field ${schemaField.name}, validation:`,
+                validation
+              );
+              return {
+                ...schemaField,
+                validation,
+              };
+            });
+
+            console.log(
+              '[autoLoadModels] Merged fields:',
+              JSON.stringify(mergedFields, null, 2)
+            );
+
+            // Merge softDelete and auditTrail: use model value if explicitly true, otherwise use schema value
+            const softDelete =
+              (exportedModel as any).softDelete === true
+                ? true
+                : schemaModel.softDelete || false;
+
+            const auditTrail =
+              (exportedModel as any).auditTrail === true
+                ? true
+                : schemaModel.auditTrail || false;
+
             Object.assign(exportedModel, schemaModel, {
               hooks: (exportedModel as any).hooks, // Preserve hooks from code
+              softDelete,
+              auditTrail,
+              fields: mergedFields, // Use merged fields with validation
             });
             console.log(
               '[autoLoadModels] Model after hydration:',

@@ -6,12 +6,22 @@ export type FieldType =
   | 'DateTime'
   | 'Json';
 
+export interface ValidationRules {
+  min?: number;
+  max?: number;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+  enum?: string[];
+}
+
 export interface Field {
   name: string;
   type: FieldType;
   required?: boolean;
   unique?: boolean;
   default?: string | number | boolean;
+  validation?: ValidationRules;
 }
 
 export type RelationType = '1:1' | '1:n' | 'n:m';

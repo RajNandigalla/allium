@@ -5,6 +5,76 @@ import { ModelDefinition, HookContext, ValidationError } from './types';
  */
 export class HookExecutor {
   /**
+   * Validate data against model field rules
+   */
+  private validateFields(model: ModelDefinition, data: any): void {
+    const errors: Array<{ field: string; message: string }> = [];
+
+    for (const field of model.fields) {
+      const value = data[field.name];
+
+      // Skip validation if value is undefined/null (unless required, but that's handled by Prisma/DB usually)
+      if (value === undefined || value === null) {
+        continue;
+      }
+
+      const rules = field.validation;
+      if (!rules) continue;
+
+      // Min/Max (Numbers)
+      if (typeof value === 'number') {
+        if (rules.min !== undefined && value < rules.min) {
+          errors.push({
+            field: field.name,
+            message: `Value must be at least ${rules.min}`,
+          });
+        }
+        if (rules.max !== undefined && value > rules.max) {
+          errors.push({
+            field: field.name,
+            message: `Value must be at most ${rules.max}`,
+          });
+        }
+      }
+
+      // MinLength/MaxLength/Pattern (Strings)
+      if (typeof value === 'string') {
+        if (rules.minLength !== undefined && value.length < rules.minLength) {
+          errors.push({
+            field: field.name,
+            message: `Length must be at least ${rules.minLength} characters`,
+          });
+        }
+        if (rules.maxLength !== undefined && value.length > rules.maxLength) {
+          errors.push({
+            field: field.name,
+            message: `Length must be at most ${rules.maxLength} characters`,
+          });
+        }
+        if (rules.pattern !== undefined) {
+          const regex = new RegExp(rules.pattern);
+          if (!regex.test(value)) {
+            errors.push({
+              field: field.name,
+              message: `Value does not match required pattern`,
+            });
+          }
+        }
+        if (rules.enum !== undefined && !rules.enum.includes(value)) {
+          errors.push({
+            field: field.name,
+            message: `Value must be one of: ${rules.enum.join(', ')}`,
+          });
+        }
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new ValidationError(errors);
+    }
+  }
+
+  /**
    * Execute beforeCreate and validate hooks
    */
   async executeBeforeCreate(
@@ -12,6 +82,9 @@ export class HookExecutor {
     data: any,
     context: HookContext
   ): Promise<any> {
+    // Run field validation
+    this.validateFields(model, data);
+
     // Auto-populate audit fields
     if (model.auditTrail && context.user?.id) {
       data.createdBy = context.user.id;
@@ -63,6 +136,9 @@ export class HookExecutor {
     data: any,
     context: HookContext
   ): Promise<any> {
+    // Run field validation
+    this.validateFields(model, data);
+
     // Auto-populate audit fields
     if (model.auditTrail && context.user?.id) {
       data.updatedBy = context.user.id;

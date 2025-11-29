@@ -96,6 +96,9 @@ export interface ModelDefinition {
   /** Enable audit trails (adds createdBy, updatedBy, deletedBy fields) */
   auditTrail?: boolean;
 
+  /** Model fields definition */
+  fields?: import('../types/model').Field[];
+
   /** Introspected metadata (populated at runtime) */
   metadata?: {
     fields: Array<{
@@ -110,6 +113,7 @@ export interface ModelDefinition {
       name: string;
       model: string;
       type: string;
+      kind: 'scalar' | 'object' | 'enum';
     }>;
   };
 }
