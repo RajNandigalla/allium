@@ -39,7 +39,7 @@ export default fp<ModelRoutesPluginOptions>(
     }
 
     for (const model of models) {
-      await generateModelRoutes(fastify, model, { routePrefix });
+      await generateModelRoutes(fastify, model, models, { routePrefix });
     }
 
     fastify.log.info(`Generated CRUD routes for ${models.length} models`);

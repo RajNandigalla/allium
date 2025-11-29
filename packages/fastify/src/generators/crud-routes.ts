@@ -194,6 +194,7 @@ function buildPrismaQuery(
 export async function generateModelRoutes(
   fastify: FastifyInstance,
   model: ModelDefinition,
+  allModels: ModelDefinition[],
   opts: RouteOptions = {}
 ): Promise<void> {
   const modelName = model.name;
@@ -480,6 +481,44 @@ export async function generateModelRoutes(
               where: { id: parsedId },
               data: updateData,
             });
+
+            // Application-Level Cascade for Soft Deletes
+            for (const otherModel of allModels) {
+              // Find relations in other models that point to this model with onDelete: Cascade
+              const cascadingRelations = otherModel.relations?.filter(
+                (r) => r.model === model.name && r.onDelete === 'Cascade'
+              );
+
+              if (cascadingRelations && cascadingRelations.length > 0) {
+                const otherPrismaModel = (fastify as any).prisma[
+                  otherModel.name.toLowerCase()
+                ];
+
+                for (const relation of cascadingRelations) {
+                  const foreignKey =
+                    relation.foreignKey || `${relation.name}Id`;
+
+                  // If other model supports soft delete, soft delete the children
+                  if (otherModel.softDelete) {
+                    const childUpdateData: any = { deletedAt: new Date() };
+                    if (otherModel.auditTrail && (request as any).user?.id) {
+                      childUpdateData.deletedBy = (request as any).user.id;
+                    }
+
+                    await otherPrismaModel.updateMany({
+                      where: { [foreignKey]: parsedId },
+                      data: childUpdateData,
+                    });
+                  } else {
+                    // If other model is hard delete, we hard delete them
+                    // (This mimics DB cascade behavior)
+                    await otherPrismaModel.deleteMany({
+                      where: { [foreignKey]: parsedId },
+                    });
+                  }
+                }
+              }
+            }
           } else {
             await prismaModel.delete({
               where: { id: parsedId },

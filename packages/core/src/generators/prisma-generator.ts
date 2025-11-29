@@ -134,16 +134,17 @@ function generatePrismaRelation(
 ): string {
   const foreignKey = rel.foreignKey || `${rel.name}Id`;
   const references = rel.references || 'id';
+  const onDelete = rel.onDelete ? `, onDelete: ${rel.onDelete}` : '';
 
   if (rel.type === '1:1') {
     return (
-      `  ${rel.name} ${rel.model}? @relation(fields: [${foreignKey}], references: [${references}])\n` +
+      `  ${rel.name} ${rel.model}? @relation(fields: [${foreignKey}], references: [${references}]${onDelete})\n` +
       `  ${foreignKey} String? @unique\n`
     );
   } else if (rel.type === '1:n') {
     // This model is the child (has foreign key)
     return (
-      `  ${rel.name} ${rel.model} @relation(fields: [${foreignKey}], references: [${references}])\n` +
+      `  ${rel.name} ${rel.model} @relation(fields: [${foreignKey}], references: [${references}]${onDelete})\n` +
       `  ${foreignKey} String\n`
     );
   } else {

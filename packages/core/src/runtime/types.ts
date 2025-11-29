@@ -99,6 +99,9 @@ export interface ModelDefinition {
   /** Model fields definition */
   fields?: import('../types/model').Field[];
 
+  /** Model relations definition */
+  relations?: import('../types/model').Relation[];
+
   /** API configuration */
   api?: import('../types/model').ApiConfig;
 

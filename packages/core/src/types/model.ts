@@ -54,12 +54,15 @@ export interface Field {
 
 export type RelationType = '1:1' | '1:n' | 'n:m';
 
+export type OnDeleteAction = 'Cascade' | 'SetNull' | 'NoAction' | 'Restrict';
+
 export interface Relation {
   name: string;
   model: string;
   type: RelationType;
   foreignKey?: string;
   references?: string;
+  onDelete?: OnDeleteAction;
 }
 
 export type ApiOperation = 'create' | 'read' | 'update' | 'delete' | 'list';
