@@ -22,6 +22,7 @@ import {
   getUpdateSchema,
   getDeleteSchema,
 } from './schema-generator';
+import { filterPrivateFields } from '../utils/field-filter';
 
 interface RouteOptions {
   routePrefix?: string;
@@ -209,7 +210,7 @@ export async function generateModelRoutes(
         // Execute afterCreate hook
         await executeAfterCreate(model, result, request);
 
-        return reply.status(201).send(result);
+        return reply.status(201).send(filterPrivateFields(result, model));
       } catch (error) {
         if (error instanceof ValidationError) {
           return (reply as any).status(400).send({
@@ -254,7 +255,7 @@ export async function generateModelRoutes(
       const processedData = await executeAfterFind(model, data, request);
 
       return {
-        data: processedData,
+        data: filterPrivateFields(processedData, model),
         pagination: {
           page: params.page || 1,
           limit: params.limit || 10,
@@ -297,7 +298,7 @@ export async function generateModelRoutes(
         });
       }
 
-      return record;
+      return filterPrivateFields(record, model);
     }
   );
 
@@ -348,7 +349,7 @@ export async function generateModelRoutes(
         // Execute afterUpdate hook
         await executeAfterUpdate(model, result, previousData, request);
 
-        return result;
+        return filterPrivateFields(result, model);
       } catch (error) {
         if (error instanceof ValidationError) {
           return (reply as any).status(400).send({

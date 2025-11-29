@@ -24,6 +24,7 @@ export interface Field {
   default?: string | number | boolean;
   validation?: ValidationRules;
   values?: string[]; // For Enum type fields
+  private?: boolean; // If true, field will be excluded from API responses
 }
 
 export type RelationType = '1:1' | '1:n' | 'n:m';

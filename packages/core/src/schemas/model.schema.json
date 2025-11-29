@@ -81,6 +81,11 @@
                             "type": "boolean"
                         }
                     ]
+                },
+                "private": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "If true, field will be excluded from API responses"
                 }
             }
         },
