@@ -650,6 +650,58 @@ registerModel('Post', {
 **Soft Delete Cascading:**
 If you soft-delete a parent (e.g., `User`), Allium automatically finds and soft-deletes related children (e.g., `Post`) that have `onDelete: 'Cascade'`. No database triggers required!
 
+## Rate Limiting
+
+Protect your APIs from abuse with configurable rate limits.
+
+### Global Configuration
+
+Set default limits for all routes:
+
+```typescript
+initAllium({
+  rateLimit: {
+    max: 100,
+    timeWindow: '1 minute',
+  },
+});
+```
+
+### Per-Model Configuration
+
+Override limits for specific models:
+
+```typescript
+registerModel('Auth', {
+  api: {
+    rateLimit: {
+      max: 5,
+      timeWindow: '1 minute',
+    },
+  },
+});
+```
+
+**JSON:**
+
+```json
+{
+  "name": "Auth",
+  "api": {
+    "rateLimit": {
+      "max": 5,
+      "timeWindow": "1 minute"
+    }
+  }
+}
+```
+
+**Behavior:**
+
+- Returns `429 Too Many Requests` when limit exceeded.
+- Tracks limits per client IP.
+- Custom routes can use Fastify's native `config.rateLimit`.
+
 ## Lifecycle Hooks
 
 Hooks allow you to execute custom logic during the CRUD lifecycle.

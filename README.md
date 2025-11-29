@@ -67,6 +67,7 @@ Shared core functionality used by the CLI and future UI.
 - **🎛️ API Control**: Enable/Disable specific CRUD operations per model.
 - **🛣️ Custom Route Prefixes**: Override default API paths per model.
 - **⛓️ Relationship Cascades**: Auto-delete related records (hard or soft) when a parent is deleted.
+- **🔒 Rate Limiting**: Protect APIs from abuse with configurable request limits.
 
 ## 🚀 Development
 

@@ -233,6 +233,9 @@ export async function generateModelRoutes(
       routePath,
       {
         schema: getCreateSchema(model),
+        config: {
+          rateLimit: model.api?.rateLimit,
+        },
       },
       async (request, reply) => {
         try {
@@ -283,6 +286,9 @@ export async function generateModelRoutes(
       routePath,
       {
         schema: getListSchema(model),
+        config: {
+          rateLimit: model.api?.rateLimit,
+        },
       },
       async (request, reply) => {
         const params = request.query as any;
@@ -327,6 +333,9 @@ export async function generateModelRoutes(
       `${routePath}/:id`,
       {
         schema: getByIdSchema(model),
+        config: {
+          rateLimit: model.api?.rateLimit,
+        },
       },
       async (request, reply) => {
         const { id } = request.params as { id: string };
@@ -363,6 +372,9 @@ export async function generateModelRoutes(
       `${routePath}/:id`,
       {
         schema: getUpdateSchema(model),
+        config: {
+          rateLimit: model.api?.rateLimit,
+        },
       },
       async (request, reply) => {
         try {
@@ -441,6 +453,9 @@ export async function generateModelRoutes(
       `${routePath}/:id`,
       {
         schema: getDeleteSchema(model),
+        config: {
+          rateLimit: model.api?.rateLimit,
+        },
       },
       async (request, reply) => {
         try {

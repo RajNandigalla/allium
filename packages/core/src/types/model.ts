@@ -67,9 +67,15 @@ export interface Relation {
 
 export type ApiOperation = 'create' | 'read' | 'update' | 'delete' | 'list';
 
+export interface RateLimitConfig {
+  max: number;
+  timeWindow: string | number;
+}
+
 export interface ApiConfig {
   prefix?: string;
   operations?: ApiOperation[];
+  rateLimit?: RateLimitConfig;
 }
 
 // Route-level configuration

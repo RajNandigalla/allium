@@ -61,7 +61,7 @@
 
 **Relationship Enhancements**
 
-- [ ] Relationship Cascade Options (Cascade, SetNull, Restrict)
+- [x] Relationship Cascade Options (Cascade, SetNull, Restrict)
 - [ ] Custom foreign key names
 - [ ] Self-referencing relationships
 - [ ] Polymorphic relationships
@@ -107,12 +107,12 @@
 - [x] Custom route prefixes per model
 - [x] Enable/disable specific operations (create, read, update, delete)
 - [ ] Custom endpoint paths
-- [ ] Rate limiting configuration
+- [x] Rate limiting configuration
 - [ ] API Versioning support (e.g., v1, v2)
 
 **Plugin System**
 
-- [ ] Custom Plugin API (create your own Allium plugins)
+- [x] Custom Plugin API (via `initAllium` plugins option)
 - [ ] Plugin Lifecycle Hooks
 - [ ] Third-party Plugin Registry support
 
