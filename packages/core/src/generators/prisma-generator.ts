@@ -19,12 +19,34 @@ datasource db {
 
 `;
 
+  // Generate enums first
+  const enums = new Set<string>();
+  for (const model of models) {
+    for (const field of model.fields) {
+      if (field.type === 'Enum' && field.values) {
+        const enumName = `${model.name}${capitalize(field.name)}`;
+        if (!enums.has(enumName)) {
+          output += `enum ${enumName} {\n`;
+          for (const value of field.values) {
+            output += `  ${value.toUpperCase()}\n`;
+          }
+          output += `}\n\n`;
+          enums.add(enumName);
+        }
+      }
+    }
+  }
+
   for (const model of models) {
     output += generatePrismaModel(model, models);
     output += '\n';
   }
 
   return output;
+}
+
+function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 function generatePrismaModel(
@@ -50,12 +72,19 @@ function generatePrismaModel(
   for (const field of model.fields) {
     const optional = field.required === false ? '?' : '';
     const unique = field.unique ? ' @unique' : '';
+
+    // Handle Enum type
+    let fieldType = field.type;
+    if (field.type === 'Enum') {
+      fieldType = `${model.name}${capitalize(field.name)}` as any;
+    }
+
     const defaultValue =
       field.default !== undefined
         ? ` @default(${formatDefault(field.default, field.type)})`
         : '';
 
-    output += `  ${field.name} ${field.type}${optional}${unique}${defaultValue}\n`;
+    output += `  ${field.name} ${fieldType}${optional}${unique}${defaultValue}\n`;
   }
 
   // Add relations
@@ -110,6 +139,7 @@ function generatePrismaRelation(
 }
 
 function formatDefault(value: string | number | boolean, type: string): string {
+  if (type === 'Enum') return String(value).toUpperCase();
   if (type === 'String') return `"${value}"`;
   if (type === 'Boolean') return String(value);
   if (type === 'DateTime' && value === 'now') return 'now()';

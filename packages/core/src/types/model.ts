@@ -4,7 +4,8 @@ export type FieldType =
   | 'Float'
   | 'Boolean'
   | 'DateTime'
-  | 'Json';
+  | 'Json'
+  | 'Enum';
 
 export interface ValidationRules {
   min?: number;
@@ -22,6 +23,7 @@ export interface Field {
   unique?: boolean;
   default?: string | number | boolean;
   validation?: ValidationRules;
+  values?: string[]; // For Enum type fields
 }
 
 export type RelationType = '1:1' | '1:n' | 'n:m';

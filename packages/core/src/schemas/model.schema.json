@@ -49,8 +49,17 @@
                         "Float",
                         "Boolean",
                         "DateTime",
-                        "Json"
+                        "Json",
+                        "Enum"
                     ]
+                },
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "minItems": 1,
+                    "description": "Allowed values for Enum type fields"
                 },
                 "required": {
                     "type": "boolean",

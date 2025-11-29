@@ -10,12 +10,30 @@ export class HookExecutor {
   private validateFields(model: ModelDefinition, data: any): void {
     const errors: Array<{ field: string; message: string }> = [];
 
+    if (!model.fields) {
+      return;
+    }
+
     for (const field of model.fields) {
       const value = data[field.name];
 
-      // Skip validation if value is undefined/null (unless required, but that's handled by Prisma/DB usually)
+      // Skip validation if value is undefined/null
       if (value === undefined || value === null) {
         continue;
+      }
+
+      // Enum type validation (check this BEFORE rules check, since enums use field.values not field.validation)
+      if (field.type === 'Enum') {
+        if (field.values) {
+          if (typeof value === 'string') {
+            if (!field.values.includes(value)) {
+              errors.push({
+                field: field.name,
+                message: `Value must be one of: ${field.values.join(', ')}`,
+              });
+            }
+          }
+        }
       }
 
       const rules = field.validation;
@@ -23,13 +41,13 @@ export class HookExecutor {
 
       // Min/Max (Numbers)
       if (typeof value === 'number') {
-        if (rules.min !== undefined && value < rules.min) {
+        if (rules?.min !== undefined && value < rules.min) {
           errors.push({
             field: field.name,
             message: `Value must be at least ${rules.min}`,
           });
         }
-        if (rules.max !== undefined && value > rules.max) {
+        if (rules?.max !== undefined && value > rules.max) {
           errors.push({
             field: field.name,
             message: `Value must be at most ${rules.max}`,
@@ -39,19 +57,19 @@ export class HookExecutor {
 
       // MinLength/MaxLength/Pattern (Strings)
       if (typeof value === 'string') {
-        if (rules.minLength !== undefined && value.length < rules.minLength) {
+        if (rules?.minLength !== undefined && value.length < rules.minLength) {
           errors.push({
             field: field.name,
             message: `Length must be at least ${rules.minLength} characters`,
           });
         }
-        if (rules.maxLength !== undefined && value.length > rules.maxLength) {
+        if (rules?.maxLength !== undefined && value.length > rules.maxLength) {
           errors.push({
             field: field.name,
             message: `Length must be at most ${rules.maxLength} characters`,
           });
         }
-        if (rules.pattern !== undefined) {
+        if (rules?.pattern !== undefined) {
           const regex = new RegExp(rules.pattern);
           if (!regex.test(value)) {
             errors.push({
@@ -60,7 +78,7 @@ export class HookExecutor {
             });
           }
         }
-        if (rules.enum !== undefined && !rules.enum.includes(value)) {
+        if (rules?.enum !== undefined && !rules.enum.includes(value)) {
           errors.push({
             field: field.name,
             message: `Value must be one of: ${rules.enum.join(', ')}`,
@@ -82,8 +100,31 @@ export class HookExecutor {
     data: any,
     context: HookContext
   ): Promise<any> {
-    // Run field validation
+    // Apply default values for missing fields
+    if (model.fields) {
+      for (const field of model.fields) {
+        if (field.default !== undefined && data[field.name] === undefined) {
+          // Apply default value as-is; transformation will handle uppercasing for enums
+          data[field.name] = field.default;
+        }
+      }
+    }
+
+    // Run field validation (before transforming enums)
     this.validateFields(model, data);
+
+    // Transform enum values to uppercase for Prisma compatibility (after validation)
+    if (model.fields) {
+      for (const field of model.fields) {
+        if (
+          field.type === 'Enum' &&
+          data[field.name] !== undefined &&
+          typeof data[field.name] === 'string'
+        ) {
+          data[field.name] = data[field.name].toUpperCase();
+        }
+      }
+    }
 
     // Auto-populate audit fields
     if (model.auditTrail && context.user?.id) {

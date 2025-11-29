@@ -103,7 +103,12 @@ export function registerSwaggerSchemas(
       properties: createProperties,
       required: required.filter(
         (r: string) =>
-          r !== 'id' && r !== 'uuid' && r !== 'createdAt' && r !== 'updatedAt'
+          r !== 'id' &&
+          r !== 'uuid' &&
+          r !== 'createdAt' &&
+          r !== 'updatedAt' &&
+          // Exclude fields with default values from required list
+          !fields.find((f: any) => f.name === r && f.default !== undefined)
       ),
     });
 
