@@ -120,6 +120,15 @@ export interface OverrideInfo {
   customMethods?: string[];
 }
 
+// Model-level constraints
+export interface ModelConstraints {
+  // Compound unique constraints: [["field1", "field2"], ["field3", "field4"]]
+  unique?: string[][];
+
+  // Compound indexes (for future performance optimization)
+  indexes?: string[][];
+}
+
 export interface ModelDefinition {
   name: string;
   fields: Field[];
@@ -131,6 +140,7 @@ export interface ModelDefinition {
   hasOverrides?: OverrideInfo;
   softDelete?: boolean;
   auditTrail?: boolean;
+  constraints?: ModelConstraints;
 }
 
 export interface AlliumSchema {

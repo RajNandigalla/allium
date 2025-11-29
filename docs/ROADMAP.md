@@ -43,7 +43,7 @@
 
 - [x] Default values for fields
 - [x] Field validation rules (regex, min/max, custom)
-- [ ] Compound unique constraints
+- [x] Compound unique constraints
 - [x] Computed/virtual fields
 - [x] Enum support
 - [x] Field Visibility Control (Private/Hidden fields e.g., password)

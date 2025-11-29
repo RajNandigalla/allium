@@ -110,6 +110,13 @@ function generatePrismaModel(
     output += `  deletedBy String?\n`;
   }
 
+  // Add compound unique constraints
+  if (model.constraints?.unique) {
+    for (const fields of model.constraints.unique) {
+      output += `\n  @@unique([${fields.join(', ')}])\n`;
+    }
+  }
+
   output += `}\n`;
   return output;
 }

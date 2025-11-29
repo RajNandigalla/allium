@@ -326,7 +326,55 @@ registerModel('Product', {
 - Virtual fields are computed at runtime, never stored in DB
 - Cannot query or sort by virtual fields
 - Use `virtual: true` flag for identification
+- Use `virtual: true` flag for identification
 - `hasTransform: true` indicates custom function logic (for introspection)
+
+## Compound Unique Constraints
+
+Enforce uniqueness across multiple fields at the database level to prevent duplicate combinations.
+
+**Example** (Likes - prevent liking the same post twice):
+
+```typescript
+registerModel('Like', {
+  fields: [
+    { name: 'userId', type: 'String' },
+    { name: 'postId', type: 'String' },
+  ],
+  constraints: {
+    unique: [['userId', 'postId']],
+  },
+});
+```
+
+**Generated Prisma Schema:**
+
+```prisma
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  postId    String
+
+  @@unique([userId, postId])
+}
+```
+
+**Multiple Constraints:**
+
+```typescript
+constraints: {
+  unique: [
+    ['userId', 'postId'], // Can't like same post twice
+    ['email', 'tenantId'], // Email unique per tenant
+  ];
+}
+```
+
+**Common Use Cases:**
+
+- **Likes/Reactions**: `[userId, postId]`
+- **Multi-Tenant Apps**: `[email, tenantId]`
+- **Subscriptions**: `[year, month, userId]`
 
 ## Soft Deletes & Audit Trails
 

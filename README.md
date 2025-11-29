@@ -59,6 +59,7 @@ Shared core functionality used by the CLI and future UI.
 - **🔍 Advanced Filtering**: Strapi-style filtering with operators (`$eq`, `$gt`, `$contains`, etc.).
 - **📊 Multi-Field Sorting**: Sort by multiple fields with array syntax.
 - **🧮 Computed/Virtual Fields**: Define calculated fields (template or function-based) that appear in responses but aren't stored.
+- **🔐 Compound Unique Constraints**: Enforce uniqueness across multiple fields (e.g., `[userId, postId]`).
 
 ## 🚀 Development
 
