@@ -96,11 +96,32 @@ const app = await initAllium({
 
 ## 2. API Versioning
 
-### A. Versioning Model APIs
+### A. Global Versioning
 
-Use the `prefix` configuration to namespace your models.
+Set a default version for all models via `initAllium`:
 
-**Version 1:**
+```typescript
+const app = await initAllium({
+  models,
+  version: 'v1', // All models default to /api/v1/{model}
+});
+```
+
+### B. Per-Model Version Override
+
+Override the global version for specific models:
+
+```typescript
+registerModel('User', {
+  api: {
+    version: 'v2', // This model uses /api/v2/users
+  },
+});
+```
+
+### C. Manual Prefix (Advanced)
+
+For complete control, use the `prefix` configuration:
 
 ```typescript
 registerModel('User', {
@@ -108,13 +129,7 @@ registerModel('User', {
 });
 ```
 
-**Version 2 (New Model):**
-
-```typescript
-registerModel('UserV2', {
-  api: { prefix: '/api/v2/users' },
-});
-```
+**Note:** When using `prefix`, the global `version` is ignored for that model.
 
 ### B. Versioning Custom Routes
 

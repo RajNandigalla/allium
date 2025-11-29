@@ -74,6 +74,7 @@ export interface RateLimitConfig {
 
 export interface ApiConfig {
   prefix?: string;
+  version?: string;
   operations?: ApiOperation[];
   rateLimit?: RateLimitConfig;
 }

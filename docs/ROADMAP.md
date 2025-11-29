@@ -108,7 +108,7 @@
 - [x] Enable/disable specific operations (create, read, update, delete)
 - [x] Custom endpoint paths
 - [x] Rate limiting configuration
-- [ ] API Versioning support (e.g., v1, v2)
+- [x] API Versioning support (e.g., v1, v2)
 
 **Plugin System**
 

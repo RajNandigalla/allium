@@ -10,6 +10,15 @@ For each model defined in `.allium/models/*.json`, Allium automatically generate
 
 All routes are prefixed with `/api` by default. For a model named `User`, routes are available at `/api/user`.
 
+**With API Versioning:**
+
+If you configure a version (e.g., `version: 'v1'` in `initAllium`), routes will include the version:
+
+- `/api/v1/user`
+- `/api/v2/post` (if model has `api: { version: 'v2' }`)
+
+See [API Versioning Guide](../API_GUIDE.md#2-api-versioning) for details.
+
 ---
 
 ## Endpoints

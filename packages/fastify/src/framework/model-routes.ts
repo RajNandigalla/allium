@@ -13,7 +13,16 @@ export interface ModelRoutesPluginOptions {
    * Route prefix for all generated routes
    * @default '/api'
    */
+  /**
+   * Route prefix for all generated routes
+   * @default '/api'
+   */
   routePrefix?: string;
+
+  /**
+   * Default API version (e.g., 'v1')
+   */
+  version?: string;
 }
 
 /**
@@ -39,7 +48,10 @@ export default fp<ModelRoutesPluginOptions>(
     }
 
     for (const model of models) {
-      await generateModelRoutes(fastify, model, models, { routePrefix });
+      await generateModelRoutes(fastify, model, models, {
+        routePrefix,
+        version: opts.version,
+      });
     }
 
     fastify.log.info(`Generated CRUD routes for ${models.length} models`);

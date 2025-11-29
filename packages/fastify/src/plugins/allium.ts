@@ -18,6 +18,12 @@ export interface AlliumPluginOptions {
    * @default '/api'
    */
   routePrefix?: string;
+
+  /**
+   * Default API version (e.g., 'v1')
+   * Can be overridden per model
+   */
+  version?: string;
 }
 
 /**
@@ -79,7 +85,11 @@ export default fp<AlliumPluginOptions>(
     await fastify.register(modelSchemasPlugin, { models });
 
     // 2. Generate CRUD routes
-    await fastify.register(modelRoutesPlugin, { models, routePrefix });
+    await fastify.register(modelRoutesPlugin, {
+      models,
+      routePrefix,
+      version: opts.version,
+    });
 
     fastify.log.info(
       `Allium plugin initialized successfully with ${models.length} models`

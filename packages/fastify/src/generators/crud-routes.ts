@@ -28,11 +28,9 @@ import { applyMasking } from '../utils/masked-fields';
 
 interface RouteOptions {
   routePrefix?: string;
+  version?: string;
 }
 
-/**
- * Build Prisma query from request parameters
- */
 /**
  * Build Prisma query from request parameters
  */
@@ -199,9 +197,26 @@ export async function generateModelRoutes(
 ): Promise<void> {
   const modelName = model.name;
   const modelLower = modelName.toLowerCase();
-  const baseRoutePath = model.api?.prefix
-    ? model.api.prefix
-    : `${opts.routePrefix || '/api'}/${modelLower}`;
+
+  // Determine effective version: model override > global default
+  const version = model.api?.version || opts.version;
+
+  // Construct base path
+  // If model has explicit prefix, use it (assume it includes version if needed)
+  // Otherwise: /{globalPrefix}/{version}/{modelName}
+  let baseRoutePath = '';
+
+  if (model.api?.prefix) {
+    baseRoutePath = model.api.prefix;
+  } else {
+    const prefix = opts.routePrefix || '/api';
+
+    const parts = [prefix];
+    if (version) parts.push(version);
+    parts.push(modelLower);
+
+    baseRoutePath = parts.join('/').replace(/\/+/g, '/');
+  }
 
   // Get Prisma delegate for this model
   const prismaModel = (fastify as any).prisma[modelLower];
