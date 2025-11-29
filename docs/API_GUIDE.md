@@ -123,3 +123,90 @@ const authRoutes: FastifyPluginAsync = async (fastify, opts) => {
   );
 };
 ```
+
+## 3. Scenario: Creating a V2 API
+
+Let's say you have `User` (v1) and you want to create a breaking change for v2.
+
+### Option A: New Model (Recommended for Schema Changes)
+
+If the database schema changes significantly (e.g., splitting `name` into `firstName` and `lastName`).
+
+1. **Keep V1 Model:**
+
+```typescript
+// src/models/User.ts
+registerModel('User', {
+  api: { prefix: '/api/v1/users' },
+  // ... fields: name
+});
+```
+
+2. **Create V2 Model:**
+
+```typescript
+// src/models/UserV2.ts
+registerModel('UserV2', {
+  api: { prefix: '/api/v2/users' },
+  fields: [
+    { name: 'firstName', type: 'String' },
+    { name: 'lastName', type: 'String' },
+  ],
+});
+```
+
+### Option B: Custom Route (Recommended for Logic Changes)
+
+If the schema is the same but the response format or logic changes.
+
+1. **Create V2 Plugin:**
+
+```typescript
+// src/routes/v2/users.ts
+const userV2Routes: FastifyPluginAsync = async (fastify) => {
+  fastify.get('/', async (req) => {
+    // Custom V2 logic returning different format
+    return { version: 2, data: [] };
+  });
+};
+export default userV2Routes;
+```
+
+2. **Register with Prefix:**
+
+```typescript
+// src/app.ts
+initAllium({
+  plugins: [[userV2Routes, { prefix: '/api/v2/users' }]],
+});
+```
+
+## 4. Swagger Documentation
+
+Custom routes automatically appear in Swagger if you define a `schema`.
+
+```typescript
+// src/routes/custom.ts
+const customRoutes: FastifyPluginAsync = async (fastify) => {
+  fastify.get(
+    '/hello',
+    {
+      schema: {
+        tags: ['Custom'], // Group name in Swagger
+        summary: 'Returns a hello message',
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              message: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+    async (req) => {
+      return { message: 'Hello!' };
+    }
+  );
+};
+```
