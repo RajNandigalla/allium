@@ -31,6 +31,15 @@ function generatePrismaModel(
   model: ModelDefinition,
   allModels: ModelDefinition[]
 ): string {
+  // Validate that model has fields defined
+  if (!model.fields || !Array.isArray(model.fields)) {
+    throw new Error(
+      `Model "${model.name}" is missing field definitions. ` +
+        `This usually means the schema hasn't been synced yet. ` +
+        `Please run 'allium sync' to generate the schema from your model definitions.`
+    );
+  }
+
   let output = `model ${model.name} {\n`;
 
   // Add ID field (uuid)

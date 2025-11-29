@@ -65,7 +65,7 @@ export const init = async (options: {
       name: `@allium/${projectName}`,
       version: '1.0.0',
       scripts: {
-        dev: 'ts-node-dev --respawn --transpile-only src/app.ts',
+        dev: 'ts-node-dev --transpile-only src/app.ts',
         build: 'tsc',
         start: 'node dist/app.js',
       },

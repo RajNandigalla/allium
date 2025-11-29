@@ -138,19 +138,19 @@ async function syncDatabase(config: AlliumServerConfig) {
   const provider = config.prisma?.provider || 'postgresql';
 
   // 1. Generate Prisma Schema
-  // Cast models to any to avoid type mismatch between runtime ModelDefinition and schema ModelDefinition
-  const schema = generatePrismaSchema({ models: models as any }, provider);
-
-  const prismaDir = path.join(projectRoot, '.allium', 'prisma');
-  if (!fs.existsSync(prismaDir)) {
-    fs.mkdirSync(prismaDir, { recursive: true });
-  }
-
-  const schemaPath = path.join(prismaDir, 'schema.prisma');
-  fs.writeFileSync(schemaPath, schema);
-
-  // 2. Sync Database
   try {
+    // Cast models to any to avoid type mismatch between runtime ModelDefinition and schema ModelDefinition
+    const schema = generatePrismaSchema({ models: models as any }, provider);
+
+    const prismaDir = path.join(projectRoot, '.allium', 'prisma');
+    if (!fs.existsSync(prismaDir)) {
+      fs.mkdirSync(prismaDir, { recursive: true });
+    }
+
+    const schemaPath = path.join(prismaDir, 'schema.prisma');
+    fs.writeFileSync(schemaPath, schema);
+
+    // 2. Sync Database
     console.log('Syncing database...');
     // Generate client
     execSync(`npx prisma generate --schema "${schemaPath}"`, {
@@ -162,8 +162,21 @@ async function syncDatabase(config: AlliumServerConfig) {
       stdio: 'inherit',
     });
     console.log('Database synced successfully.');
-  } catch (error) {
-    console.error('Failed to sync database:', error);
-    throw error;
+  } catch (error: any) {
+    if (error.message && error.message.includes('missing field definitions')) {
+      console.error('\n❌ Error: Models are missing field definitions\n');
+      console.error(
+        "This usually happens when the schema hasn't been synced yet."
+      );
+      console.error('\n📝 To fix this, run:\n');
+      console.error('   allium sync\n');
+      console.error(
+        'This will generate the schema from your model definitions.\n'
+      );
+      process.exit(1);
+    } else {
+      console.error('Failed to sync database:', error);
+      throw error;
+    }
   }
 }
