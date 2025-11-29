@@ -46,6 +46,9 @@
 - [ ] Compound unique constraints
 - [ ] Computed/virtual fields
 - [x] Enum support
+- [ ] Field Visibility Control (Private/Hidden fields e.g., password)
+- [ ] Encrypted Fields (At-rest encryption for sensitive data)
+- [ ] Masked Fields (Partial display e.g., `****-1234`)
 
 **Compound Features**
 
@@ -116,6 +119,7 @@
 
 - [ ] JWT authentication setup
 - [ ] Role-based access control (RBAC)
+- [ ] SSO & Social Auth (Google, GitHub, Auth0)
 - [ ] Permission decorators
 - [ ] Protected routes configuration
 - [ ] Field-Level Permissions (read/update per role)
@@ -163,7 +167,12 @@
 - [x] Track who created/updated records
 - [x] Automatic `createdBy`/`updatedBy` fields
 - [ ] Change history tracking
+- [ ] Change history tracking
 - [ ] Internationalization (i18n) support
+
+**Content Workflows**
+
+- [ ] Draft & Publish Workflow (status management, scheduling)
 
 ---
 
@@ -208,6 +217,7 @@
 - [ ] Prettier setup
 - [ ] Husky pre-commit hooks
 - [ ] TypeScript strict mode
+- [ ] Data Seeding & Fixtures (faker.js integration)
 
 ---
 
@@ -229,6 +239,7 @@
 
 - [ ] Health check endpoints
 - [ ] Prometheus metrics
+- [ ] OpenTelemetry Integration (Tracing)
 - [ ] Logging configuration (Winston/Pino)
 
 ---
@@ -268,6 +279,7 @@
 - [ ] File storage (S3, local)
 - [ ] Email service integration
 - [ ] Payment gateway integration (Stripe, PayPal)
+- [ ] Outgoing Webhooks (Event subscriptions)
 
 ### Performance
 

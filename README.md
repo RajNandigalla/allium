@@ -139,11 +139,19 @@ allium db studio     # Open database GUI
 
 ### Full Documentation
 
-- **[CLI Reference](./CLI_REFERENCE.md)** - Complete command reference, workflows, and examples
-- [Walkthrough](/.gemini/antigravity/brain/1d321bdf-9ebf-443b-88a4-69a31bbb78d6/walkthrough.md) - Complete feature walkthrough
-- [Roadmap](/ROADMAP.md) - Future plans and features
-- [Fastify Package README](./packages/fastify/README.md) - Fastify integration details
-- [Prisma Guide](./packages/fastify/PRISMA_GUIDE.md) - Prisma setup and usage
+### Full Documentation
+
+- **[CLI Reference](./docs/reference/cli.md)** - Complete command reference
+- **[API Routes](./docs/reference/api-routes.md)** - Generated API endpoints reference
+- **[Roadmap](./docs/ROADMAP.md)** - Future plans and features
+- **[Fastify Package README](./packages/fastify/README.md)** - Fastify integration details
+
+### Guides
+
+- [Basic Example](./docs/guides/basic-example.md) - Simple product model example
+- [Plugin Configuration](./docs/guides/plugin-configuration.md) - Configuring plugins
+- [Hidden Generation](./docs/reference/hidden-generation.md) - Understanding the generation architecture
+- [Auto-Load Models](./docs/guides/auto-load-models.md) - Using fastify-autoload with models
 
 ## 🛠️ Tech Stack
 
