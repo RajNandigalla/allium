@@ -53,9 +53,9 @@
 
 **Compound Features**
 
-- [ ] Compound Unique Constraints (e.g., unique `[userId, postId]`)
+- [x] Compound Unique Constraints (e.g., unique `[userId, postId]`)
 - [ ] Compound Required / Conditional Validation (e.g., "At least one of X or Y")
-- [ ] Compound Indexes (Performance optimization)
+- [x] Compound Indexes (Performance optimization)
 - [ ] Compound Primary Keys
 - [ ] Compound Foreign Keys
 

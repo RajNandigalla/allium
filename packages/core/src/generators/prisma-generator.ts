@@ -117,6 +117,13 @@ function generatePrismaModel(
     }
   }
 
+  // Add compound indexes
+  if (model.constraints?.indexes) {
+    for (const fields of model.constraints.indexes) {
+      output += `\n  @@index([${fields.join(', ')}])\n`;
+    }
+  }
+
   output += `}\n`;
   return output;
 }

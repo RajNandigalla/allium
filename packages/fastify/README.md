@@ -378,6 +378,36 @@ constraints: {
 
 - **Subscriptions**: `[year, month, userId]`
 
+- **Subscriptions**: `[year, month, userId]`
+
+## Compound Indexes
+
+Optimize query performance with multi-field database indexes.
+
+```typescript
+registerModel('Post', {
+  fields: [
+    { name: 'userId', type: 'String' },
+    { name: 'createdAt', type: 'DateTime' },
+  ],
+  constraints: {
+    indexes: [['userId', 'createdAt']],
+  },
+});
+```
+
+**Generated Prisma:**
+
+```prisma
+@@index([userId, createdAt])
+```
+
+**Common Use Cases:**
+
+- **User Posts**: `[userId, createdAt]` - Fast queries for recent posts
+- **Search**: `[category, status]` - Filtered listings
+- **Analytics**: `[date, eventType]` - Time-series queries
+
 ## Masked Fields
 
 Automatically mask sensitive data in API responses while preserving full values in the database.
