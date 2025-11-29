@@ -85,6 +85,25 @@ export class HookExecutor {
           });
         }
       }
+
+      // JSON Schema Validation
+      if (field.jsonSchema) {
+        // Initialize AJV lazily or use a static instance if performance is critical
+        // For now, we'll create a new instance to avoid global state issues,
+        // but in production this should be cached.
+        const Ajv = require('ajv');
+        const ajv = new Ajv();
+        const validate = ajv.compile(field.jsonSchema);
+
+        if (!validate(value)) {
+          errors.push({
+            field: field.name,
+            message: `JSON validation failed: ${ajv.errorsText(
+              validate.errors
+            )}`,
+          });
+        }
+      }
     }
 
     if (errors.length > 0) {

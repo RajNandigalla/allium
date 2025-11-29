@@ -45,6 +45,7 @@ export interface Field {
   private?: boolean; // If true, field will be excluded from API responses
   masked?: MaskPattern; // Masking configuration
   hasMaskTransform?: boolean; // True when using custom masking function
+  jsonSchema?: Record<string, any>; // JSON Schema definition for validation
   virtual?: boolean; // Auto-set to true when "computed" is present
   hasTransform?: boolean; // True when using "transform" function
   computed?: ComputedFieldConfig;

@@ -420,6 +420,39 @@ registerModel('User', {
 }
 ```
 
+}
+
+````
+
+## JSON Field Support
+
+Validate JSON fields with schemas and filter by nested properties.
+
+**Schema Validation:**
+```typescript
+registerModel('Config', {
+  fields: [
+    {
+      name: 'metadata',
+      type: 'Json',
+      jsonSchema: {
+        type: 'object',
+        required: ['theme'],
+        properties: {
+          theme: { type: 'string', enum: ['light', 'dark'] }
+        }
+      }
+    }
+  ]
+});
+````
+
+**Nested Filtering:**
+
+```bash
+GET /api/config?filters[metadata.theme][$eq]=dark
+```
+
 ## Soft Deletes & Audit Trails
 
 Enable these features in `registerModel`:

@@ -80,12 +80,37 @@ function buildPrismaQuery(
   const where: any = {};
 
   for (const key of filterKeys) {
-    // Match filters[field][$op]
-    const match = key.match(/^filters\[(\w+)\]\[(\$\w+)\]$/);
+    // Match filters[field][$op] or filters[nested.field][$op]
+    const match = key.match(/^filters\[([\w.]+)\]\[(\$\w+)\]$/);
     if (match) {
-      const [, field, op] = match;
+      const [, fieldPath, op] = match;
       const value = params[key];
 
+      // Handle JSON nested filter
+      if (fieldPath.includes('.')) {
+        const [rootField, ...nestedPath] = fieldPath.split('.');
+
+        if (!where[rootField]) where[rootField] = {};
+
+        let prismaOp = 'equals';
+        if (op === '$eq') prismaOp = 'equals';
+        else if (op === '$ne') prismaOp = 'not';
+        else if (op === '$gt') prismaOp = 'gt';
+        else if (op === '$gte') prismaOp = 'gte';
+        else if (op === '$lt') prismaOp = 'lt';
+        else if (op === '$lte') prismaOp = 'lte';
+        else if (op === '$contains') prismaOp = 'string_contains';
+        else if (op === '$startsWith') prismaOp = 'string_starts_with';
+        else if (op === '$endsWith') prismaOp = 'string_ends_with';
+
+        where[rootField] = {
+          path: nestedPath,
+          [prismaOp]: value,
+        };
+        continue;
+      }
+
+      const field = fieldPath;
       if (!where[field]) where[field] = {};
 
       // Helper to convert type based on model definition
