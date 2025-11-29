@@ -26,6 +26,8 @@ registerModel('Post', {
 
 For defining relationships between models, see the [Relationships Guide](guides/relationships.md).
 
+For GraphQL support, see the [GraphQL Guide](guides/graphql.md).
+
 **Result:**
 
 - `POST /api/v1/posts`

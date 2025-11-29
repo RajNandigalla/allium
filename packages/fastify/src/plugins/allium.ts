@@ -24,6 +24,12 @@ export interface AlliumPluginOptions {
    * Can be overridden per model
    */
   version?: string;
+
+  /**
+   * Enable GraphQL support (Apollo Server)
+   * @default false
+   */
+  graphql?: boolean;
 }
 
 /**
@@ -90,6 +96,51 @@ export default fp<AlliumPluginOptions>(
       routePrefix,
       version: opts.version,
     });
+
+    // 3. Initialize GraphQL (Apollo Server)
+    if (opts.graphql) {
+      try {
+        const { ApolloServer } = await import('@apollo/server');
+        const { fastifyApolloHandler } = await import(
+          '@as-integrations/fastify'
+        );
+        const { generateGraphQLTypeDefs } = await import(
+          '../generators/graphql-generator.js'
+        );
+        const { generateResolvers } = await import(
+          '../generators/graphql-resolvers.js'
+        );
+
+        fastify.log.info('Initializing GraphQL support...');
+
+        const typeDefs = generateGraphQLTypeDefs(models);
+        const resolvers = generateResolvers(models);
+
+        const apollo = new ApolloServer({
+          typeDefs,
+          resolvers,
+        });
+
+        await apollo.start();
+
+        fastify.route({
+          url: '/graphql',
+          method: ['GET', 'POST', 'OPTIONS'],
+          schema: { hide: true },
+          handler: fastifyApolloHandler(apollo, {
+            context: async (request, reply) => ({
+              prisma: (fastify as any).prisma,
+              request,
+              reply,
+            }),
+          }),
+        });
+
+        fastify.log.info('GraphQL initialized at /graphql');
+      } catch (error) {
+        fastify.log.error({ error }, 'Failed to initialize GraphQL support');
+      }
+    }
 
     fastify.log.info(
       `Allium plugin initialized successfully with ${models.length} models`

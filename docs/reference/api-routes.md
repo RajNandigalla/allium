@@ -23,6 +23,10 @@ See [API Versioning Guide](../API_GUIDE.md#2-api-versioning) for details.
 
 For details on how to define relationships (1:1, 1:n, n:m, polymorphic), see the [Relationships Guide](../guides/relationships.md).
 
+### GraphQL
+
+Allium also supports GraphQL. See the [GraphQL Guide](../guides/graphql.md) for details.
+
 ---
 
 ## Endpoints

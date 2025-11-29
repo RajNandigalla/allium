@@ -205,10 +205,10 @@
 
 **GraphQL Support**
 
-- [ ] Auto-generate GraphQL schema
-- [ ] GraphQL resolvers from models
+- [x] Auto-generate GraphQL schema
+- [x] GraphQL resolvers from models
 - [ ] GraphQL subscriptions
-- [ ] GraphQL playground
+- [x] GraphQL playground
 
 **Multi-tenancy**
 

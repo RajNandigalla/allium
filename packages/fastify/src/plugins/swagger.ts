@@ -31,10 +31,7 @@ export default fp(
             description: 'Development server',
           },
         ],
-        tags: [
-          { name: 'health', description: 'Health check endpoints' },
-          { name: 'models', description: 'Auto-generated model endpoints' },
-        ],
+        tags: [{ name: 'health', description: 'Health check endpoints' }],
         components: {
           securitySchemes: {
             bearerAuth: {
