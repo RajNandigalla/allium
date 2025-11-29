@@ -105,6 +105,9 @@ export interface ModelDefinition {
   /** API configuration */
   api?: import('../types/model').ApiConfig;
 
+  /** Route configuration */
+  routes?: Record<string, import('../types/model').RouteConfig>;
+
   /** Introspected metadata (populated at runtime) */
   metadata?: {
     fields: Array<{

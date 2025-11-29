@@ -30,7 +30,29 @@ registerModel('Post', {
 - `GET /api/v1/posts`
 - `GET /api/v1/posts/:id`
 
-### B. Custom Routes
+### C. Custom Endpoint Paths
+
+You can customize the path for specific operations using the `routes` configuration in your model definition.
+
+**Method:** Define `routes` in `registerModel`.
+
+```typescript
+registerModel('User', {
+  // ... fields
+  routes: {
+    create: { path: '/register' }, // POST /api/users/register
+    read: { path: '/profile/:id' }, // GET /api/users/profile/:id
+    list: { path: '/users/all' }, // GET /api/users/users/all
+  },
+  api: {
+    prefix: '/api/users',
+  },
+});
+```
+
+**Note:** The custom path is appended to the base route path (which is determined by `api.prefix` or the default `/api/{modelName}`).
+
+### D. Custom Routes
 
 For custom logic, external integrations, or non-CRUD endpoints.
 

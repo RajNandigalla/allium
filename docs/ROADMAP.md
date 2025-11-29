@@ -22,7 +22,7 @@
 
 ### Developer Experience
 
-- [ ] Auto-register routes in `app.ts`
+- [x] Auto-register routes in `app.ts`
 - [ ] README generation for generated projects
 - [x] Better error messages and validation feedback
 - [ ] CLI help documentation improvements
@@ -106,7 +106,7 @@
 
 - [x] Custom route prefixes per model
 - [x] Enable/disable specific operations (create, read, update, delete)
-- [ ] Custom endpoint paths
+- [x] Custom endpoint paths
 - [x] Rate limiting configuration
 - [ ] API Versioning support (e.g., v1, v2)
 
@@ -145,15 +145,15 @@
 
 **Search & Filtering**
 
-- [ ] Basic search support (Prisma full-text)
-- [ ] Advanced filtering DSL
+- [x] Basic search support (Prisma full-text)
+- [x] Advanced filtering DSL
 - [ ] Search engine integration (Elasticsearch, Typesense, Meilisearch)
 - [ ] Faceted search support
 
 **Pagination & Sorting**
 
 - [x] Cursor-based pagination
-- [ ] Offset-based pagination
+- [x] Offset-based pagination
 - [x] Multi-field sorting
 - [ ] Configurable default page sizes
 

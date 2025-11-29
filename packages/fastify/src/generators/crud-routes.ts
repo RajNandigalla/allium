@@ -199,7 +199,7 @@ export async function generateModelRoutes(
 ): Promise<void> {
   const modelName = model.name;
   const modelLower = modelName.toLowerCase();
-  const routePath = model.api?.prefix
+  const baseRoutePath = model.api?.prefix
     ? model.api.prefix
     : `${opts.routePrefix || '/api'}/${modelLower}`;
 
@@ -227,10 +227,32 @@ export async function generateModelRoutes(
     return model.api.operations.includes(operation as any);
   };
 
+  // Helper to get route path
+  const getRoutePath = (
+    operation: string,
+    defaultSuffix: string = ''
+  ): string => {
+    // Check if custom path is defined in model.routes
+    if (model.routes?.[operation]?.path) {
+      const customPath = model.routes[operation].path!;
+      // If custom path starts with /, treat it as absolute (relative to API root or just use as is?)
+      // For now, let's assume it replaces the suffix but keeps the prefix if it's relative,
+      // or if we want full control, maybe we should allow full override.
+      // The plan said: "use it as the suffix appended to routePath" OR "If not, use the default suffix".
+      // Let's stick to: baseRoutePath + (customPath OR defaultSuffix)
+      // BUT, if the user wants /register instead of /api/users/register, they might expect full control.
+      // However, keeping it under the prefix is safer for now.
+      // Let's assume it replaces the default suffix.
+      return `${baseRoutePath}${customPath}`;
+    }
+    return `${baseRoutePath}${defaultSuffix}`;
+  };
+
   // CREATE - POST /{model}
   if (isOperationEnabled('create')) {
+    const path = getRoutePath('create', '');
     fastify.post(
-      routePath,
+      path,
       {
         schema: getCreateSchema(model),
         config: {
@@ -282,8 +304,9 @@ export async function generateModelRoutes(
 
   // LIST - GET /{model}
   if (isOperationEnabled('list')) {
+    const path = getRoutePath('list', '');
     fastify.get(
-      routePath,
+      path,
       {
         schema: getListSchema(model),
         config: {
@@ -398,8 +421,9 @@ export async function generateModelRoutes(
 
   // GET BY ID - GET /{model}/:id
   if (isOperationEnabled('read')) {
+    const path = getRoutePath('read', '/:id');
     fastify.get(
-      `${routePath}/:id`,
+      path,
       {
         schema: getByIdSchema(model),
         config: {
@@ -437,8 +461,9 @@ export async function generateModelRoutes(
 
   // UPDATE - PATCH /{model}/:id
   if (isOperationEnabled('update')) {
+    const path = getRoutePath('update', '/:id');
     fastify.patch(
-      `${routePath}/:id`,
+      path,
       {
         schema: getUpdateSchema(model),
         config: {
@@ -518,8 +543,9 @@ export async function generateModelRoutes(
 
   // DELETE - DELETE /{model}/:id
   if (isOperationEnabled('delete')) {
+    const path = getRoutePath('delete', '/:id');
     fastify.delete(
-      `${routePath}/:id`,
+      path,
       {
         schema: getDeleteSchema(model),
         config: {
@@ -630,8 +656,24 @@ export async function generateModelRoutes(
 
     // RESTORE - POST /{model}/:id/restore
     if (model.softDelete) {
+      // Use custom path if defined, otherwise default
+      // Note: 'restore' is not a standard operation in ApiOperation type yet,
+      // but we can check if user defined a route for it if we extend the type.
+      // For now, let's assume it's a sub-resource of update or a custom operation.
+      // Since 'restore' isn't in ApiOperation, we'll check model.routes['restore'] specifically if we want to support it,
+      // or just append /restore to the update path?
+      // Let's check for a specific 'restore' route config even if not in the main enum,
+      // or just hardcode the suffix for now unless we want to be very flexible.
+      // Given the task is "Custom Endpoint Paths", let's try to support it if possible.
+      // But model.routes key is typed as string in the definition I saw?
+      // "routes?: Record<string, RouteConfig>;" -> Yes, string keys.
+
+      const restorePath = model.routes?.['restore']?.path
+        ? `${baseRoutePath}${model.routes['restore'].path}`
+        : `${baseRoutePath}/:id/restore`;
+
       fastify.post(
-        `${routePath}/:id/restore`,
+        restorePath,
         {
           schema: {
             tags: [model.name],
@@ -698,8 +740,12 @@ export async function generateModelRoutes(
       );
 
       // FORCE DELETE - DELETE /{model}/:id/force
+      const forceDeletePath = model.routes?.['forceDelete']?.path
+        ? `${baseRoutePath}${model.routes['forceDelete'].path}`
+        : `${baseRoutePath}/:id/force`;
+
       fastify.delete(
-        `${routePath}/:id/force`,
+        forceDeletePath,
         {
           schema: {
             tags: [model.name],
@@ -755,5 +801,7 @@ export async function generateModelRoutes(
     }
   }
 
-  fastify.log.info(`Generated CRUD routes for ${modelName} at ${routePath}`);
+  fastify.log.info(
+    `Generated CRUD routes for ${modelName} at ${baseRoutePath}`
+  );
 }
