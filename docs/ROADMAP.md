@@ -25,7 +25,7 @@
 - [x] Auto-register routes in `app.ts`
 - [ ] README generation for generated projects
 - [x] Better error messages and validation feedback
-- [ ] CLI help documentation improvements
+- [x] CLI help documentation improvements
 
 ### Code Quality
 

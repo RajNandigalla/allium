@@ -10,6 +10,35 @@ npm install -g @allium/cli
 yarn global add @allium/cli
 ```
 
+## Getting Help
+
+Every command has detailed help documentation with examples and usage guidance.
+
+**View all commands:**
+
+```bash
+allium --help
+```
+
+**Get help for a specific command:**
+
+```bash
+allium init --help
+allium generate --help
+allium sync --help
+allium db --help
+allium validate --help
+allium override --help
+```
+
+Each help screen includes:
+
+- Detailed description of what the command does
+- Available options with defaults
+- Practical examples
+- Expected outcomes
+- Next steps and workflow guidance
+
 ## Commands
 
 ### `allium init`
@@ -79,6 +108,93 @@ allium sync
 # Sync and generate modules
 allium sync --scaffold
 ```
+
+---
+
+### `allium generate`
+
+Generate resources like models, overrides, controllers, or routes.
+
+```bash
+allium generate [type] [options]
+# or use alias
+allium g [type]
+```
+
+**Types:**
+
+- `model` - Generate a new model with fields and relations
+- `override` - Create an override file for customizing generated code
+- `controller` - Generate a custom controller
+- `route` - Generate a custom route
+
+**Options:**
+
+- `--definition <json>` - JSON definition of the model (for non-interactive mode)
+- `-m, --model <name>` - Model name (required for overrides)
+- `-l, --layer <layer>` - Layer to override: service, controller, routes
+
+**Examples:**
+
+```bash
+# Interactive mode
+allium generate
+
+# Generate model interactively
+allium generate model
+
+# Quick model with fields
+allium generate model
+# Then enter: name:String price:Float stock:Int
+
+# Generate from JSON
+allium generate model --definition '{"name":"Product","fields":[...]}'
+
+# Create override
+allium generate override --model User --layer service
+```
+
+---
+
+### `allium override`
+
+Create an override file to customize generated code for a specific model layer.
+
+```bash
+allium override <model> <layer>
+```
+
+**Available Layers:**
+
+- `service` - Override database operations
+- `controller` - Override request handlers
+- `routes` - Override route definitions
+
+**Examples:**
+
+```bash
+# Override User service
+allium override User service
+
+# Override Post controller
+allium override Post controller
+
+# Override Product routes
+allium override Product routes
+```
+
+**What it creates:**
+
+```
+src/modules/{model}/overrides/{model}.{layer}.ts
+```
+
+**Use Cases:**
+
+- Add custom business logic
+- Modify default CRUD operations
+- Add custom validation
+- Integrate third-party services
 
 ---
 
