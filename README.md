@@ -68,6 +68,7 @@ Shared core functionality used by the CLI and future UI.
 - **🛣️ Custom Route Prefixes**: Override default API paths per model.
 - **⛓️ Relationship Cascades**: Auto-delete related records (hard or soft) when a parent is deleted.
 - **🔒 Rate Limiting**: Protect APIs from abuse with configurable request limits.
+- **📊 Cursor-based Pagination**: Efficient pagination for large datasets with backward compatibility.
 
 ## 🚀 Development
 

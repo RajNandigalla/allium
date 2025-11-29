@@ -292,31 +292,100 @@ export async function generateModelRoutes(
       },
       async (request, reply) => {
         const params = request.query as any;
-        let query = buildPrismaQuery(model, params);
+        const { cursor, limit = 10, page } = params;
 
-        // Execute beforeFind hook
-        query = await executeBeforeFind(model, query, request);
+        // Use offset-based pagination only if page is explicitly provided
+        if (page && !cursor) {
+          // Offset-based pagination (backward compatible)
+          let query = buildPrismaQuery(model, params);
 
-        // Fetch records
-        const [data, total] = await Promise.all([
-          prismaModel.findMany(query),
-          prismaModel.count({ where: query.where }),
-        ]);
+          // Execute beforeFind hook
+          query = await executeBeforeFind(model, query, request);
 
-        // Execute afterFind hook
-        const processedData = await executeAfterFind(model, data, request);
+          // Fetch records
+          const [data, total] = await Promise.all([
+            prismaModel.findMany(query),
+            prismaModel.count({ where: query.where }),
+          ]);
 
-        return {
-          data: applyMasking(
-            addComputedFields(filterPrivateFields(processedData, model), model),
-            model
-          ),
-          pagination: {
-            page: params.page || 1,
-            limit: params.limit || 10,
-            total,
-          },
-        };
+          // Execute afterFind hook
+          const processedData = await executeAfterFind(model, data, request);
+
+          return {
+            data: applyMasking(
+              addComputedFields(
+                filterPrivateFields(processedData, model),
+                model
+              ),
+              model
+            ),
+            pagination: {
+              page: parseInt(page) || 1,
+              limit: parseInt(limit),
+              total,
+            },
+          };
+        }
+
+        // Cursor-based pagination (default)
+        try {
+          let cursorId;
+          if (cursor) {
+            // Decode cursor
+            const decodedCursor = JSON.parse(
+              Buffer.from(cursor, 'base64').toString()
+            );
+            cursorId = parseId(decodedCursor.id);
+          }
+
+          // Build query with cursor
+          let query = buildPrismaQuery(model, params);
+          query.take = parseInt(limit) + 1; // Fetch one extra to check hasMore
+
+          if (cursorId) {
+            query.cursor = { id: cursorId };
+            query.skip = 1; // Skip the cursor record itself
+          }
+
+          query.orderBy = query.orderBy || { id: 'asc' };
+
+          // Execute beforeFind hook
+          query = await executeBeforeFind(model, query, request);
+
+          // Fetch records
+          const data = await prismaModel.findMany(query);
+
+          // Execute afterFind hook
+          await executeAfterFind(model, data, request);
+
+          // Check if there are more records
+          const hasMore = data.length > parseInt(limit);
+          const records = hasMore ? data.slice(0, parseInt(limit)) : data;
+
+          // Generate next cursor
+          const nextCursor =
+            hasMore && records.length > 0
+              ? Buffer.from(
+                  JSON.stringify({ id: records[records.length - 1].id })
+                ).toString('base64')
+              : null;
+
+          return {
+            data: applyMasking(
+              addComputedFields(filterPrivateFields(records, model), model),
+              model
+            ),
+            pagination: {
+              nextCursor,
+              hasMore,
+              limit: parseInt(limit),
+            },
+          };
+        } catch (error) {
+          return (reply as any).code(400).send({
+            error: 'Invalid cursor',
+          });
+        }
       }
     );
   }

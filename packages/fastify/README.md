@@ -702,6 +702,61 @@ registerModel('Auth', {
 - Tracks limits per client IP.
 - Custom routes can use Fastify's native `config.rateLimit`.
 
+## Cursor-based Pagination
+
+Efficient pagination for large datasets. **Cursor-based pagination is now the default** for all list endpoints.
+
+### Default behavior (Cursor-based)
+
+```bash
+# First page - no cursor needed
+GET /api/users?limit=10
+
+# Next page - use cursor from previous response
+GET /api/users?cursor=eyJpZCI6IjEyMyJ9&limit=10
+```
+
+**Response:**
+
+```json
+{
+  "data": [...],
+  "pagination": {
+    "nextCursor": "eyJpZCI6IjQ1NiJ9",
+    "hasMore": true,
+    "limit": 10
+  }
+}
+```
+
+### Offset-based (Backward compatible)
+
+To use offset-based pagination, explicitly provide a `page` parameter:
+
+```bash
+GET /api/users?page=2&limit=10
+```
+
+**Response:**
+
+```json
+{
+  "data": [...],
+  "pagination": {
+    "page": 2,
+    "limit": 10,
+    "total": 100
+  }
+}
+```
+
+**Benefits:**
+
+- No skipped/duplicate records when data changes
+- More efficient for large datasets
+- Perfect for infinite scroll
+- **Default behavior** - no configuration needed
+
 ## Lifecycle Hooks
 
 Hooks allow you to execute custom logic during the CRUD lifecycle.

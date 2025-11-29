@@ -152,9 +152,9 @@
 
 **Pagination & Sorting**
 
-- [ ] Cursor-based pagination
+- [x] Cursor-based pagination
 - [ ] Offset-based pagination
-- [ ] Multi-field sorting
+- [x] Multi-field sorting
 - [ ] Configurable default page sizes
 
 **Soft Deletes**

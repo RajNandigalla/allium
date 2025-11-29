@@ -145,7 +145,8 @@ export function getListSchema(model: ModelDefinition) {
     querystring: {
       type: 'object',
       properties: {
-        page: { type: 'integer', minimum: 1, default: 1 },
+        cursor: { type: 'string', description: 'Cursor for pagination' },
+        page: { type: 'integer', minimum: 1 },
         limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
         sort: {
           type: 'string',
@@ -165,6 +166,10 @@ export function getListSchema(model: ModelDefinition) {
           pagination: {
             type: 'object',
             properties: {
+              // Cursor-based pagination fields
+              nextCursor: { type: ['string', 'null'] },
+              hasMore: { type: 'boolean' },
+              // Offset-based pagination fields (backward compatible)
               page: { type: 'integer' },
               limit: { type: 'integer' },
               total: { type: 'integer' },
