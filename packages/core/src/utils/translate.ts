@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const translate = (txt: string, obj: any): string => {
+export const translate = (txt: string, obj: any): string => {
   if (!txt) return '';
   if (!obj) return txt;
 
@@ -11,5 +11,3 @@ const translate = (txt: string, obj: any): string => {
     return acc;
   }, txt);
 };
-
-export default translate;

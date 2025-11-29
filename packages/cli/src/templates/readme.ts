@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import translate from '../utils/translate';
+import { translate } from '@allium/core';
 
 interface ReadmeOptions {
   projectName: string;

@@ -1,6 +1,5 @@
 import { get } from 'lodash';
-import { ModelDefinition } from '@allium/core';
-import translate from './translate';
+import { ModelDefinition, translate } from '@allium/core';
 
 /**
  * Add computed/virtual fields to response data

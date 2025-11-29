@@ -11,6 +11,7 @@ export type { ModelDefinition, ModelHooks, HookContext } from './runtime';
 
 // Utilities
 export { autoLoadModels, autoLoadModelsSync } from './utils/model-loader';
+export { translate } from './utils/translate';
 
 // Existing exports (generators, validators, etc.)
 export { ModelValidator } from './validators/model-validator';
