@@ -46,6 +46,7 @@ export interface Field {
   masked?: MaskPattern; // Masking configuration
   hasMaskTransform?: boolean; // True when using custom masking function
   jsonSchema?: Record<string, any>; // JSON Schema definition for validation
+  encrypted?: boolean; // If true, field will be encrypted at rest
   virtual?: boolean; // Auto-set to true when "computed" is present
   hasTransform?: boolean; // True when using "transform" function
   computed?: ComputedFieldConfig;

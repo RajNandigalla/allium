@@ -453,6 +453,44 @@ registerModel('Config', {
 GET /api/config?filters[metadata.theme][$eq]=dark
 ```
 
+GET /api/config?filters[metadata.theme][$eq]=dark
+
+````
+
+## Encrypted Fields
+
+Automatically encrypt sensitive data at rest using AES-256-GCM.
+
+**Usage:**
+```typescript
+registerModel('User', {
+  fields: [
+    {
+      name: 'stripeKey',
+      type: 'String',
+      encrypted: true
+    }
+  ]
+});
+````
+
+**Environment:**
+
+```bash
+ENCRYPTION_KEY=your-32-character-secret-key-here-minimum
+```
+
+**Behavior:**
+
+- **On Write**: `"sk_test_123"` → Stored as encrypted base64
+- **On Read**: Encrypted base64 → `"sk_test_123"`
+
+**Security Notes:**
+
+- Uses AES-256-GCM with PBKDF2 key derivation
+- Unique salt and IV per encryption
+- Store `ENCRYPTION_KEY` securely (env vars, secrets manager)
+
 ## Soft Deletes & Audit Trails
 
 Enable these features in `registerModel`:

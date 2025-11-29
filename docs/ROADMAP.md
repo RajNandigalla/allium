@@ -47,8 +47,9 @@
 - [x] Computed/virtual fields
 - [x] Enum support
 - [x] Field Visibility Control (Private/Hidden fields e.g., password)
-- [ ] Encrypted Fields (At-rest encryption for sensitive data)
-- [ ] Masked Fields (Partial display e.g., `****-1234`)
+- [x] Encrypted Fields (At-rest encryption for sensitive data)
+- [x] Masked Fields (Partial display e.g., `****-1234`)
+- [x] JSON Field Support (Schema validation & nested filtering)
 
 **Compound Features**
 

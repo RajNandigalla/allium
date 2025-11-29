@@ -62,6 +62,7 @@ Shared core functionality used by the CLI and future UI.
 - **🔐 Compound Unique Constraints**: Enforce uniqueness across multiple fields (e.g., `[userId, postId]`).
 - **🎭 Masked Fields**: Automatically mask sensitive data (credit cards, SSNs) in API responses.
 - **📦 JSON Field Support**: Schema validation and nested filtering for JSON fields.
+- **🔐 Encrypted Fields**: At-rest encryption for sensitive data using AES-256-GCM.
 
 ## 🚀 Development
 

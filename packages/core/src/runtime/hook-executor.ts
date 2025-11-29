@@ -145,6 +145,25 @@ export class HookExecutor {
       }
     }
 
+    // Encrypt fields marked as encrypted
+    if (model.fields) {
+      const { encrypt, getEncryptionKey } = require('../utils/encryption');
+      let encryptionKey: string | null = null;
+
+      for (const field of model.fields) {
+        if (
+          field.encrypted &&
+          data[field.name] !== undefined &&
+          data[field.name] !== null
+        ) {
+          if (!encryptionKey) {
+            encryptionKey = getEncryptionKey();
+          }
+          data[field.name] = encrypt(String(data[field.name]), encryptionKey);
+        }
+      }
+    }
+
     // Auto-populate audit fields
     if (model.auditTrail && context.user?.id) {
       data.createdBy = context.user.id;
@@ -198,6 +217,25 @@ export class HookExecutor {
   ): Promise<any> {
     // Run field validation
     this.validateFields(model, data);
+
+    // Encrypt fields marked as encrypted
+    if (model.fields) {
+      const { encrypt, getEncryptionKey } = require('../utils/encryption');
+      let encryptionKey: string | null = null;
+
+      for (const field of model.fields) {
+        if (
+          field.encrypted &&
+          data[field.name] !== undefined &&
+          data[field.name] !== null
+        ) {
+          if (!encryptionKey) {
+            encryptionKey = getEncryptionKey();
+          }
+          data[field.name] = encrypt(String(data[field.name]), encryptionKey);
+        }
+      }
+    }
 
     // Auto-populate audit fields
     if (model.auditTrail && context.user?.id) {
@@ -306,6 +344,35 @@ export class HookExecutor {
     results: any[],
     context: HookContext
   ): Promise<any[]> {
+    // Decrypt encrypted fields
+    if (model.fields) {
+      const encryptedFields = model.fields.filter((f) => f.encrypted);
+
+      if (encryptedFields.length > 0) {
+        const { decrypt, getEncryptionKey } = require('../utils/encryption');
+        let encryptionKey: string | null = null;
+
+        for (const record of results) {
+          for (const field of encryptedFields) {
+            if (
+              record[field.name] !== undefined &&
+              record[field.name] !== null
+            ) {
+              if (!encryptionKey) {
+                encryptionKey = getEncryptionKey();
+              }
+              try {
+                record[field.name] = decrypt(record[field.name], encryptionKey);
+              } catch (error) {
+                // If decryption fails, leave the value as is (might be unencrypted legacy data)
+                console.warn(`Failed to decrypt field ${field.name}:`, error);
+              }
+            }
+          }
+        }
+      }
+    }
+
     if (model.hooks?.afterFind) {
       const modifiedResults = await model.hooks.afterFind(results, context);
       return modifiedResults !== undefined ? modifiedResults : results;
