@@ -167,7 +167,7 @@ Update an existing record.
 
 **`DELETE /api/{model}/:id`**
 
-Delete a record.
+Delete a record. If **Soft Deletes** are enabled for the model, this will perform a soft delete (setting `deletedAt`) instead of removing the record.
 
 **Parameters:**
 
@@ -178,6 +178,62 @@ Delete a record.
 ```json
 {
   "message": "User deleted successfully"
+}
+```
+
+**Error:** `404 Not Found`
+
+```json
+{
+  "error": "User not found"
+}
+```
+
+---
+
+### 6. Restore Record (Soft Delete)
+
+**`POST /api/{model}/:id/restore`**
+
+Restore a soft-deleted record. Only available if soft delete is enabled.
+
+**Parameters:**
+
+- `id` (string) - Record UUID
+
+**Response:** `200 OK`
+
+```json
+{
+  "message": "User restored successfully"
+}
+```
+
+**Error:** `404 Not Found`
+
+```json
+{
+  "error": "User not found"
+}
+```
+
+---
+
+### 7. Force Delete Record
+
+**`DELETE /api/{model}/:id/force`**
+
+Permanently delete a record, bypassing soft delete. Only available if soft delete is enabled.
+
+**Parameters:**
+
+- `id` (string) - Record UUID
+
+**Response:** `200 OK`
+
+```json
+{
+  "message": "User permanently deleted"
 }
 ```
 

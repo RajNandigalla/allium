@@ -51,6 +51,8 @@ Shared core functionality used by the CLI and future UI.
 - **⚡ Quick Generation**: Define models rapidly with shorthand syntax.
 - **🛡️ Type-Safe**: End-to-end type safety from database to API response.
 - **🆔 UUID-Based IDs**: All models automatically include `id` (uuid primary key), `uuid`, `createdAt`, and `updatedAt` fields.
+- **🗑️ Soft Deletes**: Built-in support for soft deletion with restore capabilities.
+- **📝 Audit Trails**: Automatic tracking of `createdBy`, `updatedBy`, and `deletedBy`.
 
 ## 🚀 Development
 
@@ -129,7 +131,9 @@ allium db studio     # Open database GUI
 - `GET /api/{model}` - List (with pagination, sorting, filtering)
 - `GET /api/{model}/:id` - Get by ID
 - `PATCH /api/{model}/:id` - Update
-- `DELETE /api/{model}/:id` - Delete
+- `DELETE /api/{model}/:id` - Delete (or Soft Delete if enabled)
+- `POST /api/{model}/:id/restore` - Restore (if soft delete enabled)
+- `DELETE /api/{model}/:id/force` - Force Delete (if soft delete enabled)
 
 ### Full Documentation
 

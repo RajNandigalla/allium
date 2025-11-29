@@ -9,6 +9,8 @@ A powerful, opinionated Fastify framework for building type-safe REST APIs with 
 - 🪝 **Lifecycle Hooks**: Intercept and modify data with `beforeCreate`, `afterFind`, etc.
 - 🔌 **Modular Plugin Architecture**: Built on Fastify's plugin system, fully compatible with `fastify-autoload`.
 - 🛡️ **Type-Safe**: Built with TypeScript and Prisma for end-to-end type safety.
+- 🗑️ **Soft Deletes**: Built-in support for soft deletion with restore capabilities.
+- 📝 **Audit Trails**: Automatic tracking of `createdBy`, `updatedBy`, and `deletedBy`.
 
 ## Installation
 
@@ -66,9 +68,13 @@ Define your models and optional hooks:
 import { registerModel } from '@allium/core';
 
 export const User = registerModel('User', {
-  beforeCreate: async (data, context) => {
-    context.logger.info('Creating new user...');
-    return data;
+  softDelete: true,
+  auditTrail: true,
+  hooks: {
+    beforeCreate: async (data, context) => {
+      context.logger.info('Creating new user...');
+      return data;
+    },
   },
 });
 ```
@@ -153,13 +159,15 @@ If using `fastify-autoload`, this is handled automatically via plugin dependenci
 
 For a model named `User`, the following endpoints are generated:
 
-| Method   | Endpoint        | Description                                 |
-| :------- | :-------------- | :------------------------------------------ |
-| `POST`   | `/api/user`     | Create a new user                           |
-| `GET`    | `/api/user`     | List users (pagination, sorting, filtering) |
-| `GET`    | `/api/user/:id` | Get user by ID                              |
-| `PATCH`  | `/api/user/:id` | Update user by ID                           |
-| `DELETE` | `/api/user/:id` | Delete user by ID                           |
+| Method   | Endpoint                | Description                                 |
+| :------- | :---------------------- | :------------------------------------------ |
+| `POST`   | `/api/user`             | Create a new user                           |
+| `GET`    | `/api/user`             | List users (pagination, sorting, filtering) |
+| `GET`    | `/api/user/:id`         | Get user by ID                              |
+| `PATCH`  | `/api/user/:id`         | Update user by ID                           |
+| `DELETE` | `/api/user/:id`         | Delete user by ID (or Soft Delete)          |
+| `POST`   | `/api/user/:id/restore` | Restore soft-deleted user                   |
+| `DELETE` | `/api/user/:id/force`   | Permanently delete user                     |
 
 ### Query Parameters (List)
 
@@ -167,6 +175,31 @@ For a model named `User`, the following endpoints are generated:
 - `limit`: Items per page (default: 10)
 - `sort`: Sort field and order (e.g., `createdAt:desc`)
 - `filter`: JSON string for filtering
+
+- `filter`: JSON string for filtering
+
+## Soft Deletes & Audit Trails
+
+Enable these features in `registerModel`:
+
+```typescript
+registerModel('User', {
+  softDelete: true, // Adds deletedAt, enables restore/forceDelete
+  auditTrail: true, // Adds createdBy, updatedBy, deletedBy
+});
+```
+
+**Soft Deletes:**
+
+- `DELETE` endpoint sets `deletedAt` instead of removing record.
+- `GET` endpoints filter out records where `deletedAt` is not null.
+- Use `POST /:id/restore` to recover records.
+- Use `DELETE /:id/force` to permanently delete.
+
+**Audit Trails:**
+
+- Automatically populates `createdBy` and `updatedBy` from `request.user.id`.
+- Populates `deletedBy` on soft delete.
 
 ## Lifecycle Hooks
 
