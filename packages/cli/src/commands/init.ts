@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import ora from 'ora';
 import { execSync } from 'child_process';
+import { generateReadme } from '../templates/readme';
 
 export const init = async (options: {
   name?: string;
@@ -245,6 +246,14 @@ module.exports = {
 };
 `;
     fs.writeFileSync(path.join(projectPath, 'prisma.config.js'), prismaConfig);
+
+    // Generate README.md
+    const readmeContent = generateReadme({
+      projectName,
+      database,
+      hasModels: true,
+    });
+    fs.writeFileSync(path.join(projectPath, 'README.md'), readmeContent);
 
     spinner.succeed(
       chalk.green(`Project ${projectName} created successfully!`)

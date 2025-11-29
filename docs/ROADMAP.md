@@ -23,7 +23,7 @@
 ### Developer Experience
 
 - [x] Auto-register routes in `app.ts`
-- [ ] README generation for generated projects
+- [x] README generation for generated projects
 - [x] Better error messages and validation feedback
 - [x] CLI help documentation improvements
 

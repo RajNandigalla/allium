@@ -6,7 +6,8 @@
         "allium": "./dist/index.js"
     },
     "scripts": {
-        "build": "tsc",
+        "build": "tsc && npm run copy-templates",
+        "copy-templates": "mkdir -p dist/templates && cp src/templates/*.md dist/templates/",
         "clean": "rm -rf dist",
         "dev": "ts-node src/index.ts"
     },
