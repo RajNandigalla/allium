@@ -198,7 +198,9 @@ export async function generateModelRoutes(
 ): Promise<void> {
   const modelName = model.name;
   const modelLower = modelName.toLowerCase();
-  const routePath = `${opts.routePrefix || '/api'}/${modelLower}`;
+  const routePath = model.api?.prefix
+    ? model.api.prefix
+    : `${opts.routePrefix || '/api'}/${modelLower}`;
 
   // Get Prisma delegate for this model
   const prismaModel = (fastify as any).prisma[modelLower];

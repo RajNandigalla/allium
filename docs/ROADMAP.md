@@ -104,7 +104,7 @@
 
 **Route Configuration**
 
-- [ ] Custom route prefixes per model
+- [x] Custom route prefixes per model
 - [x] Enable/disable specific operations (create, read, update, delete)
 - [ ] Custom endpoint paths
 - [ ] Rate limiting configuration

@@ -439,6 +439,31 @@ registerModel('Config', {
 - Disabled operations return `404 Not Found`
 - If `operations` is omitted, ALL operations are enabled by default
 
+- Disabled operations return `404 Not Found`
+- If `operations` is omitted, ALL operations are enabled by default
+
+## Custom Route Prefixes
+
+Override the default `/api/{model}` path for specific models.
+
+```typescript
+registerModel('Auth', {
+  fields: [
+    /*...*/
+  ],
+  api: {
+    prefix: '/api/v1/auth', // Custom path
+  },
+});
+```
+
+**Resulting Routes:**
+
+- `GET /api/v1/auth`
+- `POST /api/v1/auth`
+- `GET /api/v1/auth/:id`
+- ...
+
 ## Masked Fields
 
 Automatically mask sensitive data in API responses while preserving full values in the database.
