@@ -178,6 +178,45 @@ For a model named `User`, the following endpoints are generated:
 
 - `filter`: JSON string for filtering
 
+## Field Configuration
+
+You can define validation rules, enums, and default values directly in your model definition:
+
+```typescript
+registerModel('User', {
+  fields: [
+    {
+      name: 'role',
+      type: 'Enum',
+      values: ['user', 'admin', 'moderator'],
+      default: 'user',
+    },
+    {
+      name: 'email',
+      type: 'String',
+      unique: true,
+      validation: {
+        pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
+      },
+    },
+    {
+      name: 'age',
+      type: 'Int',
+      validation: {
+        min: 18,
+        max: 100,
+      },
+    },
+  ],
+});
+```
+
+**Features:**
+
+- **Validation**: `min`, `max`, `minLength`, `maxLength`, `pattern`, `enum`.
+- **Enums**: Automatically generates Prisma enums and validates values at runtime.
+- **Defaults**: Automatically applied if field is missing in request.
+
 ## Soft Deletes & Audit Trails
 
 Enable these features in `registerModel`:

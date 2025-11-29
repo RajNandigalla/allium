@@ -53,6 +53,8 @@ Shared core functionality used by the CLI and future UI.
 - **🆔 UUID-Based IDs**: All models automatically include `id` (uuid primary key), `uuid`, `createdAt`, and `updatedAt` fields.
 - **🗑️ Soft Deletes**: Built-in support for soft deletion with restore capabilities.
 - **📝 Audit Trails**: Automatic tracking of `createdBy`, `updatedBy`, and `deletedBy`.
+- **✅ Field Validation**: Declarative validation rules (min, max, pattern, enum) enforced at runtime.
+- **🔢 Enum Support**: First-class support for enum fields with automatic Prisma mapping.
 
 ## 🚀 Development
 
