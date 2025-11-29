@@ -64,7 +64,7 @@
 - [x] Relationship Cascade Options (Cascade, SetNull, Restrict)
 - [ ] Custom foreign key names
 - [ ] Self-referencing relationships
-- [ ] Polymorphic relationships
+- [x] Polymorphic relationships
 
 **Model Configuration**
 

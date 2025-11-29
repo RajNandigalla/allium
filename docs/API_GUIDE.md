@@ -24,6 +24,8 @@ registerModel('Post', {
 });
 ```
 
+For defining relationships between models, see the [Relationships Guide](guides/relationships.md).
+
 **Result:**
 
 - `POST /api/v1/posts`

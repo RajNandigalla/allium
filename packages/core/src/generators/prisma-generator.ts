@@ -147,6 +147,26 @@ function generatePrismaRelation(
       `  ${rel.name} ${rel.model} @relation(fields: [${foreignKey}], references: [${references}]${onDelete})\n` +
       `  ${foreignKey} String\n`
     );
+  } else if (rel.type === 'polymorphic') {
+    // Polymorphic relation: Generate multiple nullable foreign keys
+    if (!rel.models || rel.models.length === 0) {
+      throw new Error(
+        `Polymorphic relation "${rel.name}" in model "${currentModelName}" must specify 'models' array.`
+      );
+    }
+
+    let output = '';
+    for (const targetModel of rel.models) {
+      // e.g. post Post? @relation(fields: [postId], references: [id])
+      //      postId String?
+      const fieldName =
+        targetModel.charAt(0).toLowerCase() + targetModel.slice(1);
+      const fkName = `${fieldName}Id`;
+
+      output += `  ${fieldName} ${targetModel}? @relation(fields: [${fkName}], references: [id]${onDelete})\n`;
+      output += `  ${fkName} String?\n`;
+    }
+    return output;
   } else {
     // n:m
     return `  ${rel.name} ${rel.model}[]\n`;

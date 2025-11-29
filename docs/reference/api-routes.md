@@ -19,6 +19,10 @@ If you configure a version (e.g., `version: 'v1'` in `initAllium`), routes will 
 
 See [API Versioning Guide](../API_GUIDE.md#2-api-versioning) for details.
 
+### Relationships
+
+For details on how to define relationships (1:1, 1:n, n:m, polymorphic), see the [Relationships Guide](../guides/relationships.md).
+
 ---
 
 ## Endpoints

@@ -43,6 +43,35 @@ function generateProperties(fields: any[]): Record<string, any> {
 }
 
 /**
+ * Inject polymorphic foreign keys into properties
+ */
+function injectPolymorphicFields(
+  properties: Record<string, any>,
+  model: ModelDefinition
+): Record<string, any> {
+  if (!model.relations) return properties;
+
+  const newProps = { ...properties };
+
+  for (const rel of model.relations) {
+    if (rel.type === 'polymorphic' && rel.models) {
+      for (const targetModel of rel.models) {
+        const fieldName =
+          targetModel.charAt(0).toLowerCase() + targetModel.slice(1);
+        const fkName = `${fieldName}Id`;
+
+        newProps[fkName] = {
+          type: 'string',
+          description: `Foreign key for ${targetModel} (Polymorphic)`,
+        };
+      }
+    }
+  }
+
+  return newProps;
+}
+
+/**
  * Register Swagger schemas for all models
  */
 export function registerSwaggerSchemas(
@@ -60,7 +89,8 @@ export function registerSwaggerSchemas(
       continue;
     }
 
-    const properties = generateProperties(fields);
+    let properties = generateProperties(fields);
+    properties = injectPolymorphicFields(properties, model);
     const required = fields
       .filter((f: any) => f.required !== false) // required is true by default
       .map((f: any) => f.name);

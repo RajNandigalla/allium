@@ -78,10 +78,35 @@ export class ModelValidator {
 
       if (model.relations) {
         for (const rel of model.relations) {
-          if (!modelNames.has(rel.model)) {
-            modelErrors.push(
-              `Relation '${rel.name}' references unknown model '${rel.model}'`
-            );
+          if (rel.type === 'polymorphic') {
+            // Validate polymorphic relation
+            if (
+              !rel.models ||
+              !Array.isArray(rel.models) ||
+              rel.models.length < 2
+            ) {
+              modelErrors.push(
+                `Polymorphic relation '${rel.name}' must specify 'models' array with at least 2 models`
+              );
+            } else {
+              // Check if all referenced models exist
+              for (const targetModel of rel.models) {
+                if (!modelNames.has(targetModel)) {
+                  modelErrors.push(
+                    `Polymorphic relation '${rel.name}' references unknown model '${targetModel}'`
+                  );
+                }
+              }
+            }
+          } else {
+            // Validate standard relation
+            if (!rel.model) {
+              modelErrors.push(`Relation '${rel.name}' must specify 'model'`);
+            } else if (!modelNames.has(rel.model)) {
+              modelErrors.push(
+                `Relation '${rel.name}' references unknown model '${rel.model}'`
+              );
+            }
           }
         }
       }

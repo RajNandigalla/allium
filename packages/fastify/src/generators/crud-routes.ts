@@ -281,6 +281,56 @@ export async function generateModelRoutes(
           // Execute beforeCreate hook
           data = await executeBeforeCreate(model, data, request);
 
+          // Validate polymorphic relations (XOR check)
+          if (model.relations) {
+            for (const rel of model.relations) {
+              if (rel.type === 'polymorphic' && rel.models) {
+                let providedCount = 0;
+                const providedFields: string[] = [];
+
+                for (const targetModel of rel.models) {
+                  const fieldName =
+                    targetModel.charAt(0).toLowerCase() + targetModel.slice(1);
+                  const fkName = `${fieldName}Id`;
+
+                  if (data[fkName] !== undefined && data[fkName] !== null) {
+                    providedCount++;
+                    providedFields.push(fkName);
+                  }
+                }
+
+                if (providedCount === 0) {
+                  throw new ValidationError([
+                    {
+                      field: rel.name,
+                      message: `Polymorphic relation '${
+                        rel.name
+                      }' requires exactly one of: ${rel.models
+                        .map(
+                          (m: string) =>
+                            `${m.charAt(0).toLowerCase() + m.slice(1)}Id`
+                        )
+                        .join(', ')}`,
+                    },
+                  ]);
+                }
+
+                if (providedCount > 1) {
+                  throw new ValidationError([
+                    {
+                      field: rel.name,
+                      message: `Polymorphic relation '${
+                        rel.name
+                      }' cannot have multiple targets. Provided: ${providedFields.join(
+                        ', '
+                      )}`,
+                    },
+                  ]);
+                }
+              }
+            }
+          }
+
           // Create record
           const result = await prismaModel.create({ data });
 

@@ -93,7 +93,6 @@
             "type": "object",
             "required": [
                 "name",
-                "model",
                 "type"
             ],
             "properties": {
@@ -103,13 +102,22 @@
                 },
                 "model": {
                     "type": "string",
-                    "description": "Referenced model name"
+                    "description": "Referenced model name (required for non-polymorphic)"
+                },
+                "models": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "minItems": 2,
+                    "description": "Referenced models for polymorphic relations"
                 },
                 "type": {
                     "enum": [
                         "1:1",
                         "1:n",
-                        "n:m"
+                        "n:m",
+                        "polymorphic"
                     ]
                 },
                 "foreignKey": {

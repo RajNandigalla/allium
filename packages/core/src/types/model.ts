@@ -52,13 +52,14 @@ export interface Field {
   computed?: ComputedFieldConfig;
 }
 
-export type RelationType = '1:1' | '1:n' | 'n:m';
+export type RelationType = '1:1' | '1:n' | 'n:m' | 'polymorphic';
 
 export type OnDeleteAction = 'Cascade' | 'SetNull' | 'NoAction' | 'Restrict';
 
 export interface Relation {
   name: string;
-  model: string;
+  model?: string; // Optional for polymorphic
+  models?: string[]; // Required for polymorphic
   type: RelationType;
   foreignKey?: string;
   references?: string;
