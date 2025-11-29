@@ -408,6 +408,37 @@ registerModel('Post', {
 - **Search**: `[category, status]` - Filtered listings
 - **Analytics**: `[date, eventType]` - Time-series queries
 
+- **Analytics**: `[date, eventType]` - Time-series queries
+
+## Enable/Disable CRUD Operations
+
+Selectively enable or disable API endpoints per model.
+
+```typescript
+registerModel('Config', {
+  fields: [
+    { name: 'key', type: 'String' },
+    { name: 'value', type: 'String' },
+  ],
+  api: {
+    operations: ['read', 'list'], // Only GET endpoints
+  },
+});
+```
+
+**Available Operations:**
+
+- `create`: POST /api/{model}
+- `list`: GET /api/{model}
+- `read`: GET /api/{model}/:id
+- `update`: PATCH /api/{model}/:id
+- `delete`: DELETE /api/{model}/:id
+
+**Behavior:**
+
+- Disabled operations return `404 Not Found`
+- If `operations` is omitted, ALL operations are enabled by default
+
 ## Masked Fields
 
 Automatically mask sensitive data in API responses while preserving full values in the database.

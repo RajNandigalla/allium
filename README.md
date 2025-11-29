@@ -64,6 +64,7 @@ Shared core functionality used by the CLI and future UI.
 - **📦 JSON Field Support**: Schema validation and nested filtering for JSON fields.
 - **🔐 Encrypted Fields**: At-rest encryption for sensitive data using AES-256-GCM.
 - **📊 Compound Indexes**: Multi-field database indexes for query performance optimization.
+- **🎛️ API Control**: Enable/Disable specific CRUD operations per model.
 
 ## 🚀 Development
 

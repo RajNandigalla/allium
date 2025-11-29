@@ -105,7 +105,7 @@
 **Route Configuration**
 
 - [ ] Custom route prefixes per model
-- [ ] Enable/disable specific operations (create, read, update, delete)
+- [x] Enable/disable specific operations (create, read, update, delete)
 - [ ] Custom endpoint paths
 - [ ] Rate limiting configuration
 - [ ] API Versioning support (e.g., v1, v2)

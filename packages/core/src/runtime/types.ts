@@ -99,6 +99,9 @@ export interface ModelDefinition {
   /** Model fields definition */
   fields?: import('../types/model').Field[];
 
+  /** API configuration */
+  api?: import('../types/model').ApiConfig;
+
   /** Introspected metadata (populated at runtime) */
   metadata?: {
     fields: Array<{

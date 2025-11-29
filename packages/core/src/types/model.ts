@@ -62,7 +62,7 @@ export interface Relation {
   references?: string;
 }
 
-export type ApiOperation = 'create' | 'read' | 'update' | 'delete';
+export type ApiOperation = 'create' | 'read' | 'update' | 'delete' | 'list';
 
 export interface ApiConfig {
   prefix?: string;
