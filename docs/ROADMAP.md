@@ -168,9 +168,54 @@
 - [x] Track who created/updated records
 - [x] Automatic `createdBy`/`updatedBy` fields
 - [ ] Change history tracking
-- [ ] Change history tracking
 - [ ] Internationalization (i18n) support
 - [ ] Feature Flags & A/B Testing
+
+**Performance & Optimization**
+
+- [ ] Redis caching layer
+- [ ] Query result caching
+- [ ] Database connection pooling
+- [ ] Automatic index generation
+- [ ] Query optimization (select field reduction)
+
+**File Management**
+
+- [ ] File upload handling
+- [ ] S3/Cloud storage integration
+- [ ] Local file storage
+- [ ] Image resizing/optimization
+- [ ] File validation (size, type)
+
+**Data Management**
+
+- [ ] CSV/JSON export
+- [ ] CSV/JSON import
+- [ ] Data seeding utilities
+- [ ] Database migration tools
+- [ ] Backup/restore functionality
+
+**Real-time & Events**
+
+- [ ] WebSocket support
+- [ ] Real-time subscriptions
+- [ ] Webhooks for CRUD events
+- [ ] Event-driven architecture
+- [ ] Message queue integration
+
+**GraphQL Support**
+
+- [ ] Auto-generate GraphQL schema
+- [ ] GraphQL resolvers from models
+- [ ] GraphQL subscriptions
+- [ ] GraphQL playground
+
+**Multi-tenancy**
+
+- [ ] Tenant isolation
+- [ ] Tenant-specific databases
+- [ ] Tenant management APIs
+- [ ] Cross-tenant queries (admin)
 
 **Content Workflows**
 
