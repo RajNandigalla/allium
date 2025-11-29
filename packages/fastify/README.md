@@ -620,7 +620,35 @@ registerModel('User', {
 **Audit Trails:**
 
 - Automatically populates `createdBy` and `updatedBy` from `request.user.id`.
+- Automatically populates `createdBy` and `updatedBy` from `request.user.id`.
 - Populates `deletedBy` on soft delete.
+
+## Relationship Cascades
+
+Ensure data integrity by automatically deleting related records.
+
+```typescript
+registerModel('Post', {
+  fields: [
+    {
+      name: 'user',
+      type: 'Relation',
+      model: 'User',
+      relation: { onDelete: 'Cascade' },
+    },
+  ],
+});
+```
+
+**Supported Actions:**
+
+- `Cascade`: Delete children (Hard or Soft delete based on child model).
+- `SetNull`: Set FK to null.
+- `Restrict`: Prevent deletion.
+- `NoAction`: Database error.
+
+**Soft Delete Cascading:**
+If you soft-delete a parent (e.g., `User`), Allium automatically finds and soft-deletes related children (e.g., `Post`) that have `onDelete: 'Cascade'`. No database triggers required!
 
 ## Lifecycle Hooks
 

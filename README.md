@@ -66,6 +66,7 @@ Shared core functionality used by the CLI and future UI.
 - **📊 Compound Indexes**: Multi-field database indexes for query performance optimization.
 - **🎛️ API Control**: Enable/Disable specific CRUD operations per model.
 - **🛣️ Custom Route Prefixes**: Override default API paths per model.
+- **⛓️ Relationship Cascades**: Auto-delete related records (hard or soft) when a parent is deleted.
 
 ## 🚀 Development
 
