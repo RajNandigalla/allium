@@ -30,23 +30,131 @@ interface RouteOptions {
 /**
  * Build Prisma query from request parameters
  */
-function buildPrismaQuery(params: {
-  page?: number;
-  limit?: number;
-  sort?: string;
-  filter?: string;
-}): any {
-  const { page = 1, limit = 10, sort } = params;
+/**
+ * Build Prisma query from request parameters
+ */
+function buildPrismaQuery(
+  model: ModelDefinition,
+  params: Record<string, any>
+): any {
+  const { page = 1, limit = 10 } = params;
 
   const query: any = {
-    skip: (page - 1) * limit,
-    take: limit,
+    skip: (Number(page) - 1) * Number(limit),
+    take: Number(limit),
   };
 
-  // Parse sort parameter (e.g., "createdAt:desc")
-  if (sort) {
-    const [field, order] = sort.split(':');
+  // 1. Handle Sorting (Strapi style: sort[0]=Field:Order)
+  const sortKeys = Object.keys(params).filter((k) => /^sort\[\d+\]$/.test(k));
+  if (sortKeys.length > 0) {
+    // Sort keys by index
+    sortKeys.sort((a, b) => {
+      const idxA = Number(a.match(/^sort\[(\d+)\]$/)![1]);
+      const idxB = Number(b.match(/^sort\[(\d+)\]$/)![1]);
+      return idxA - idxB;
+    });
+
+    query.orderBy = sortKeys.map((key) => {
+      const [field, order] = params[key].split(':');
+      return { [field]: order === 'desc' ? 'desc' : 'asc' };
+    });
+  } else if (params.sort) {
+    // Fallback for simple sort=Field:Order
+    const [field, order] = params.sort.split(':');
     query.orderBy = { [field]: order || 'asc' };
+  } else {
+    // Default sort
+    const hasCreatedAt = model.fields?.some((f) => f.name === 'createdAt');
+    if (hasCreatedAt) {
+      query.orderBy = { createdAt: 'desc' };
+    } else {
+      query.orderBy = { id: 'asc' };
+    }
+  }
+
+  // 2. Handle Filtering (Strapi style: filters[field][$op]=value)
+  const filterKeys = Object.keys(params).filter((k) => k.startsWith('filters'));
+  const where: any = {};
+
+  for (const key of filterKeys) {
+    // Match filters[field][$op]
+    const match = key.match(/^filters\[(\w+)\]\[(\$\w+)\]$/);
+    if (match) {
+      const [, field, op] = match;
+      const value = params[key];
+
+      if (!where[field]) where[field] = {};
+
+      // Helper to convert type based on model definition
+      const convertType = (val: any) => {
+        const fieldDef = model.fields?.find((f) => f.name === field);
+        if (!fieldDef) return val;
+        if (fieldDef.type === 'Int') return Number(val);
+        if (fieldDef.type === 'Boolean') return val === 'true';
+        if (fieldDef.type === 'DateTime') return new Date(val);
+        return val;
+      };
+
+      const typedValue = convertType(value);
+
+      switch (op) {
+        case '$eq':
+          where[field].equals = typedValue;
+          break;
+        case '$ne':
+          where[field].not = typedValue;
+          break;
+        case '$gt':
+          where[field].gt = typedValue;
+          break;
+        case '$gte':
+          where[field].gte = typedValue;
+          break;
+        case '$lt':
+          where[field].lt = typedValue;
+          break;
+        case '$lte':
+          where[field].lte = typedValue;
+          break;
+        case '$contains':
+          where[field].contains = String(value);
+          break;
+        case '$startsWith':
+          where[field].startsWith = String(value);
+          break;
+        case '$endsWith':
+          where[field].endsWith = String(value);
+          break;
+        case '$in':
+          where[field].in = Array.isArray(value)
+            ? value.map(convertType)
+            : String(value).split(',').map(convertType);
+          break;
+        case '$notIn':
+          where[field].notIn = Array.isArray(value)
+            ? value.map(convertType)
+            : String(value).split(',').map(convertType);
+          break;
+      }
+    } else {
+      // Handle simple equality: filters[field]=value
+      const simpleMatch = key.match(/^filters\[(\w+)\]$/);
+      if (simpleMatch) {
+        const [, field] = simpleMatch;
+        const value = params[key];
+        // Convert type
+        const fieldDef = model.fields?.find((f) => f.name === field);
+        let typedValue = value;
+        if (fieldDef?.type === 'Int') typedValue = Number(value);
+        if (fieldDef?.type === 'Boolean') typedValue = value === 'true';
+
+        where[field] = typedValue;
+      }
+    }
+  }
+
+  if (Object.keys(where).length > 0) {
+    query.where = where;
   }
 
   return query;
@@ -131,7 +239,7 @@ export async function generateModelRoutes(
     },
     async (request, reply) => {
       const params = request.query as any;
-      let query = buildPrismaQuery(params);
+      let query = buildPrismaQuery(model, params);
 
       // Execute beforeFind hook
       query = await executeBeforeFind(model, query, request);

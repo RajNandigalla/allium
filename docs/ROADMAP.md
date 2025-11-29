@@ -169,6 +169,7 @@
 - [ ] Change history tracking
 - [ ] Change history tracking
 - [ ] Internationalization (i18n) support
+- [ ] Feature Flags & A/B Testing
 
 **Content Workflows**
 
@@ -228,6 +229,7 @@
 - [ ] Docker setup generation
 - [ ] Docker Compose for local development
 - [ ] Kubernetes manifests (optional)
+- [ ] Serverless Deployment Adapters (AWS Lambda, Vercel, Cloudflare)
 
 **CI/CD**
 
@@ -256,7 +258,7 @@
 **Admin Panel Generation**
 
 - [ ] Auto-generated CRUD admin UI
-- [ ] Dashboard with analytics
+- [ ] Dashboard with analytics (API usage, latency, errors)
 - [ ] User management interface
 - [ ] File upload support
 
@@ -280,6 +282,7 @@
 - [ ] Email service integration
 - [ ] Payment gateway integration (Stripe, PayPal)
 - [ ] Outgoing Webhooks (Event subscriptions)
+- [ ] Cron Jobs / Scheduled Tasks
 
 ### Performance
 
