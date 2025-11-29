@@ -17,7 +17,7 @@ import {
   getByIdSchema,
   getUpdateSchema,
   getDeleteSchema,
-} from './swagger-schemas';
+} from './schema-generator';
 
 interface RouteOptions {
   routePrefix?: string;
@@ -127,7 +127,7 @@ export async function generateModelRoutes(
       // Fetch records
       const [data, total] = await Promise.all([
         prismaModel.findMany(query),
-        prismaModel.count(),
+        prismaModel.count({ where: query.where }),
       ]);
 
       // Execute afterFind hook
@@ -170,6 +170,13 @@ export async function generateModelRoutes(
         });
       }
 
+      // Check if soft deleted
+      if (model.softDelete && (record as any).deletedAt) {
+        return reply.status(404).send({
+          error: `${modelName} not found`,
+        });
+      }
+
       return record;
     }
   );
@@ -200,6 +207,13 @@ export async function generateModelRoutes(
         });
 
         if (!previousData) {
+          return reply.status(404).send({
+            error: `${modelName} not found`,
+          });
+        }
+
+        // Check if soft deleted
+        if (model.softDelete && (previousData as any).deletedAt) {
           return reply.status(404).send({
             error: `${modelName} not found`,
           });
@@ -250,13 +264,34 @@ export async function generateModelRoutes(
           });
         }
 
+        // Check if soft deleted
+        if (model.softDelete && (record as any).deletedAt) {
+          return reply.status(404).send({
+            error: `${modelName} not found`,
+          });
+        }
+
         // Execute beforeDelete hook
         await executeBeforeDelete(model, String(parsedId), request);
 
-        // Delete record
-        await prismaModel.delete({
-          where: { id: parsedId },
-        });
+        // Delete record (or soft delete)
+        if (model.softDelete) {
+          const updateData: any = { deletedAt: new Date() };
+
+          // Add deletedBy if audit trail is enabled
+          if (model.auditTrail && (request as any).user?.id) {
+            updateData.deletedBy = (request as any).user.id;
+          }
+
+          await prismaModel.update({
+            where: { id: parsedId },
+            data: updateData,
+          });
+        } else {
+          await prismaModel.delete({
+            where: { id: parsedId },
+          });
+        }
 
         // Execute afterDelete hook
         await executeAfterDelete(model, String(parsedId), record, request);
@@ -276,6 +311,132 @@ export async function generateModelRoutes(
       }
     }
   );
+
+  // RESTORE - POST /{model}/:id/restore
+  if (model.softDelete) {
+    fastify.post(
+      `${routePath}/:id/restore`,
+      {
+        schema: {
+          tags: [model.name],
+          description: `Restore soft-deleted ${model.name}`,
+          params: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+            },
+            required: ['id'],
+          },
+          response: {
+            200: {
+              type: 'object',
+              properties: {
+                message: { type: 'string' },
+              },
+            },
+            404: {
+              type: 'object',
+              properties: {
+                error: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+      async (request, reply) => {
+        try {
+          const { id } = request.params as { id: string };
+          const parsedId = parseId(id);
+
+          // Check if record exists (even if deleted)
+          const record = await prismaModel.findUnique({
+            where: { id: parsedId },
+          });
+
+          if (!record) {
+            return reply.status(404).send({
+              error: `${modelName} not found`,
+            });
+          }
+
+          // Restore record
+          await prismaModel.update({
+            where: { id: parsedId },
+            data: { deletedAt: null },
+          });
+
+          return {
+            message: `${modelName} restored successfully`,
+          };
+        } catch (error) {
+          if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2025') {
+              return reply.status(404).send({
+                error: `${modelName} not found`,
+              });
+            }
+          }
+          throw error;
+        }
+      }
+    );
+
+    // FORCE DELETE - DELETE /{model}/:id/force
+    fastify.delete(
+      `${routePath}/:id/force`,
+      {
+        schema: {
+          tags: [model.name],
+          description: `Permanently delete ${model.name}`,
+          params: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+            },
+            required: ['id'],
+          },
+          response: {
+            200: {
+              type: 'object',
+              properties: {
+                message: { type: 'string' },
+              },
+            },
+            404: {
+              type: 'object',
+              properties: {
+                error: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+      async (request, reply) => {
+        try {
+          const { id } = request.params as { id: string };
+          const parsedId = parseId(id);
+
+          // Permanently delete record
+          await prismaModel.delete({
+            where: { id: parsedId },
+          });
+
+          return {
+            message: `${modelName} permanently deleted`,
+          };
+        } catch (error) {
+          if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2025') {
+              return reply.status(404).send({
+                error: `${modelName} not found`,
+              });
+            }
+          }
+          throw error;
+        }
+      }
+    );
+  }
 
   fastify.log.info(`Generated CRUD routes for ${modelName} at ${routePath}`);
 }

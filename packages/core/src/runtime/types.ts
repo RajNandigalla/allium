@@ -90,6 +90,12 @@ export interface ModelDefinition {
   /** Lifecycle hooks */
   hooks?: ModelHooks;
 
+  /** Enable soft deletes (adds deletedAt field) */
+  softDelete?: boolean;
+
+  /** Enable audit trails (adds createdBy, updatedBy, deletedBy fields) */
+  auditTrail?: boolean;
+
   /** Introspected metadata (populated at runtime) */
   metadata?: {
     fields: Array<{

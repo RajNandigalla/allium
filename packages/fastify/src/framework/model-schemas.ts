@@ -1,7 +1,7 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
 import { ModelDefinition } from '@allium/core';
-import { registerSwaggerSchemas } from '../generators/swagger-schemas';
+import { registerSwaggerSchemas } from '../generators/schema-generator';
 
 export interface ModelSchemasPluginOptions {
   /**

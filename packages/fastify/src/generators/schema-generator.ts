@@ -65,11 +65,28 @@ export function registerSwaggerSchemas(
       .filter((f: any) => f.required !== false) // required is true by default
       .map((f: any) => f.name);
 
-    // Register schema for the model
+    // Add auto-generated fields to response schema
+    const responseProperties = {
+      ...properties,
+      id: { type: 'string', description: 'Unique identifier' },
+      uuid: { type: 'string', description: 'UUID identifier' },
+      createdAt: {
+        type: 'string',
+        format: 'date-time',
+        description: 'Creation timestamp',
+      },
+      updatedAt: {
+        type: 'string',
+        format: 'date-time',
+        description: 'Last update timestamp',
+      },
+    };
+
+    // Register schema for the model (used in responses)
     fastify.addSchema({
       $id: `${model.name}Schema`,
       type: 'object',
-      properties,
+      properties: responseProperties,
       required,
     });
 

@@ -69,6 +69,18 @@ function generatePrismaModel(
   output += `  createdAt DateTime @default(now())\n`;
   output += `  updatedAt DateTime @updatedAt\n`;
 
+  // Add soft delete field
+  if (model.softDelete) {
+    output += `  deletedAt DateTime?\n`;
+  }
+
+  // Add audit trail fields
+  if (model.auditTrail) {
+    output += `  createdBy String?\n`;
+    output += `  updatedBy String?\n`;
+    output += `  deletedBy String?\n`;
+  }
+
   output += `}\n`;
   return output;
 }

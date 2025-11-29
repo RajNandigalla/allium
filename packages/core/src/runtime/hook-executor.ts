@@ -12,6 +12,12 @@ export class HookExecutor {
     data: any,
     context: HookContext
   ): Promise<any> {
+    // Auto-populate audit fields
+    if (model.auditTrail && context.user?.id) {
+      data.createdBy = context.user.id;
+      data.updatedBy = context.user.id;
+    }
+
     // Run validation hook first
     if (model.hooks?.validate) {
       try {
@@ -57,6 +63,11 @@ export class HookExecutor {
     data: any,
     context: HookContext
   ): Promise<any> {
+    // Auto-populate audit fields
+    if (model.auditTrail && context.user?.id) {
+      data.updatedBy = context.user.id;
+    }
+
     // Run validation hook first
     if (model.hooks?.validate) {
       try {
@@ -129,6 +140,20 @@ export class HookExecutor {
     query: any,
     context: HookContext
   ): Promise<any> {
+    // Filter soft deleted records
+    if (model.softDelete) {
+      // Check if we should include deleted records (e.g. via query param or context)
+      // For now, we assume query might have a special flag, or we default to excluding
+      const includeDeleted = query.where?.deletedAt !== undefined;
+
+      if (!includeDeleted) {
+        query.where = {
+          ...query.where,
+          deletedAt: null,
+        };
+      }
+    }
+
     if (model.hooks?.beforeFind) {
       const modifiedQuery = await model.hooks.beforeFind(query, context);
       return modifiedQuery !== undefined ? modifiedQuery : query;

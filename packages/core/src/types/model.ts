@@ -103,6 +103,8 @@ export interface ModelDefinition {
   service?: ServiceConfig;
   controller?: ControllerConfig;
   hasOverrides?: OverrideInfo;
+  softDelete?: boolean;
+  auditTrail?: boolean;
 }
 
 export interface AlliumSchema {
