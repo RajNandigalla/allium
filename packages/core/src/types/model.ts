@@ -16,6 +16,16 @@ export interface ValidationRules {
   enum?: string[];
 }
 
+export interface ComputedFieldConfig {
+  // Template-based: "{firstName} {lastName}" or "{address.city}"
+  // Supports nested paths using dot notation
+  template?: string;
+
+  // Function-based: (record) => record.price * 1.1
+  // Only works with registerModel (TypeScript), not JSON
+  transform?: (record: any) => any;
+}
+
 export interface Field {
   name: string;
   type: FieldType;
@@ -25,6 +35,9 @@ export interface Field {
   validation?: ValidationRules;
   values?: string[]; // For Enum type fields
   private?: boolean; // If true, field will be excluded from API responses
+  virtual?: boolean; // Auto-set to true when "computed" is present
+  hasTransform?: boolean; // True when using "transform" function
+  computed?: ComputedFieldConfig;
 }
 
 export type RelationType = '1:1' | '1:n' | 'n:m';

@@ -55,6 +55,10 @@ Shared core functionality used by the CLI and future UI.
 - **📝 Audit Trails**: Automatic tracking of `createdBy`, `updatedBy`, and `deletedBy`.
 - **✅ Field Validation**: Declarative validation rules (min, max, pattern, enum) enforced at runtime.
 - **🔢 Enum Support**: First-class support for enum fields with automatic Prisma mapping.
+- **🔒 Field Visibility**: Mark fields as `private` to auto-exclude from API responses (e.g., passwords).
+- **🔍 Advanced Filtering**: Strapi-style filtering with operators (`$eq`, `$gt`, `$contains`, etc.).
+- **📊 Multi-Field Sorting**: Sort by multiple fields with array syntax.
+- **🧮 Computed/Virtual Fields**: Define calculated fields (template or function-based) that appear in responses but aren't stored.
 
 ## 🚀 Development
 

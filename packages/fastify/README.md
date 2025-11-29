@@ -171,12 +171,52 @@ For a model named `User`, the following endpoints are generated:
 
 ### Query Parameters (List)
 
+**Pagination:**
+
 - `page`: Page number (default: 1)
 - `limit`: Items per page (default: 10)
-- `sort`: Sort field and order (e.g., `createdAt:desc`)
-- `filter`: JSON string for filtering
 
-- `filter`: JSON string for filtering
+**Filtering** (Strapi-style):
+
+- `filters[field][$eq]=value` - Equals
+- `filters[field][$ne]=value` - Not equals
+- `filters[field][$gt]=value` - Greater than
+- `filters[field][$gte]=value` - Greater than or equal
+- `filters[field][$lt]=value` - Less than
+- `filters[field][$lte]=value` - Less than or equal
+- `filters[field][$contains]=value` - Contains substring
+- `filters[field][$startsWith]=value` - Starts with
+- `filters[field][$endsWith]=value` - Ends with
+- `filters[field][$in]=val1,val2` - In array
+
+**Examples:**
+
+```bash
+# Find users with age > 18
+GET /api/user?filters[age][$gt]=18
+
+# Find users with name containing "John"
+GET /api/user?filters[name][$contains]=John
+
+# Combine multiple filters
+GET /api/user?filters[age][$gte]=21&filters[role][$eq]=admin
+```
+
+**Sorting:**
+
+- `sort[0]=field:order` - Primary sort
+- `sort[1]=field:order` - Secondary sort
+- Order: `asc` or `desc`
+
+**Examples:**
+
+```bash
+# Sort by name ascending
+GET /api/user?sort[0]=name:asc
+
+# Sort by role, then createdAt
+GET /api/user?sort[0]=role:asc&sort[1]=createdAt:desc
+```
 
 ## Field Configuration
 
@@ -216,6 +256,77 @@ registerModel('User', {
 - **Validation**: `min`, `max`, `minLength`, `maxLength`, `pattern`, `enum`.
 - **Enums**: Automatically generates Prisma enums and validates values at runtime.
 - **Defaults**: Automatically applied if field is missing in request.
+- **Private Fields**: Mark fields as `private: true` to exclude from API responses.
+
+**Private Fields Example:**
+
+```typescript
+registerModel('User', {
+  fields: [
+    {
+      name: 'password',
+      type: 'String',
+      private: true, // Never returned in API responses
+    },
+    {
+      name: 'apiKey',
+      type: 'String',
+      private: true,
+    },
+  ],
+});
+```
+
+Private fields are automatically excluded from all CRUD responses (CREATE, LIST, GET, UPDATE) but remain accessible for internal queries and updates.
+
+## Computed/Virtual Fields
+
+Define calculated fields that appear in API responses but are NOT stored in the database.
+
+**Template-based** (works in JSON & TypeScript):
+
+```typescript
+registerModel('User', {
+  fields: [
+    { name: 'firstName', type: 'String' },
+    { name: 'lastName', type: 'String' },
+    {
+      name: 'fullName',
+      type: 'String',
+      virtual: true,
+      computed: {
+        template: '{firstName} {lastName}', // Supports nested paths like {address.city}
+      },
+    },
+  ],
+});
+```
+
+**Function-based** (TypeScript `registerModel` only):
+
+```typescript
+registerModel('Product', {
+  fields: [
+    { name: 'price', type: 'Float' },
+    {
+      name: 'priceWithTax',
+      type: 'Float',
+      virtual: true,
+      hasTransform: true,
+      computed: {
+        transform: (record) => record.price * 1.1,
+      },
+    },
+  ],
+});
+```
+
+**Key Points:**
+
+- Virtual fields are computed at runtime, never stored in DB
+- Cannot query or sort by virtual fields
+- Use `virtual: true` flag for identification
+- `hasTransform: true` indicates custom function logic (for introspection)
 
 ## Soft Deletes & Audit Trails
 

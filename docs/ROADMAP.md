@@ -44,9 +44,9 @@
 - [x] Default values for fields
 - [x] Field validation rules (regex, min/max, custom)
 - [ ] Compound unique constraints
-- [ ] Computed/virtual fields
+- [x] Computed/virtual fields
 - [x] Enum support
-- [ ] Field Visibility Control (Private/Hidden fields e.g., password)
+- [x] Field Visibility Control (Private/Hidden fields e.g., password)
 - [ ] Encrypted Fields (At-rest encryption for sensitive data)
 - [ ] Masked Fields (Partial display e.g., `****-1234`)
 

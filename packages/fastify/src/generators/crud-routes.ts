@@ -23,6 +23,7 @@ import {
   getDeleteSchema,
 } from './schema-generator';
 import { filterPrivateFields } from '../utils/field-filter';
+import { addComputedFields } from '../utils/computed-fields';
 
 interface RouteOptions {
   routePrefix?: string;
@@ -210,7 +211,9 @@ export async function generateModelRoutes(
         // Execute afterCreate hook
         await executeAfterCreate(model, result, request);
 
-        return reply.status(201).send(filterPrivateFields(result, model));
+        return reply
+          .status(201)
+          .send(addComputedFields(filterPrivateFields(result, model), model));
       } catch (error) {
         if (error instanceof ValidationError) {
           return (reply as any).status(400).send({
@@ -255,7 +258,10 @@ export async function generateModelRoutes(
       const processedData = await executeAfterFind(model, data, request);
 
       return {
-        data: filterPrivateFields(processedData, model),
+        data: addComputedFields(
+          filterPrivateFields(processedData, model),
+          model
+        ),
         pagination: {
           page: params.page || 1,
           limit: params.limit || 10,
@@ -298,7 +304,7 @@ export async function generateModelRoutes(
         });
       }
 
-      return filterPrivateFields(record, model);
+      return addComputedFields(filterPrivateFields(record, model), model);
     }
   );
 
@@ -349,7 +355,7 @@ export async function generateModelRoutes(
         // Execute afterUpdate hook
         await executeAfterUpdate(model, result, previousData, request);
 
-        return filterPrivateFields(result, model);
+        return addComputedFields(filterPrivateFields(result, model), model);
       } catch (error) {
         if (error instanceof ValidationError) {
           return (reply as any).status(400).send({
