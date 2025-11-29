@@ -464,6 +464,28 @@ registerModel('Auth', {
 - `GET /api/v1/auth/:id`
 - ...
 
+- `GET /api/v1/auth/:id`
+- ...
+
+## Custom Plugins & Routes
+
+Register your own Fastify plugins and routes alongside Allium.
+
+```typescript
+import customRoutes from './routes/custom';
+
+const app = await initAllium({
+  models,
+  prisma: { ... },
+
+  // Register custom plugins
+  plugins: [
+    customRoutes,
+    [require('@fastify/websocket'), { options: 'here' }]
+  ]
+});
+```
+
 ## Masked Fields
 
 Automatically mask sensitive data in API responses while preserving full values in the database.

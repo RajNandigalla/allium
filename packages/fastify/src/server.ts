@@ -14,12 +14,25 @@ import { FastifyCompressOptions } from '@fastify/compress';
 import { FastifySensibleOptions } from '@fastify/sensible';
 import { FastifySwaggerOptions } from '@fastify/swagger';
 
+import { FastifyPluginAsync, FastifyPluginCallback } from 'fastify';
+
 export interface AlliumServerConfig extends AlliumPluginOptions {
+  /**
+   * Custom Fastify plugins to register
+   * Can be a plugin function or a tuple of [plugin, options]
+   */
+  plugins?: Array<
+    | FastifyPluginAsync
+    | FastifyPluginCallback
+    | [FastifyPluginAsync | FastifyPluginCallback, any]
+  >;
+
   /**
    * Prisma database configuration (required)
    */
   prisma: PrismaPluginOptions;
 
+  // ... (rest of the interface remains the same, but we need to match the target content)
   /**
    * Fastify server options
    */
@@ -82,6 +95,7 @@ export interface AlliumServerConfig extends AlliumPluginOptions {
  * import { initAllium } from '@allium/fastify';
  * import { autoLoadModels } from '@allium/core';
  * import path from 'path';
+ * import customRoutes from './routes/custom';
  *
  * const models = await autoLoadModels(path.join(__dirname, 'models'));
  *
@@ -90,45 +104,46 @@ export interface AlliumServerConfig extends AlliumPluginOptions {
  *   models,
  *   routePrefix: '/api',
  *
+ *   // Custom plugins/routes
+ *   plugins: [
+ *     customRoutes,
+ *     [require('@fastify/websocket'), { options: 'here' }]
+ *   ],
+ *
  *   // Prisma configuration (required)
  *   prisma: {
  *     datasourceUrl: process.env.DATABASE_URL || 'file:./test.db'
  *   },
  *
- *   // Optional plugin configurations
- *   swagger: {
- *     mode: 'dynamic',
- *     openapi: {
- *       info: { title: 'My API', version: '1.0.0' }
- *     }
- *   },
- *   cors: {
- *     origin: '*',
- *     credentials: true
- *   },
- *   rateLimit: {
- *     max: 100,
- *     timeWindow: '1 minute'
- *   },
- *
- *   // Fastify server options
- *   server: {
- *     logger: true
- *   }
+ *   // ... other config
  * });
  *
  * await app.listen({ port: 3000 });
  * ```
  */
 export async function initAllium(config: AlliumServerConfig) {
-  const { server, autoSync, ...alliumConfig } = config;
+  const { server, autoSync, plugins, ...alliumConfig } = config;
 
   if (autoSync) {
     await syncDatabase(config);
   }
 
   const fastify = Fastify(server || { logger: true });
+
+  // Register Allium core
   await fastify.register(app, alliumConfig);
+
+  // Register user plugins
+  if (plugins) {
+    for (const plugin of plugins) {
+      if (Array.isArray(plugin)) {
+        await fastify.register(plugin[0], plugin[1]);
+      } else {
+        await fastify.register(plugin as any);
+      }
+    }
+  }
+
   return fastify;
 }
 
