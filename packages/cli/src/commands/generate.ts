@@ -256,6 +256,13 @@ async function generateModel(options: { definition?: string }) {
       name: answers.modelName,
       fields,
       relations,
+      routes: {
+        create: { path: `/${answers.modelName.toLowerCase()}` },
+        read: { path: `/${answers.modelName.toLowerCase()}/:id` },
+        update: { path: `/${answers.modelName.toLowerCase()}/:id` },
+        delete: { path: `/${answers.modelName.toLowerCase()}/:id` },
+        list: { path: `/${answers.modelName.toLowerCase()}` },
+      },
     };
   }
 

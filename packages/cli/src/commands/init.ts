@@ -179,6 +179,13 @@ export const User = registerModel('User', {
         { name: 'email', type: 'String', unique: true },
         { name: 'name', type: 'String', required: false },
       ],
+      routes: {
+        create: { path: '/users' },
+        read: { path: '/users/:id' },
+        update: { path: '/users/:id' },
+        delete: { path: '/users/:id' },
+        list: { path: '/users' },
+      },
     };
 
     fs.writeFileSync(
