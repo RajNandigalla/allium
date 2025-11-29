@@ -376,6 +376,50 @@ constraints: {
 - **Multi-Tenant Apps**: `[email, tenantId]`
 - **Subscriptions**: `[year, month, userId]`
 
+- **Subscriptions**: `[year, month, userId]`
+
+## Masked Fields
+
+Automatically mask sensitive data in API responses while preserving full values in the database.
+
+**Preset Patterns:**
+
+```typescript
+registerModel('User', {
+  fields: [
+    { name: 'creditCard', type: 'String', masked: 'creditCard' }, // ****-****-****-1234
+    { name: 'ssn', type: 'String', masked: 'ssn' }, // ***-**-1234
+    { name: 'phone', type: 'String', masked: 'phone' }, // ***-***-5678
+    { name: 'email', type: 'String', masked: 'email' }, // j***@example.com
+  ],
+});
+```
+
+**Custom Configuration:**
+
+```typescript
+{
+  name: 'apiKey',
+  type: 'String',
+  masked: {
+    pattern: '*',
+    visibleStart: 4,
+    visibleEnd: 4
+  } // Output: sk_t****************abcd
+}
+```
+
+**Custom Function:**
+
+```typescript
+{
+  name: 'secretCode',
+  type: 'String',
+  hasMaskTransform: true, // Indicates custom logic (for introspection)
+  masked: (val) => `SECRET-${val.slice(-4)}` // Output: SECRET-5678
+}
+```
+
 ## Soft Deletes & Audit Trails
 
 Enable these features in `registerModel`:

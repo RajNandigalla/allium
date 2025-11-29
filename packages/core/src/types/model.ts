@@ -26,6 +26,14 @@ export interface ComputedFieldConfig {
   transform?: (record: any) => any;
 }
 
+export type MaskPattern =
+  | 'creditCard'
+  | 'ssn'
+  | 'phone'
+  | 'email'
+  | { pattern: string; visibleStart?: number; visibleEnd?: number }
+  | ((value: any) => any);
+
 export interface Field {
   name: string;
   type: FieldType;
@@ -35,6 +43,8 @@ export interface Field {
   validation?: ValidationRules;
   values?: string[]; // For Enum type fields
   private?: boolean; // If true, field will be excluded from API responses
+  masked?: MaskPattern; // Masking configuration
+  hasMaskTransform?: boolean; // True when using custom masking function
   virtual?: boolean; // Auto-set to true when "computed" is present
   hasTransform?: boolean; // True when using "transform" function
   computed?: ComputedFieldConfig;

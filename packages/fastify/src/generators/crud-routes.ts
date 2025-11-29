@@ -24,6 +24,7 @@ import {
 } from './schema-generator';
 import { filterPrivateFields } from '../utils/field-filter';
 import { addComputedFields } from '../utils/computed-fields';
+import { applyMasking } from '../utils/masked-fields';
 
 interface RouteOptions {
   routePrefix?: string;
@@ -258,8 +259,8 @@ export async function generateModelRoutes(
       const processedData = await executeAfterFind(model, data, request);
 
       return {
-        data: addComputedFields(
-          filterPrivateFields(processedData, model),
+        data: applyMasking(
+          addComputedFields(filterPrivateFields(processedData, model), model),
           model
         ),
         pagination: {
@@ -304,7 +305,10 @@ export async function generateModelRoutes(
         });
       }
 
-      return addComputedFields(filterPrivateFields(record, model), model);
+      return applyMasking(
+        addComputedFields(filterPrivateFields(record, model), model),
+        model
+      );
     }
   );
 
@@ -355,7 +359,14 @@ export async function generateModelRoutes(
         // Execute afterUpdate hook
         await executeAfterUpdate(model, result, previousData, request);
 
-        return addComputedFields(filterPrivateFields(result, model), model);
+        return reply
+          .status(200)
+          .send(
+            applyMasking(
+              addComputedFields(filterPrivateFields(result, model), model),
+              model
+            )
+          );
       } catch (error) {
         if (error instanceof ValidationError) {
           return (reply as any).status(400).send({
