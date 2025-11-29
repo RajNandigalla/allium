@@ -24,7 +24,7 @@
 
 - [ ] Auto-register routes in `app.ts`
 - [ ] README generation for generated projects
-- [ ] Better error messages and validation feedback
+- [x] Better error messages and validation feedback
 - [ ] CLI help documentation improvements
 
 ### Code Quality
@@ -41,15 +41,23 @@
 
 **Field-Level Features**
 
-- [ ] Default values for fields
-- [ ] Field validation rules (regex, min/max, custom)
+- [x] Default values for fields
+- [x] Field validation rules (regex, min/max, custom)
 - [ ] Compound unique constraints
 - [ ] Computed/virtual fields
-- [ ] Enum support
+- [x] Enum support
+
+**Compound Features**
+
+- [ ] Compound Unique Constraints (e.g., unique `[userId, postId]`)
+- [ ] Compound Required / Conditional Validation (e.g., "At least one of X or Y")
+- [ ] Compound Indexes (Performance optimization)
+- [ ] Compound Primary Keys
+- [ ] Compound Foreign Keys
 
 **Relationship Enhancements**
 
-- [ ] Cascade delete options
+- [ ] Relationship Cascade Options (Cascade, SetNull, Restrict)
 - [ ] Custom foreign key names
 - [ ] Self-referencing relationships
 - [ ] Polymorphic relationships
@@ -96,6 +104,13 @@
 - [ ] Enable/disable specific operations (create, read, update, delete)
 - [ ] Custom endpoint paths
 - [ ] Rate limiting configuration
+- [ ] API Versioning support (e.g., v1, v2)
+
+**Plugin System**
+
+- [ ] Custom Plugin API (create your own Allium plugins)
+- [ ] Plugin Lifecycle Hooks
+- [ ] Third-party Plugin Registry support
 
 **Authentication & Authorization**
 
@@ -103,6 +118,7 @@
 - [ ] Role-based access control (RBAC)
 - [ ] Permission decorators
 - [ ] Protected routes configuration
+- [ ] Field-Level Permissions (read/update per role)
 
 ```json
 {
@@ -138,15 +154,16 @@
 
 **Soft Deletes**
 
-- [ ] `deletedAt` field support
-- [ ] Automatic filtering of deleted records
-- [ ] Restore functionality
+- [x] `deletedAt` field support
+- [x] Automatic filtering of deleted records
+- [x] Restore functionality
 
 **Audit Logging**
 
-- [ ] Track who created/updated records
-- [ ] Automatic `createdBy`/`updatedBy` fields
+- [x] Track who created/updated records
+- [x] Automatic `createdBy`/`updatedBy` fields
 - [ ] Change history tracking
+- [ ] Internationalization (i18n) support
 
 ---
 
@@ -165,6 +182,7 @@
 - [ ] Model diff viewer
 - [ ] Migration preview
 - [ ] Rollback support
+- [ ] Interactive Console (REPL)
 
 **Documentation Generation**
 
@@ -240,6 +258,7 @@
 - [ ] Kotlin/Spring Boot backend generation
 - [ ] Python/FastAPI backend generation
 - [ ] Go/Gin backend generation
+- [ ] Edge Runtime Support (Cloudflare Workers, Vercel Edge)
 
 ### Advanced Integrations
 
