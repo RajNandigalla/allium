@@ -4,16 +4,27 @@ import { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { SidePanel } from '../../components/ui/SidePanel';
-import { Plus, Database, Trash2, Link2, Eraser, Settings } from 'lucide-react';
+import {
+  Plus,
+  Database,
+  Trash2,
+  Link2,
+  Eraser,
+  Settings,
+  Search,
+} from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { adminApi, ModelDefinition } from '../../lib/api';
 import { ModelWizard } from '../../components/model-wizard/ModelWizard';
+import { Input } from '../../components/ui/Input';
 
 export default function ModelsPage() {
   const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
   const [models, setModels] = useState<ModelDefinition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [expandedModels, setExpandedModels] = useState<Record<string, boolean>>(
     {}
   );
@@ -23,6 +34,14 @@ export default function ModelsPage() {
       ...prev,
       [modelName]: !prev[modelName],
     }));
+  };
+
+  const toggleFilter = (filter: string) => {
+    setActiveFilters((prev) =>
+      prev.includes(filter)
+        ? prev.filter((f) => f !== filter)
+        : [...prev, filter]
+    );
   };
 
   const fetchModels = async () => {
@@ -117,19 +136,79 @@ export default function ModelsPage() {
     }
   };
 
+  const filteredModels = models.filter((model) => {
+    const query = searchQuery.toLowerCase();
+    const matchesSearch =
+      model.name.toLowerCase().includes(query) ||
+      model.description?.toLowerCase().includes(query);
+
+    if (!matchesSearch) return false;
+
+    if (activeFilters.length === 0) return true;
+
+    return activeFilters.every((filter) => {
+      if (filter === 'Soft Delete') return model.softDelete;
+      if (filter === 'Audit Trail') return model.auditTrail;
+      if (filter === 'Configured')
+        return model.api || model.service || model.constraints;
+      return true;
+    });
+  });
+
   return (
     <div className='space-y-6'>
-      <div className='flex justify-between items-center'>
-        <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Models</h1>
-          <p className='text-slate-500 dark:text-slate-400 mt-2'>
-            Manage your data models and schema definitions.
-          </p>
+      <div className='flex flex-col gap-4'>
+        <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
+          <div>
+            <h1 className='text-3xl font-bold tracking-tight'>Models</h1>
+            <p className='text-slate-500 dark:text-slate-400 mt-2'>
+              Manage your data models and schema definitions.
+            </p>
+          </div>
+          <div className='flex items-center gap-3 w-full md:w-auto'>
+            <div className='relative flex-1 md:w-64'>
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
+              <Input
+                placeholder='Search models...'
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className='pl-9'
+              />
+            </div>
+            <Button onClick={() => setIsCreatePanelOpen(true)}>
+              <Plus className='w-4 h-4 mr-2' />
+              Create Model
+            </Button>
+          </div>
         </div>
-        <Button onClick={() => setIsCreatePanelOpen(true)}>
-          <Plus className='w-4 h-4 mr-2' />
-          Create Model
-        </Button>
+
+        {/* Filter Chips */}
+        <div className='flex items-center gap-2 flex-wrap'>
+          <span className='text-sm text-slate-500 font-medium mr-1'>
+            Filter by:
+          </span>
+          {['Soft Delete', 'Audit Trail', 'Configured'].map((filter) => (
+            <button
+              key={filter}
+              onClick={() => toggleFilter(filter)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                activeFilters.includes(filter)
+                  ? 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800'
+                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-700'
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
+          {activeFilters.length > 0 && (
+            <button
+              onClick={() => setActiveFilters([])}
+              className='px-3 py-1.5 text-xs font-medium text-red-500 hover:text-red-600 transition-colors'
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
       </div>
 
       {isLoading ? (
@@ -144,23 +223,40 @@ export default function ModelsPage() {
             Retry
           </Button>
         </div>
-      ) : models.length === 0 ? (
+      ) : filteredModels.length === 0 ? (
         <div className='text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700'>
-          <Database className='w-12 h-12 text-slate-400 mx-auto mb-4' />
-          <h3 className='text-lg font-medium text-slate-900 dark:text-slate-100'>
-            No models found
-          </h3>
-          <p className='text-slate-500 dark:text-slate-400 mt-2 mb-6'>
-            Get started by creating your first data model.
-          </p>
-          <Button onClick={() => setIsCreatePanelOpen(true)}>
-            <Plus className='w-4 h-4 mr-2' />
-            Create Model
-          </Button>
+          {searchQuery ? (
+            <>
+              <Search className='w-12 h-12 text-slate-400 mx-auto mb-4' />
+              <h3 className='text-lg font-medium text-slate-900 dark:text-slate-100'>
+                No models found
+              </h3>
+              <p className='text-slate-500 dark:text-slate-400 mt-2 mb-6'>
+                No models match your search &quot;{searchQuery}&quot;.
+              </p>
+              <Button variant='secondary' onClick={() => setSearchQuery('')}>
+                Clear Search
+              </Button>
+            </>
+          ) : (
+            <>
+              <Database className='w-12 h-12 text-slate-400 mx-auto mb-4' />
+              <h3 className='text-lg font-medium text-slate-900 dark:text-slate-100'>
+                No models found
+              </h3>
+              <p className='text-slate-500 dark:text-slate-400 mt-2 mb-6'>
+                Get started by creating your first data model.
+              </p>
+              <Button onClick={() => setIsCreatePanelOpen(true)}>
+                <Plus className='w-4 h-4 mr-2' />
+                Create Model
+              </Button>
+            </>
+          )}
         </div>
       ) : (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-          {models.map((model) => {
+          {filteredModels.map((model) => {
             const isExpanded = expandedModels[model.name] || false;
 
             return (
