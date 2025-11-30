@@ -124,11 +124,29 @@ export async function autoLoadModels(
                 ? true
                 : schemaModel.auditTrail || false;
 
+            // Merge relations: TS takes precedence
+            const tsRelations = (exportedModel as any).relations || [];
+            const jsonRelations = schemaModel.relations || [];
+            const mergedRelationsMap = new Map();
+
+            // Add JSON relations first
+            for (const rel of jsonRelations) {
+              mergedRelationsMap.set(rel.name, rel);
+            }
+
+            // Add/Overwrite with TS relations
+            for (const rel of tsRelations) {
+              mergedRelationsMap.set(rel.name, rel);
+            }
+
+            const mergedRelations = Array.from(mergedRelationsMap.values());
+
             Object.assign(exportedModel, schemaModel, {
               hooks: (exportedModel as any).hooks, // Preserve hooks from code
               softDelete,
               auditTrail,
               fields: mergedFields, // Use merged fields with validation
+              relations: mergedRelations, // Use merged relations
             });
             console.log(
               '[autoLoadModels] Model after hydration:',
@@ -205,8 +223,26 @@ export function autoLoadModelsSync(modelsDir: string): ModelDefinition[] {
             (m: any) => m.name === (exportedModel as any).name
           );
           if (schemaModel) {
+            // Merge relations: TS takes precedence
+            const tsRelations = (exportedModel as any).relations || [];
+            const jsonRelations = schemaModel.relations || [];
+            const mergedRelationsMap = new Map();
+
+            // Add JSON relations first
+            for (const rel of jsonRelations) {
+              mergedRelationsMap.set(rel.name, rel);
+            }
+
+            // Add/Overwrite with TS relations
+            for (const rel of tsRelations) {
+              mergedRelationsMap.set(rel.name, rel);
+            }
+
+            const mergedRelations = Array.from(mergedRelationsMap.values());
+
             Object.assign(exportedModel, schemaModel, {
               hooks: (exportedModel as any).hooks, // Preserve hooks from code
+              relations: mergedRelations,
             });
           }
         }
