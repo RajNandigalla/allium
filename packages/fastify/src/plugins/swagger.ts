@@ -86,13 +86,79 @@ export default fp(
     // Register Swagger
     await fastify.register(swagger, config);
 
-    // Register Swagger UI
+    // Define custom routes for filtered specs
+    fastify.get(
+      '/documentation/json/public',
+      {
+        schema: {
+          tags: ['Admin - System'],
+          description: 'Get Public API OpenAPI specification',
+        },
+      },
+      async () => {
+        const spec = fastify.swagger();
+        const paths = spec.paths || {};
+        const filteredPaths = Object.keys(paths)
+          .filter(
+            (path) =>
+              !path.startsWith('/_admin') &&
+              !path.startsWith('/documentation/json')
+          )
+          .reduce((obj, key) => {
+            obj[key] = paths[key];
+            return obj;
+          }, {} as any);
+
+        const tags = spec.tags || [];
+        const filteredTags = tags.filter(
+          (tag) => !tag.name.startsWith('Admin')
+        );
+
+        return { ...spec, paths: filteredPaths, tags: filteredTags };
+      }
+    );
+
+    fastify.get(
+      '/documentation/json/admin',
+      {
+        schema: {
+          tags: ['Admin - System'],
+          description: 'Get Admin API OpenAPI specification',
+        },
+      },
+      async () => {
+        const spec = fastify.swagger();
+        const paths = spec.paths || {};
+        const filteredPaths = Object.keys(paths)
+          .filter(
+            (path) =>
+              path.startsWith('/_admin') ||
+              path.startsWith('/documentation/json')
+          )
+          .reduce((obj, key) => {
+            obj[key] = paths[key];
+            return obj;
+          }, {} as any);
+
+        const tags = spec.tags || [];
+        const filteredTags = tags.filter((tag) => tag.name.startsWith('Admin'));
+
+        return { ...spec, paths: filteredPaths, tags: filteredTags };
+      }
+    );
+
+    // Register Swagger UI with multiple URLs
     await fastify.register(swaggerUI, {
       routePrefix: '/documentation',
       uiConfig: {
         docExpansion: 'list',
         deepLinking: true,
-      },
+        urls: [
+          { url: '/documentation/json/public', name: 'Public API' },
+          { url: '/documentation/json/admin', name: 'Admin API' },
+        ],
+        'urls.primaryName': 'Public API',
+      } as any,
       staticCSP: true,
       transformStaticCSP: (header: string) => header,
     });

@@ -251,3 +251,9 @@ const customRoutes: FastifyPluginAsync = async (fastify) => {
   );
 };
 ```
+
+---
+
+## 5. Admin API
+
+For managing the project schema, data, and configuration programmatically, see the [Admin API Guide](ADMIN_API.md).
