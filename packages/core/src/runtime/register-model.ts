@@ -1,5 +1,6 @@
 import { ModelDefinition, ModelHooks } from './types';
 import { modelRegistry } from './model-registry';
+import { Field, Relation } from '../types/model';
 
 /**
  * Register a model with optional lifecycle hooks
@@ -29,8 +30,8 @@ export interface ModelOptions {
   hooks?: ModelHooks;
   softDelete?: boolean;
   auditTrail?: boolean;
-  fields?: import('../types/model').Field[];
-  relations?: import('../types/model').Relation[];
+  fields?: Field[];
+  relations?: Relation[];
 }
 
 /**
@@ -67,8 +68,8 @@ export function registerModel(
   let hooks: ModelHooks = {};
   let softDelete = false;
   let auditTrail = false;
-  let fields: import('../types/model').Field[] | undefined;
-  let relations: import('../types/model').Relation[] | undefined;
+  let fields: Field[] | undefined;
+  let relations: Relation[] | undefined;
 
   if (optionsOrHooks) {
     // Check if it's the new options object (has hooks, softDelete, or auditTrail properties)

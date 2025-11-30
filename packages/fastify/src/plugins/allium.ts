@@ -1,9 +1,13 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
-import { ModelDefinition, SchemaIntrospector } from '@allium/core';
+import { ApiKeyModel, ModelDefinition, SchemaIntrospector } from '@allium/core';
 import modelSchemasPlugin from '../framework/model-schemas';
 import modelRoutesPlugin from '../framework/model-routes';
 import apiKeyAuthPlugin, { PublicRouteConfig } from './api-key-auth';
+import { generateGraphQLTypeDefs } from '../generators/graphql-generator';
+import { generateResolvers } from '../generators/graphql-resolvers';
+import { ApolloServer } from '@apollo/server';
+import { fastifyApolloHandler } from '@as-integrations/fastify';
 
 export interface AlliumPluginOptions {
   /**
@@ -114,10 +118,6 @@ export default fp<AlliumPluginOptions>(
 
     // Inject ApiKey model if API key authentication is enabled
     if (opts.apiKeyAuth?.enabled) {
-      const { ApiKeyModel } = await import(
-        '@allium/core/dist/models/apikey.js'
-      );
-
       // Check if ApiKey model is already in the models array
       const hasApiKeyModel = models.some((m) => m.name === 'ApiKey');
 
@@ -154,17 +154,6 @@ export default fp<AlliumPluginOptions>(
     // 3. Initialize GraphQL (Apollo Server)
     if (opts.graphql) {
       try {
-        const { ApolloServer } = await import('@apollo/server');
-        const { fastifyApolloHandler } = await import(
-          '@as-integrations/fastify'
-        );
-        const { generateGraphQLTypeDefs } = await import(
-          '../generators/graphql-generator.js'
-        );
-        const { generateResolvers } = await import(
-          '../generators/graphql-resolvers.js'
-        );
-
         fastify.log.info('Initializing GraphQL support...');
 
         const typeDefs = generateGraphQLTypeDefs(models);
@@ -193,20 +182,6 @@ export default fp<AlliumPluginOptions>(
         fastify.log.info('GraphQL initialized at /graphql');
       } catch (error) {
         fastify.log.error({ error }, 'Failed to initialize GraphQL support');
-      }
-    }
-
-    // 4. Initialize Admin API (Development Only)
-    if (
-      (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) &&
-      opts.modelsDir
-    ) {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const adminApi = (await import('./admin-api.js')).default;
-        await fastify.register(adminApi as any, { modelsDir: opts.modelsDir });
-      } catch (error) {
-        fastify.log.warn({ error }, 'Failed to initialize Admin API');
       }
     }
 

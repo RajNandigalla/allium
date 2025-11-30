@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { FastifyRequest } from 'fastify';
+import { ApiConfig, Field, Relation, RouteConfig } from '../types/model';
 
 /**
  * Context provided to all lifecycle hooks
@@ -97,16 +98,16 @@ export interface ModelDefinition {
   auditTrail?: boolean;
 
   /** Model fields definition */
-  fields?: import('../types/model').Field[];
+  fields?: Field[];
 
   /** Model relations definition */
-  relations?: import('../types/model').Relation[];
+  relations?: Relation[];
 
   /** API configuration */
-  api?: import('../types/model').ApiConfig;
+  api?: ApiConfig;
 
   /** Route configuration */
-  routes?: Record<string, import('../types/model').RouteConfig>;
+  routes?: Record<string, RouteConfig>;
 
   /** Introspected metadata (populated at runtime) */
   metadata?: {

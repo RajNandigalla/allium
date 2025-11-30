@@ -83,5 +83,5 @@ const adminApi = async (fastify: FastifyInstance, opts: AdminApiOptions) => {
 
 export default fp(adminApi, {
   name: 'admin-api',
-  dependencies: ['swagger'],
+  dependencies: ['swagger', 'allium-plugin'],
 });
