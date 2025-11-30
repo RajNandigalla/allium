@@ -180,11 +180,49 @@ Occurs when trying to create a duplicate record for a unique field (e.g., email)
 {
   "statusCode": 409,
   "error": "Conflict",
-  "message": "Unique constraint violation",
+  "message": "Unique constraint failed on field: email",
   "errors": [
     {
       "field": "email",
-      "message": "Value must be unique"
+      "message": "A record with this email already exists"
+    }
+  ]
+}
+```
+
+**Multiple Fields:**
+
+```json
+{
+  "statusCode": 409,
+  "error": "Conflict",
+  "message": "Unique constraint failed on fields: email, username",
+  "errors": [
+    {
+      "field": "email",
+      "message": "A record with this email already exists"
+    },
+    {
+      "field": "username",
+      "message": "A record with this username already exists"
+    }
+  ]
+}
+```
+
+#### Invalid Data Format (400)
+
+Occurs when data is in an invalid format (e.g., invalid date string, wrong type).
+
+```json
+{
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "Invalid data format for field: expiresAt",
+  "errors": [
+    {
+      "field": "expiresAt",
+      "message": "Invalid date format. Expected ISO 8601 format (e.g., \"2024-12-31T23:59:59Z\")"
     }
   ]
 }
@@ -202,9 +240,118 @@ Occurs when the requested resource does not exist.
 }
 ```
 
+#### Internal Server Error (500)
+
+For unexpected errors, Allium returns contextual error messages:
+
+```json
+{
+  "statusCode": 500,
+  "error": "Internal Server Error",
+  "message": "Failed to create record",
+  "details": "..." // Only in development mode (NODE_ENV=development)
+}
+```
+
 ---
 
-## 4. Swagger / OpenAPI Documentation
+## 4. Built-in API Key Authentication
+
+Allium includes built-in API key authentication for secure service-to-service communication.
+
+### **Enable Authentication**
+
+1. Enable `apiKeyAuth` in configuration:
+
+```typescript
+import { initAllium } from '@allium/fastify';
+import { User, Product } from './models';
+
+const app = await initAllium({
+  models: [User, Product],
+
+  apiKeyAuth: {
+    enabled: true,
+  },
+
+  prisma: {
+    datasourceUrl: 'file:./dev.db',
+    provider: 'sqlite',
+  },
+});
+```
+
+### **What Happens**
+
+When configured, Allium:
+
+1. Generates the Prisma schema for ApiKey (via `allium sync`)
+2. Protects all routes (except `/documentation` and `/health`)
+3. Validates API keys from the `X-API-Key` header
+
+### **Creating API Keys**
+
+Create an API key via the auto-generated endpoint:
+
+```bash
+curl -X POST http://localhost:3000/api/apikey \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Payment Service",
+    "service": "payment-service"
+  }'
+```
+
+Response:
+
+```json
+{
+  "id": "...",
+  "name": "Payment Service",
+  "key": "sk_a1b2c3d4e5f6...",
+  "service": "payment-service",
+  "isActive": true
+}
+```
+
+### **Using API Keys**
+
+Other services include the API key in requests:
+
+```bash
+curl http://localhost:3000/api/user \
+  -H "X-API-Key: sk_a1b2c3d4e5f6..."
+```
+
+### **Configuration Options**
+
+```typescript
+apiKeyAuth: {
+  enabled: true,
+  headerName: 'x-api-key',                    // Custom header name
+  publicRoutes: ['/health', '/documentation'], // Routes that don't require auth
+  keyPrefix: 'sk_',                           // API key prefix
+}
+```
+
+### **API Key Model Fields**
+
+| Field        | Type      | Description                                     |
+| ------------ | --------- | ----------------------------------------------- |
+| `name`       | String    | Friendly name for the key                       |
+| `key`        | String    | The actual API key (auto-generated, write-only) |
+| `service`    | String    | Name of the service using this key              |
+| `isActive`   | Boolean   | Enable/disable the key (default: true)          |
+| `expiresAt`  | DateTime? | Optional expiration date                        |
+| `lastUsedAt` | DateTime? | Last time the key was used (auto-updated)       |
+
+**Note:** The `key` field is **auto-generated** and cannot be set by users. It uses the `writePrivate` property to prevent manual input while still being returned in responses.
+
+For detailed documentation, see [API Key Authentication Guide](./API_KEY_AUTH.md).
+
+---
+
+## 5. Swagger / OpenAPI Documentation
 
 All the above features are fully documented in the auto-generated Swagger UI (`/documentation`).
 

@@ -55,7 +55,7 @@ Shared core functionality used by the CLI and future UI.
 - **📝 Audit Trails**: Automatic tracking of `createdBy`, `updatedBy`, and `deletedBy`.
 - **✅ Field Validation**: Declarative validation rules (min, max, pattern, enum) enforced at runtime.
 - **🔢 Enum Support**: First-class support for enum fields with automatic Prisma mapping.
-- **🔒 Field Visibility**: Mark fields as `private` to auto-exclude from API responses (e.g., passwords).
+- **🔒 Field Visibility**: Mark fields as `private` to auto-exclude from API responses, or `writePrivate` to prevent user input on auto-generated fields.
 - **🔍 Advanced Filtering**: Strapi-style filtering with operators (`$eq`, `$gt`, `$contains`, etc.).
 - **📊 Multi-Field Sorting**: Sort by multiple fields with array syntax.
 - **🧮 Computed/Virtual Fields**: Define calculated fields (template or function-based) that appear in responses but aren't stored.
@@ -69,6 +69,9 @@ Shared core functionality used by the CLI and future UI.
 - **⛓️ Relationship Cascades**: Auto-delete related records (hard or soft) when a parent is deleted.
 - **🔒 Rate Limiting**: Protect APIs from abuse with configurable request limits.
 - **📊 Cursor-based Pagination**: Efficient pagination for large datasets with backward compatibility.
+- **🔑 Built-in API Key Auth**: Service-to-service authentication with auto-generated keys.
+- **🔗 Relation Population**: Fetch related records in a single request with `?populate=relation`.
+- **⚠️ Detailed Error Messages**: Field-specific validation errors with clear, actionable messages.
 
 ## 🚀 Development
 
@@ -157,6 +160,7 @@ allium db studio     # Open database GUI
 
 - **[CLI Reference](./docs/reference/cli.md)** - Complete command reference
 - **[API Routes](./docs/reference/api-routes.md)** - Generated API endpoints reference
+- **[Field Properties](./docs/reference/field-properties.md)** - Complete field properties reference
 - **[Roadmap](./docs/ROADMAP.md)** - Future plans and features
 - **[Fastify Package README](./packages/fastify/README.md)** - Fastify integration details
 
@@ -166,6 +170,8 @@ allium db studio     # Open database GUI
 - [Plugin Configuration](./docs/guides/plugin-configuration.md) - Configuring plugins
 - [Hidden Generation](./docs/reference/hidden-generation.md) - Understanding the generation architecture
 - [Auto-Load Models](./docs/guides/auto-load-models.md) - Using fastify-autoload with models
+- [Advanced Features](./docs/guides/ADVANCED_FEATURES.md) - Relations, population, and error handling
+- [API Key Authentication](./docs/guides/API_KEY_AUTH.md) - Built-in service-to-service authentication
 
 ## 🛠️ Tech Stack
 

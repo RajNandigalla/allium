@@ -87,6 +87,23 @@ datasource db {
     output += '\n';
   }
 
+  // Check if ApiKey model is present, if not append it
+  const hasApiKey = models.some((m) => m.name === 'ApiKey');
+  if (!hasApiKey) {
+    output += `model ApiKey {
+  id        String   @id @default(uuid())
+  name      String
+  key       String   @unique
+  service   String
+  isActive  Boolean  @default(true)
+  expiresAt DateTime?
+  lastUsedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+`;
+  }
+
   return output;
 }
 

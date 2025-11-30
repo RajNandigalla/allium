@@ -43,6 +43,7 @@ export interface Field {
   validation?: ValidationRules;
   values?: string[]; // For Enum type fields
   private?: boolean; // If true, field will be excluded from API responses
+  writePrivate?: boolean; // If true, field cannot be set by users (auto-generated only)
   masked?: MaskPattern; // Masking configuration
   hasMaskTransform?: boolean; // True when using custom masking function
   jsonSchema?: Record<string, any>; // JSON Schema definition for validation

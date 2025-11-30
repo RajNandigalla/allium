@@ -3,6 +3,7 @@ import { FastifyInstance } from 'fastify';
 import { ModelDefinition, SchemaIntrospector } from '@allium/core';
 import modelSchemasPlugin from '../framework/model-schemas';
 import modelRoutesPlugin from '../framework/model-routes';
+import apiKeyAuthPlugin, { PublicRouteConfig } from './api-key-auth';
 
 export interface AlliumPluginOptions {
   /**
@@ -30,6 +31,35 @@ export interface AlliumPluginOptions {
    * @default false
    */
   graphql?: boolean;
+
+  /**
+   * API Key authentication configuration
+   */
+  apiKeyAuth?: {
+    /**
+     * Enable API key authentication
+     * @default false
+     */
+    enabled?: boolean;
+
+    /**
+     * Header name for API key
+     * @default 'x-api-key'
+     */
+    headerName?: string;
+
+    /**
+     * Routes that don't require authentication
+     * @default ['/health', '/documentation']
+     */
+    publicRoutes?: (string | PublicRouteConfig)[];
+
+    /**
+     * API key prefix
+     * @default 'sk_'
+     */
+    keyPrefix?: string;
+  };
 }
 
 /**
@@ -57,7 +87,8 @@ export interface AlliumPluginOptions {
  */
 export default fp<AlliumPluginOptions>(
   async (fastify: FastifyInstance, opts: AlliumPluginOptions) => {
-    const { models, routePrefix = '/api' } = opts;
+    let { models } = opts;
+    const { routePrefix = '/api' } = opts;
 
     fastify.log.info('Initializing Allium plugin...');
 
@@ -74,6 +105,24 @@ export default fp<AlliumPluginOptions>(
         'Empty models array provided to Allium plugin. Skipping initialization.'
       );
       return;
+    }
+
+    // Inject ApiKey model if API key authentication is enabled
+    if (opts.apiKeyAuth?.enabled) {
+      const { ApiKeyModel } = await import(
+        '@allium/core/dist/models/apikey.js'
+      );
+
+      // Check if ApiKey model is already in the models array
+      const hasApiKeyModel = models.some((m) => m.name === 'ApiKey');
+
+      if (!hasApiKeyModel) {
+        fastify.log.info('Injecting built-in ApiKey model for authentication');
+        models = [...models, ApiKeyModel];
+      }
+
+      // Register API key authentication plugin
+      await fastify.register(apiKeyAuthPlugin, opts.apiKeyAuth);
     }
 
     // 0. Introspect models to populate metadata

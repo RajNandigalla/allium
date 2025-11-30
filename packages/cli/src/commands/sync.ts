@@ -71,9 +71,10 @@ export const sync = async (options?: { scaffold?: boolean }) => {
             ...existingJson,
             name: model.name,
             relations: mergedRelations,
-            // We don't overwrite fields from TS yet as they might be partial in registerModel
-            // But if registerModel has fields, we should probably use them?
-            // For now, let's focus on relations as requested.
+            // Merge fields from TS if they exist
+            fields: model.fields || existingJson.fields || [],
+            softDelete: model.softDelete ?? existingJson.softDelete,
+            auditTrail: model.auditTrail ?? existingJson.auditTrail,
           };
 
           fs.writeFileSync(jsonPath, JSON.stringify(mergedModel, null, 2));

@@ -32,6 +32,79 @@ interface RouteOptions {
 }
 
 /**
+ * Parse Prisma validation error to extract field-specific information
+ */
+function parsePrismaValidationError(
+  error: Prisma.PrismaClientValidationError
+): {
+  message: string;
+  errors: Array<{ field: string; message: string }>;
+} {
+  const errorMessage = error.message;
+  const errors: Array<{ field: string; message: string }> = [];
+
+  // Try to extract field names from common Prisma validation error patterns
+
+  // Pattern 1: "Invalid value for argument `expiresAt`: ..."
+  const argumentMatch = errorMessage.match(
+    /Invalid value for argument `(\w+)`/
+  );
+  if (argumentMatch) {
+    const field = argumentMatch[1];
+
+    // Check for specific error types
+    if (errorMessage.includes('Invalid DateTime')) {
+      errors.push({
+        field,
+        message:
+          'Invalid date format. Expected ISO 8601 format (e.g., "2024-12-31T23:59:59Z")',
+      });
+    } else if (errorMessage.includes('Expected')) {
+      // Extract expected type
+      const typeMatch = errorMessage.match(/Expected (\w+)/);
+      const expectedType = typeMatch ? typeMatch[1] : 'valid value';
+      errors.push({
+        field,
+        message: `Invalid value. Expected ${expectedType}`,
+      });
+    } else {
+      errors.push({
+        field,
+        message: 'Invalid value format',
+      });
+    }
+  }
+
+  // Pattern 2: Multiple field errors or general validation
+  const fieldMatches = errorMessage.matchAll(/Argument `(\w+)`.*?invalid/gi);
+  for (const match of fieldMatches) {
+    const field = match[1];
+    if (!errors.some((e) => e.field === field)) {
+      errors.push({
+        field,
+        message: 'Invalid value format',
+      });
+    }
+  }
+
+  // If we couldn't extract specific fields, provide a general message
+  if (errors.length === 0) {
+    return {
+      message: 'Invalid data format. Please check your input values.',
+      errors: [],
+    };
+  }
+
+  const fieldList = errors.map((e) => e.field).join(', ');
+  return {
+    message: `Invalid data format for field${
+      errors.length > 1 ? 's' : ''
+    }: ${fieldList}`,
+    errors,
+  };
+}
+
+/**
  * Build Prisma query from request parameters
  */
 function buildPrismaQuery(
@@ -241,11 +314,13 @@ export async function generateModelRoutes(
   }
 
   // Get Prisma delegate for this model
-  const prismaModel = (fastify as any).prisma[modelLower];
+  // Prisma uses camelCase for model accessors (e.g., ApiKey -> apiKey, not apikey)
+  const modelCamelCase = modelName.charAt(0).toLowerCase() + modelName.slice(1);
+  const prismaModel = (fastify as any).prisma[modelCamelCase];
 
   if (!prismaModel) {
     fastify.log.warn(
-      `Prisma model '${modelLower}' not found. Skipping route generation for ${modelName}.`
+      `Prisma model '${modelCamelCase}' not found. Skipping route generation for ${modelName}.`
     );
     return;
   }
@@ -380,13 +455,17 @@ export async function generateModelRoutes(
             // P2002: Unique constraint violation
             if (error.code === 'P2002') {
               const target = (error.meta?.target as string[]) || [];
+              const fields = target.length > 0 ? target : ['unknown'];
+              const fieldList = fields.join(', ');
               return (reply as any).status(409).send({
                 statusCode: 409,
                 error: 'Conflict',
-                message: 'Unique constraint violation',
-                errors: target.map((field) => ({
+                message: `Unique constraint failed on field${
+                  fields.length > 1 ? 's' : ''
+                }: ${fieldList}`,
+                errors: fields.map((field) => ({
                   field,
-                  message: 'Value must be unique',
+                  message: `A record with this ${field} already exists`,
                 })),
               });
             }
@@ -415,12 +494,31 @@ export async function generateModelRoutes(
               });
             }
           }
-          // Log unexpected errors and return generic message
-          fastify.log.error(error);
+          // Handle Prisma validation errors (e.g., invalid date format)
+          if (error instanceof Prisma.PrismaClientValidationError) {
+            fastify.log.error(error);
+            const { message, errors: validationErrors } =
+              parsePrismaValidationError(error);
+            return (reply as any).status(400).send({
+              statusCode: 400,
+              error: 'Bad Request',
+              message,
+              errors: validationErrors,
+            });
+          }
+          // Log unexpected errors with full details
+          fastify.log.error(
+            { error, modelName },
+            'Unexpected error in CREATE operation'
+          );
           return (reply as any).status(500).send({
             statusCode: 500,
             error: 'Internal Server Error',
-            message: 'An unexpected error occurred',
+            message: 'Failed to create record',
+            details:
+              process.env.NODE_ENV === 'development'
+                ? (error as Error).message
+                : undefined,
           });
         }
       }
@@ -692,13 +790,17 @@ export async function generateModelRoutes(
             // P2002: Unique constraint violation
             if (error.code === 'P2002') {
               const target = (error.meta?.target as string[]) || [];
+              const fields = target.length > 0 ? target : ['unknown'];
+              const fieldList = fields.join(', ');
               return (reply as any).status(409).send({
                 statusCode: 409,
                 error: 'Conflict',
-                message: 'Unique constraint violation',
-                errors: target.map((field) => ({
+                message: `Unique constraint failed on field${
+                  fields.length > 1 ? 's' : ''
+                }: ${fieldList}`,
+                errors: fields.map((field) => ({
                   field,
-                  message: 'Value must be unique',
+                  message: `A record with this ${field} already exists`,
                 })),
               });
             }
@@ -718,12 +820,31 @@ export async function generateModelRoutes(
               });
             }
           }
-          // Log unexpected errors and return generic message
-          fastify.log.error(error);
+          // Handle Prisma validation errors
+          if (error instanceof Prisma.PrismaClientValidationError) {
+            fastify.log.error(error);
+            const { message, errors: validationErrors } =
+              parsePrismaValidationError(error);
+            return (reply as any).status(400).send({
+              statusCode: 400,
+              error: 'Bad Request',
+              message,
+              errors: validationErrors,
+            });
+          }
+          // Log unexpected errors with full details
+          fastify.log.error(
+            { error, modelName },
+            'Unexpected error in UPDATE operation'
+          );
           return (reply as any).status(500).send({
             statusCode: 500,
             error: 'Internal Server Error',
-            message: 'An unexpected error occurred',
+            message: 'Failed to update record',
+            details:
+              process.env.NODE_ENV === 'development'
+                ? (error as Error).message
+                : undefined,
           });
         }
       }

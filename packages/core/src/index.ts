@@ -13,6 +13,9 @@ export type { ModelDefinition, ModelHooks, HookContext } from './runtime';
 export { autoLoadModels, autoLoadModelsSync } from './utils/model-loader';
 export { translate } from './utils/translate';
 
+// Built-in models
+export { ApiKeyModel, generateApiKey } from './models/apikey';
+
 // Existing exports (generators, validators, etc.)
 export { ModelValidator } from './validators/model-validator';
 export { generatePrismaSchema } from './generators/prisma-generator';

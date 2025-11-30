@@ -170,12 +170,19 @@ export function registerSwaggerSchemas(
       required,
     });
 
-    // Register create schema (without id, createdAt, updatedAt)
+    // Register create schema (without id, createdAt, updatedAt, and writePrivate fields)
     const createProperties = { ...properties };
     delete createProperties.id;
     delete createProperties.uuid;
     delete createProperties.createdAt;
     delete createProperties.updatedAt;
+
+    // Remove writePrivate fields from create schema
+    for (const field of fields) {
+      if (field.writePrivate) {
+        delete createProperties[field.name];
+      }
+    }
 
     fastify.addSchema({
       $id: `${model.name}CreateSchema`,
@@ -187,16 +194,21 @@ export function registerSwaggerSchemas(
           r !== 'uuid' &&
           r !== 'createdAt' &&
           r !== 'updatedAt' &&
+          // Exclude writePrivate fields
+          !fields.find((f: any) => f.name === r && f.writePrivate) &&
           // Exclude fields with default values from required list
           !fields.find((f: any) => f.name === r && f.default !== undefined)
       ),
     });
 
-    // Register update schema (all fields optional)
+    // Register update schema (all fields optional, excluding writePrivate)
+    const updateProperties = { ...createProperties };
+    // writePrivate fields are already removed from createProperties
+
     fastify.addSchema({
       $id: `${model.name}UpdateSchema`,
       type: 'object',
-      properties: createProperties,
+      properties: updateProperties,
     });
   }
 }
