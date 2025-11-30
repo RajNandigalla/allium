@@ -1,39 +1,84 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { LayoutDashboard, Box, Key, Activity, Plus, Eye } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Box,
+  Key,
+  Activity,
+  Plus,
+  Eye,
+  Database,
+} from 'lucide-react';
 import Link from 'next/link';
+import { adminApi, ModelDefinition } from '../lib/api';
 
 export default function Dashboard() {
+  const [models, setModels] = useState<ModelDefinition[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const data = await adminApi.getModels();
+        setModels(data);
+      } catch (error) {
+        console.error('Failed to fetch models:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchModels();
+  }, []);
+
   const stats = [
     {
       name: 'Total Models',
-      value: '12',
+      value: isLoading ? '...' : models.length.toString(),
       icon: Box,
       color: 'indigo',
-      change: '+2 this week',
+      change: `${
+        models.filter((m) => m.fields && m.fields.length > 0).length
+      } configured`,
     },
     {
-      name: 'Total Records',
-      value: '1,234',
+      name: 'Active Models',
+      value: isLoading
+        ? '...'
+        : models
+            .filter((m) => m.fields && m.fields.length > 0)
+            .length.toString(),
       icon: LayoutDashboard,
       color: 'cyan',
-      change: '+156 today',
+      change: 'With fields defined',
     },
     {
-      name: 'API Keys',
-      value: '3',
-      icon: Key,
-      color: 'green',
-      change: 'Active',
-    },
-    {
-      name: 'Uptime',
-      value: '99.9%',
+      name: 'Advanced Features',
+      value: isLoading
+        ? '...'
+        : models.filter((m) => m.softDelete || m.auditTrail).length.toString(),
       icon: Activity,
+      color: 'green',
+      change: 'Soft delete or audit trail',
+    },
+    {
+      name: 'Relations',
+      value: isLoading
+        ? '...'
+        : models
+            .reduce((acc, m) => acc + (m.relations?.length || 0), 0)
+            .toString(),
+      icon: Key,
       color: 'yellow',
-      change: 'Last 30 days',
+      change: 'Total relationships',
     },
   ];
+
+  // Get recent models (last 3)
+  const recentModels = models.slice(0, 3);
 
   return (
     <div className='p-8'>
@@ -61,8 +106,13 @@ export default function Dashboard() {
                     {stat.change}
                   </p>
                 </div>
-                <div className={`p-3 rounded-lg bg-${stat.color}-600/20`}>
-                  <Icon size={24} className={`text-${stat.color}-500`} />
+                <div
+                  className={`p-3 rounded-lg bg-${stat.color}-100 dark:bg-${stat.color}-900/20`}
+                >
+                  <Icon
+                    size={24}
+                    className={`text-${stat.color}-600 dark:text-${stat.color}-400`}
+                  />
                 </div>
               </div>
             </Card>
@@ -73,11 +123,14 @@ export default function Dashboard() {
       {/* Welcome Banner */}
       <Card className='bg-gradient-to-r from-indigo-600 to-cyan-500 p-8 text-center mb-8 border-0'>
         <h2 className='text-2xl font-bold mb-2 text-white'>
-          Get Started with Allium
+          {models.length === 0
+            ? 'Get Started with Allium'
+            : 'Manage Your Data Models'}
         </h2>
         <p className='text-white/90 mb-6'>
-          Create your first model or explore existing data to manage your
-          application
+          {models.length === 0
+            ? 'Create your first model to start managing your application data'
+            : 'Create new models or explore existing data to manage your application'}
         </p>
         <div className='flex gap-4 justify-center'>
           <Link href='/models'>
@@ -106,36 +159,38 @@ export default function Dashboard() {
       {/* Quick Links */}
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
         <Card>
-          <h3 className='text-xl font-semibold mb-4'>Recent Activity</h3>
-          <div className='space-y-3'>
-            <div className='flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg'>
-              <div className='w-2 h-2 bg-green-500 rounded-full'></div>
-              <div className='flex-1'>
-                <p className='text-sm font-medium'>User model created</p>
-                <p className='text-xs text-slate-500 dark:text-slate-400'>
-                  2 hours ago
-                </p>
-              </div>
+          <h3 className='text-xl font-semibold mb-4'>Recent Models</h3>
+          {isLoading ? (
+            <div className='flex justify-center items-center h-32'>
+              <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600'></div>
             </div>
-            <div className='flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg'>
-              <div className='w-2 h-2 bg-indigo-500 rounded-full'></div>
-              <div className='flex-1'>
-                <p className='text-sm font-medium'>Database synced</p>
-                <p className='text-xs text-slate-500 dark:text-slate-400'>
-                  5 hours ago
-                </p>
-              </div>
+          ) : recentModels.length === 0 ? (
+            <p className='text-slate-500 text-sm text-center py-8'>
+              No models created yet. Create your first model to get started!
+            </p>
+          ) : (
+            <div className='space-y-3'>
+              {recentModels.map((model) => (
+                <Link
+                  key={model.name}
+                  href={`/models/${model.name.toLowerCase()}/data`}
+                >
+                  <div className='flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer'>
+                    <Database size={20} className='text-indigo-500' />
+                    <div className='flex-1'>
+                      <p className='text-sm font-medium'>{model.name}</p>
+                      <p className='text-xs text-slate-500 dark:text-slate-400'>
+                        {model.fields?.length || 0} fields
+                        {model.relations &&
+                          model.relations.length > 0 &&
+                          `, ${model.relations.length} relations`}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
-            <div className='flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg'>
-              <div className='w-2 h-2 bg-cyan-500 rounded-full'></div>
-              <div className='flex-1'>
-                <p className='text-sm font-medium'>API key generated</p>
-                <p className='text-xs text-slate-500 dark:text-slate-400'>
-                  1 day ago
-                </p>
-              </div>
-            </div>
-          </div>
+          )}
         </Card>
 
         <Card>
@@ -152,24 +207,24 @@ export default function Dashboard() {
                 </div>
               </button>
             </Link>
-            <Link href='/data'>
+            <Link href='/models'>
               <button className='w-full flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
                 <LayoutDashboard size={20} className='text-cyan-500' />
                 <div>
-                  <p className='text-sm font-medium'>Explore Data</p>
+                  <p className='text-sm font-medium'>Browse Models</p>
                   <p className='text-xs text-slate-500 dark:text-slate-400'>
-                    View and manage records
+                    View and manage all models
                   </p>
                 </div>
               </button>
             </Link>
-            <Link href='/api-keys'>
+            <Link href='/database'>
               <button className='w-full flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
-                <Key size={20} className='text-green-500' />
+                <Activity size={20} className='text-green-500' />
                 <div>
-                  <p className='text-sm font-medium'>Manage API Keys</p>
+                  <p className='text-sm font-medium'>Database Status</p>
                   <p className='text-xs text-slate-500 dark:text-slate-400'>
-                    Generate and revoke keys
+                    Check connection and sync
                   </p>
                 </div>
               </button>
