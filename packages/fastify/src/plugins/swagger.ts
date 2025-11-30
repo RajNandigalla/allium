@@ -34,8 +34,32 @@ export default fp(
         tags: [
           { name: 'health', description: 'Health check endpoints' },
           {
-            name: 'Admin',
-            description: 'Admin API endpoints (development only)',
+            name: 'Admin - Config',
+            description: 'Admin configuration and metadata endpoints',
+          },
+          {
+            name: 'Admin - Models',
+            description: 'Model CRUD operations',
+          },
+          {
+            name: 'Admin - Fields',
+            description: 'Field management for models',
+          },
+          {
+            name: 'Admin - Relations',
+            description: 'Relationship management for models',
+          },
+          {
+            name: 'Admin - Schema',
+            description: 'Schema synchronization and inspection',
+          },
+          {
+            name: 'Admin - API Keys',
+            description: 'Manage API keys for service authentication',
+          },
+          {
+            name: 'Admin - Database',
+            description: 'Database operations (seed, reset, stats)',
           },
         ],
         components: {

@@ -1,0 +1,327 @@
+import { FastifyInstance } from 'fastify';
+import path from 'path';
+import fs from 'fs-extra';
+import { autoLoadModels } from '@allium/core';
+
+export async function registerModelsRoutes(
+  fastify: FastifyInstance,
+  alliumDir: string,
+  modelsDir: string,
+  triggerSync: () => Promise<void>
+) {
+  // GET /_admin/models
+  fastify.get(
+    '/models',
+    {
+      schema: {
+        tags: ['Admin - Models'],
+        description: 'List all models',
+        response: {
+          200: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                fields: { type: 'array' },
+                relations: { type: 'array' },
+                routes: { type: 'object' },
+              },
+            },
+          },
+        },
+      },
+    },
+    async () => {
+      // 1. Try to read the aggregated schema first (fastest)
+      const schemaPath = path.join(alliumDir, 'schema.json');
+      if (await fs.pathExists(schemaPath)) {
+        const schema = await fs.readJson(schemaPath);
+        return schema.models || [];
+      }
+
+      // 2. Fallback to loading from source
+      try {
+        const models = await autoLoadModels(modelsDir);
+        return models;
+      } catch (error) {
+        fastify.log.error(error);
+        return [];
+      }
+    }
+  );
+
+  // POST /_admin/models
+  fastify.post<{ Body: { name: string; fields: any[] } }>(
+    '/models',
+    {
+      schema: {
+        tags: ['Admin - Models'],
+        description: 'Create a new model',
+        body: {
+          type: 'object',
+          required: ['name'],
+          properties: {
+            name: {
+              type: 'string',
+              description: 'Model name (PascalCase)',
+            },
+            fields: {
+              type: 'array',
+              description: 'Model fields',
+              items: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  type: { type: 'string' },
+                  required: { type: 'boolean' },
+                  unique: { type: 'boolean' },
+                },
+              },
+            },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean' },
+              model: { type: 'object' },
+            },
+          },
+          400: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+          409: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+    async (req, reply) => {
+      const { name, fields } = req.body;
+
+      if (!name) {
+        return reply.code(400).send({ error: 'Model name is required' });
+      }
+
+      const modelName = name;
+      const fileName = `${modelName.toLowerCase()}.json`;
+      const filePath = path.join(alliumDir, 'models', fileName);
+
+      // Check if exists
+      if (await fs.pathExists(filePath)) {
+        return reply.code(409).send({ error: 'Model already exists' });
+      }
+
+      const modelDef = {
+        name: modelName,
+        fields: fields || [],
+        relations: [],
+        // Default routes
+        routes: {
+          create: { path: `/${modelName.toLowerCase()}` },
+          read: { path: `/${modelName.toLowerCase()}/:id` },
+          update: { path: `/${modelName.toLowerCase()}/:id` },
+          delete: { path: `/${modelName.toLowerCase()}/:id` },
+          list: { path: `/${modelName.toLowerCase()}` },
+        },
+      };
+
+      // Write JSON definition
+      await fs.ensureDir(path.join(alliumDir, 'models'));
+      await fs.writeJson(filePath, modelDef, { spaces: 2 });
+
+      // Create TS Model File
+      const tsFilePath = path.join(
+        modelsDir,
+        `${modelName.toLowerCase()}.model.ts`
+      );
+      if (!(await fs.pathExists(tsFilePath))) {
+        const tsContent = `import { registerModel } from '@allium/core';
+
+export const ${modelName} = registerModel('${modelName}', {
+  // Add hooks here
+});
+`;
+        await fs.ensureDir(modelsDir);
+        await fs.writeFile(tsFilePath, tsContent);
+      }
+
+      await triggerSync();
+
+      return { success: true, model: modelDef };
+    }
+  );
+
+  // GET /_admin/models/:name
+  fastify.get<{ Params: { name: string } }>(
+    '/models/:name',
+    {
+      schema: {
+        tags: ['Admin - Models'],
+        description: 'Get a specific model definition',
+        params: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+          },
+          required: ['name'],
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              fields: { type: 'array' },
+              relations: { type: 'array' },
+              routes: { type: 'object' },
+            },
+          },
+          404: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+    async (req, reply) => {
+      const { name } = req.params;
+      const fileName = `${name.toLowerCase()}.json`;
+      const filePath = path.join(alliumDir, 'models', fileName);
+
+      if (!(await fs.pathExists(filePath))) {
+        return reply.code(404).send({ error: 'Model not found' });
+      }
+
+      const model = await fs.readJson(filePath);
+      return model;
+    }
+  );
+
+  // PUT /_admin/models/:name
+  fastify.put<{ Params: { name: string }; Body: any }>(
+    '/models/:name',
+    {
+      schema: {
+        tags: ['Admin - Models'],
+        description: 'Update a model definition',
+        params: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+          },
+          required: ['name'],
+        },
+        body: {
+          type: 'object',
+          properties: {
+            fields: { type: 'array' },
+            relations: { type: 'array' },
+            routes: { type: 'object' },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean' },
+              model: { type: 'object' },
+            },
+          },
+          404: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+    async (req, reply) => {
+      const { name } = req.params;
+      const fileName = `${name.toLowerCase()}.json`;
+      const filePath = path.join(alliumDir, 'models', fileName);
+
+      if (!(await fs.pathExists(filePath))) {
+        return reply.code(404).send({ error: 'Model not found' });
+      }
+
+      const existingModel = await fs.readJson(filePath);
+      const updates = req.body as Record<string, any>;
+      const updatedModel = {
+        ...existingModel,
+        ...updates,
+        name, // Preserve the name
+      };
+
+      await fs.writeJson(filePath, updatedModel, { spaces: 2 });
+      await triggerSync();
+
+      return { success: true, model: updatedModel };
+    }
+  );
+
+  // DELETE /_admin/models/:name
+  fastify.delete<{ Params: { name: string } }>(
+    '/models/:name',
+    {
+      schema: {
+        tags: ['Admin - Models'],
+        description: 'Delete a model',
+        params: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+          },
+          required: ['name'],
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean' },
+              message: { type: 'string' },
+            },
+          },
+          404: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+    async (req, reply) => {
+      const { name } = req.params;
+      const fileName = `${name.toLowerCase()}.json`;
+      const filePath = path.join(alliumDir, 'models', fileName);
+      const tsFilePath = path.join(modelsDir, `${name.toLowerCase()}.model.ts`);
+
+      if (!(await fs.pathExists(filePath))) {
+        return reply.code(404).send({ error: 'Model not found' });
+      }
+
+      // Delete JSON definition
+      await fs.remove(filePath);
+
+      // Delete TS file if exists
+      if (await fs.pathExists(tsFilePath)) {
+        await fs.remove(tsFilePath);
+      }
+
+      await triggerSync();
+
+      return { success: true, message: `Model ${name} deleted` };
+    }
+  );
+}
