@@ -29,11 +29,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       primary:
         'bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-800 shadow-sm',
       secondary:
-        'bg-slate-700 text-white hover:bg-slate-600 active:bg-slate-700 shadow-sm',
+        'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white hover:bg-slate-300 dark:hover:bg-slate-600 active:bg-slate-400 dark:active:bg-slate-700 shadow-sm',
       danger:
         'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 shadow-sm',
       ghost:
-        'bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white',
+        'bg-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white',
     };
 
     const sizes = {
