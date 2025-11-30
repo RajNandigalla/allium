@@ -194,6 +194,7 @@
 - [ ] Data seeding utilities
 - [ ] Database migration tools
 - [ ] Backup/restore functionality
+- [ ] Clear Data (truncate tables without deleting model)
 
 **Real-time & Events**
 

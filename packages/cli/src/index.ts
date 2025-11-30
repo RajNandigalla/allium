@@ -163,6 +163,7 @@ program
   .command('sync')
   .description('Generate TypeScript code from model definitions')
   .option('--scaffold', 'Generate module scaffolding in src/modules (advanced)')
+  .allowUnknownOption()
   .addHelpText(
     'after',
     `
@@ -218,7 +219,20 @@ ${chalk.bold('Note:')}
   'db push' is for development. For production, use Prisma migrations.
 `
   )
-  .action(db);
+  .action((command, options, commandObject) => {
+    // Commander passes (command, options, commandObject) for commands with arguments
+    // But if command is optional, it might be different.
+    // Let's handle the args manually
+    const args = commandObject ? commandObject.args : options.args;
+    // We want to capture everything after --
+    // Commander stores this in .args if configured, or we can use process.argv
+
+    // Simple approach: pass the options object which should contain what we need if configured
+    // But commander doesn't automatically capture unknown args unless configured.
+    // Let's use .allowUnknownOption() on the command
+
+    db(command, options);
+  });
 
 // OVERRIDE COMMAND
 program

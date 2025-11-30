@@ -101,17 +101,28 @@ export interface SyncResponse {
   error?: string;
 }
 
+export interface ModelDefinition extends CreateModelInput {
+  // Model definition includes all create input fields
+}
+
 async function fetchAdmin<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
   const url = `${BASE_URL}${endpoint}`;
+
+  // Only set Content-Type header if there's a body
+  const headers: HeadersInit = {
+    ...options?.headers,
+  };
+
+  if (options?.body) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   const response = await fetch(url, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
+    headers,
   });
 
   const data = await response.json();
@@ -135,5 +146,10 @@ export const adminApi = {
       method: 'POST',
     }),
 
-  getModels: () => fetchAdmin<any[]>('/models'),
+  getModels: () => fetchAdmin<ModelDefinition[]>('/models'),
+
+  deleteModel: (name: string) =>
+    fetchAdmin<{ success: boolean }>(`/models/${name}`, {
+      method: 'DELETE',
+    }),
 };

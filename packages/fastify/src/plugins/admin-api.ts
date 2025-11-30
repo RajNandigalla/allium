@@ -55,7 +55,8 @@ const adminApi = async (fastify: FastifyInstance, opts: AdminApiOptions) => {
   const triggerSync = async () => {
     try {
       fastify.log.info('Triggering Allium sync...');
-      await execAsync('npx allium sync');
+      // Pass --accept-data-loss to handle potential data loss warnings non-interactively
+      await execAsync('npm run allium sync -- --accept-data-loss');
       fastify.log.info('Allium sync completed');
     } catch (error) {
       fastify.log.error({ error }, 'Failed to sync Allium schema');

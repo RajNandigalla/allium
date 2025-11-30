@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import inquirer from 'inquirer';
 
-export const db = async (command: string) => {
+export const db = async (command: string, options: any) => {
   const projectRoot = process.cwd();
   const schemaPath = path.join(
     projectRoot,
@@ -21,10 +21,14 @@ export const db = async (command: string) => {
 
   let prismaCommand = '';
 
+  // Extract extra args passed after --
+  const extraArgs = options?.args || [];
+  const flags = extraArgs.join(' ');
+
   switch (command) {
     case 'push':
       console.log(chalk.blue('Pushing schema to database...'));
-      prismaCommand = `npx prisma db push --schema "${schemaPath}"`;
+      prismaCommand = `npx prisma db push --schema "${schemaPath}" ${flags}`;
       break;
     case 'generate':
       console.log(chalk.blue('Generating Prisma client...'));
@@ -48,7 +52,7 @@ export const db = async (command: string) => {
             ],
           },
         ]);
-        return db(selectedCommand);
+        return db(selectedCommand, options);
       }
       console.error(chalk.red(`Unknown db command: ${command}`));
       console.log(chalk.yellow('Available commands: push, generate, studio'));

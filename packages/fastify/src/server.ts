@@ -178,9 +178,33 @@ async function syncDatabase(config: AlliumServerConfig) {
     });
 
     // Push to DB
-    execSync(`npx prisma db push --schema "${schemaPath}"`, {
-      stdio: 'inherit',
-    });
+    // Push to DB
+    // Use --accept-data-loss to avoid interactive prompts on startup
+    const prismaCmd = `npx prisma db push --schema "${schemaPath}" --accept-data-loss`;
+
+    try {
+      execSync(prismaCmd, {
+        stdio: 'inherit',
+      });
+    } catch (e) {
+      // Fallback to local node_modules binary if npx fails or is not available
+      const localPrisma = path.join(
+        projectRoot,
+        'node_modules',
+        '.bin',
+        'prisma'
+      );
+      if (fs.existsSync(localPrisma)) {
+        execSync(
+          `${localPrisma} db push --schema "${schemaPath}" --accept-data-loss`,
+          {
+            stdio: 'inherit',
+          }
+        );
+      } else {
+        throw e;
+      }
+    }
     console.log('Database synced successfully.');
   } catch (error: any) {
     if (error.message && error.message.includes('missing field definitions')) {
