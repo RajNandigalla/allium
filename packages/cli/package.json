@@ -8,7 +8,7 @@
     "scripts": {
         "build": "tsc && npm run copy-templates",
         "copy-templates": "mkdir -p dist/templates && cp src/templates/*.md dist/templates/",
-        "clean": "rm -rf dist",
+        "clean": "rm -rf dist tsconfig.tsbuildinfo",
         "dev": "ts-node src/index.ts"
     },
     "dependencies": {
