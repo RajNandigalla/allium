@@ -5,16 +5,88 @@ export interface ApiError {
   error: string;
 }
 
+export interface ValidationRules {
+  min?: number;
+  max?: number;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+  enum?: string[];
+}
+
+export interface ComputedFieldConfig {
+  template?: string;
+  transform?: (record: any) => any;
+}
+
 export interface ModelField {
   name: string;
   type: string;
-  required: boolean;
-  unique: boolean;
+  required?: boolean;
+  unique?: boolean;
+  default?: string | number | boolean;
+  validation?: ValidationRules;
+  values?: string[];
+  private?: boolean;
+  writePrivate?: boolean;
+  encrypted?: boolean;
+  virtual?: boolean;
+  computed?: ComputedFieldConfig;
+}
+
+export interface Relation {
+  name: string;
+  model?: string;
+  models?: string[];
+  type: '1:1' | '1:n' | 'n:m' | 'polymorphic';
+  foreignKey?: string;
+  references?: string;
+  onDelete?: 'Cascade' | 'SetNull' | 'NoAction' | 'Restrict';
+  required?: boolean;
+}
+
+export interface RateLimitConfig {
+  max: number;
+  timeWindow: string | number;
+}
+
+export interface ApiConfig {
+  prefix?: string;
+  version?: string;
+  operations?: ('create' | 'read' | 'update' | 'delete' | 'list')[];
+  rateLimit?: RateLimitConfig;
+}
+
+export interface ServiceConfig {
+  hooks?: {
+    beforeCreate?: string;
+    afterCreate?: string;
+    beforeUpdate?: string;
+    afterUpdate?: string;
+    beforeDelete?: string;
+    afterDelete?: string;
+  };
+  customMethods?: Array<{
+    name: string;
+    description?: string;
+  }>;
+}
+
+export interface ModelConstraints {
+  unique?: string[][];
+  indexes?: string[][];
 }
 
 export interface CreateModelInput {
   name: string;
+  description?: string;
   fields: ModelField[];
+  relations?: Relation[];
+  api?: ApiConfig;
+  service?: ServiceConfig;
+  softDelete?: boolean;
+  auditTrail?: boolean;
+  constraints?: ModelConstraints;
 }
 
 export interface CreateModelResponse {
