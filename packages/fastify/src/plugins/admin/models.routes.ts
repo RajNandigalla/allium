@@ -324,4 +324,82 @@ export const ${modelName} = registerModel('${modelName}', {
       return { success: true, message: `Model ${name} deleted` };
     }
   );
+
+  // DELETE /_admin/models/:name/data
+  fastify.delete<{ Params: { name: string } }>(
+    '/models/:name/data',
+    {
+      schema: {
+        tags: ['Admin - Models'],
+        description: 'Clear all data from a model (truncate table)',
+        params: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+          },
+          required: ['name'],
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean' },
+              message: { type: 'string' },
+              count: { type: 'number' },
+            },
+          },
+          404: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+          500: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+    async (req, reply) => {
+      const { name } = req.params;
+
+      // 1. Check if model exists in schema
+      const fileName = `${name.toLowerCase()}.json`;
+      const filePath = path.join(alliumDir, 'models', fileName);
+
+      if (!(await fs.pathExists(filePath))) {
+        return reply.code(404).send({ error: 'Model definition not found' });
+      }
+
+      // 2. Access Prisma delegate dynamically
+      // Prisma client properties are usually lowercase (e.g. prisma.user)
+      // But we should try both or rely on standard naming convention
+      const modelName = name.charAt(0).toLowerCase() + name.slice(1);
+      const delegate = (fastify as any).prisma[modelName];
+
+      if (!delegate) {
+        return reply.code(500).send({
+          error: `Database model '${modelName}' not found in Prisma client. Try syncing the schema first.`,
+        });
+      }
+
+      try {
+        // 3. Delete all records
+        const result = await delegate.deleteMany({});
+        return {
+          success: true,
+          message: `Cleared data for model ${name}`,
+          count: result.count,
+        };
+      } catch (error: any) {
+        fastify.log.error(error);
+        return reply.code(500).send({
+          error: `Failed to clear data: ${error.message}`,
+        });
+      }
+    }
+  );
 }

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { SidePanel } from '../../components/ui/SidePanel';
-import { Plus, Database, Link2, Trash2, Settings } from 'lucide-react';
+import { Plus, Database, Trash2, Link2, Eraser, Settings } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { adminApi, ModelDefinition } from '../../lib/api';
 import { ModelWizard } from '../../components/model-wizard/ModelWizard';
@@ -91,81 +91,112 @@ export default function ModelsPage() {
     }
   };
 
+  const handleClearData = async (modelName: string) => {
+    if (
+      !confirm(
+        `Are you sure you want to clear ALL data from "${modelName}"? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await toast.promise(
+        adminApi.clearModelData(modelName),
+        {
+          loading: `Clearing data from ${modelName}...`,
+          success: (data) => `Cleared ${data.count} records from ${modelName}!`,
+          error: (err) => `Failed to clear data: ${err.message}`,
+        },
+        {
+          id: 'clear-data',
+        }
+      );
+    } catch (error) {
+      console.error('Failed to clear data:', error);
+    }
+  };
+
   return (
-    <div className='p-8'>
-      <div className='flex items-center justify-between mb-8'>
+    <div className='space-y-6'>
+      <div className='flex justify-between items-center'>
         <div>
-          <h1 className='text-4xl font-bold mb-2'>Models</h1>
-          <p className='text-gray-400'>Manage your data models</p>
+          <h1 className='text-3xl font-bold tracking-tight'>Models</h1>
+          <p className='text-slate-500 dark:text-slate-400 mt-2'>
+            Manage your data models and schema definitions.
+          </p>
         </div>
-        <Button
-          variant='primary'
-          size='md'
-          onClick={() => setIsCreatePanelOpen(true)}
-        >
-          <Plus size={20} />
+        <Button onClick={() => setIsCreatePanelOpen(true)}>
+          <Plus className='w-4 h-4 mr-2' />
           Create Model
         </Button>
       </div>
 
       {isLoading ? (
-        <Card>
-          <div className='text-center py-12'>
-            <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4'></div>
-            <p className='text-gray-400'>Loading models...</p>
-          </div>
-        </Card>
+        <div className='flex justify-center items-center h-64'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600'></div>
+          <span className='ml-3 text-slate-500'>Loading models...</span>
+        </div>
       ) : error ? (
-        <Card>
-          <div className='text-center py-12'>
-            <p className='text-red-500 mb-4'>{error}</p>
-            <Button variant='secondary' size='sm' onClick={fetchModels}>
-              Retry
-            </Button>
-          </div>
-        </Card>
+        <div className='bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg flex items-center justify-between'>
+          <span>{error}</span>
+          <Button variant='secondary' size='sm' onClick={fetchModels}>
+            Retry
+          </Button>
+        </div>
       ) : models.length === 0 ? (
-        <Card>
-          <div className='text-center py-12'>
-            <p className='text-gray-400 mb-4'>
-              No models yet. Create your first model to get started!
-            </p>
-            <Button
-              variant='primary'
-              size='md'
-              onClick={() => setIsCreatePanelOpen(true)}
-            >
-              <Plus size={20} />
-              Create Your First Model
-            </Button>
-          </div>
-        </Card>
+        <div className='text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700'>
+          <Database className='w-12 h-12 text-slate-400 mx-auto mb-4' />
+          <h3 className='text-lg font-medium text-slate-900 dark:text-slate-100'>
+            No models found
+          </h3>
+          <p className='text-slate-500 dark:text-slate-400 mt-2 mb-6'>
+            Get started by creating your first data model.
+          </p>
+          <Button onClick={() => setIsCreatePanelOpen(true)}>
+            <Plus className='w-4 h-4 mr-2' />
+            Create Model
+          </Button>
+        </div>
       ) : (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
           {models.map((model) => {
             const isExpanded = expandedModels[model.name] || false;
 
             return (
-              <Card key={model.name} hover className='relative'>
-                <div className='flex items-start justify-between mb-4'>
-                  <div className='flex-1'>
-                    <h3 className='text-xl font-bold text-slate-900 dark:text-white mb-1'>
-                      {model.name}
-                    </h3>
-                    {model.description && (
-                      <p className='text-sm text-slate-600 dark:text-slate-400'>
-                        {model.description}
-                      </p>
-                    )}
-                  </div>
+              <Card key={model.name} className='relative group'>
+                <div className='absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2'>
                   <Button
                     variant='ghost'
                     size='sm'
-                    className='text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20'
-                    onClick={() => handleDeleteModel(model.name)}
+                    className='h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 p-0'
+                    onClick={() => handleClearData(model.name)}
+                    title='Clear Data (Truncate)'
                   >
-                    <Trash2 size={16} />
+                    <Eraser className='w-4 h-4' />
                   </Button>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    className='h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 p-0'
+                    onClick={() => handleDeleteModel(model.name)}
+                    title='Delete Model'
+                  >
+                    <Trash2 className='w-4 h-4' />
+                  </Button>
+                </div>
+
+                <div className='mb-4'>
+                  <div className='flex items-center justify-between mb-2'>
+                    <h3 className='text-lg font-semibold text-slate-900 dark:text-slate-100'>
+                      {model.name}
+                    </h3>
+                  </div>
+                  {model.description && (
+                    <p className='text-sm text-slate-500 dark:text-slate-400 line-clamp-2'>
+                      {model.description}
+                    </p>
+                  )}
                 </div>
 
                 {/* Summary Stats */}

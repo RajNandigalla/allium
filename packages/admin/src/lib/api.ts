@@ -152,4 +152,9 @@ export const adminApi = {
     fetchAdmin<{ success: boolean }>(`/models/${name}`, {
       method: 'DELETE',
     }),
+
+  clearModelData: (name: string) =>
+    fetchAdmin<{ success: boolean; count: number }>(`/models/${name}/data`, {
+      method: 'DELETE',
+    }),
 };
