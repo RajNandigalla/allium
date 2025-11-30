@@ -31,7 +31,13 @@ export default fp(
             description: 'Development server',
           },
         ],
-        tags: [{ name: 'health', description: 'Health check endpoints' }],
+        tags: [
+          { name: 'health', description: 'Health check endpoints' },
+          {
+            name: 'Admin',
+            description: 'Admin API endpoints (development only)',
+          },
+        ],
         components: {
           securitySchemes: {
             bearerAuth: {

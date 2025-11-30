@@ -124,6 +124,11 @@ export interface AlliumServerConfig extends AlliumPluginOptions {
 export async function initAllium(config: AlliumServerConfig) {
   const { server, autoSync, plugins, ...alliumConfig } = config;
 
+  // Default modelsDir if not provided (required for Admin API)
+  if (!alliumConfig.modelsDir) {
+    alliumConfig.modelsDir = path.join(process.cwd(), 'src', 'models');
+  }
+
   if (autoSync) {
     await syncDatabase(config);
   }

@@ -11,6 +11,11 @@ export interface AlliumPluginOptions {
    */
   models: ModelDefinition[];
 
+  /**
+   * Directory containing model definitions (required for Admin API)
+   */
+  modelsDir?: string;
+
   // Prisma configuration removed to decouple framework from specific ORM config
   // The plugin now relies on the 'prisma' decorator being present on the Fastify instance
 
@@ -188,6 +193,20 @@ export default fp<AlliumPluginOptions>(
         fastify.log.info('GraphQL initialized at /graphql');
       } catch (error) {
         fastify.log.error({ error }, 'Failed to initialize GraphQL support');
+      }
+    }
+
+    // 4. Initialize Admin API (Development Only)
+    if (
+      (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) &&
+      opts.modelsDir
+    ) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const adminApi = (await import('./admin-api.js')).default;
+        await fastify.register(adminApi as any, { modelsDir: opts.modelsDir });
+      } catch (error) {
+        fastify.log.warn({ error }, 'Failed to initialize Admin API');
       }
     }
 

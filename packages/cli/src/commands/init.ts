@@ -136,6 +136,7 @@ const start = async () => {
 
     const app = await initAllium({
       models,
+      modelsDir: path.join(__dirname, 'models'),
       autoSync: true,
       prisma: {
         datasourceUrl: process.env.DATABASE_URL,
