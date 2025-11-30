@@ -30,6 +30,7 @@ export interface ModelOptions {
   softDelete?: boolean;
   auditTrail?: boolean;
   fields?: import('../types/model').Field[];
+  relations?: import('../types/model').Relation[];
 }
 
 /**
@@ -67,6 +68,7 @@ export function registerModel(
   let softDelete = false;
   let auditTrail = false;
   let fields: import('../types/model').Field[] | undefined;
+  let relations: import('../types/model').Relation[] | undefined;
 
   if (optionsOrHooks) {
     // Check if it's the new options object (has hooks, softDelete, or auditTrail properties)
@@ -75,7 +77,8 @@ export function registerModel(
       'hooks' in optionsOrHooks ||
       'softDelete' in optionsOrHooks ||
       'auditTrail' in optionsOrHooks ||
-      'fields' in optionsOrHooks;
+      'fields' in optionsOrHooks ||
+      'relations' in optionsOrHooks;
 
     if (isOptions) {
       const opts = optionsOrHooks as ModelOptions;
@@ -83,6 +86,7 @@ export function registerModel(
       softDelete = opts.softDelete || false;
       auditTrail = opts.auditTrail || false;
       fields = opts.fields;
+      relations = opts.relations;
     } else {
       // Legacy: treat as hooks object
       hooks = optionsOrHooks as ModelHooks;
@@ -95,6 +99,7 @@ export function registerModel(
     softDelete,
     auditTrail,
     fields,
+    relations,
   };
 
   modelRegistry.register(model);

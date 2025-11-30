@@ -64,6 +64,7 @@ export interface Relation {
   foreignKey?: string;
   references?: string;
   onDelete?: OnDeleteAction;
+  required?: boolean; // If false, the foreign key will be nullable
 }
 
 export type ApiOperation = 'create' | 'read' | 'update' | 'delete' | 'list';

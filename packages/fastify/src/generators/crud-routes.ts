@@ -183,6 +183,28 @@ function buildPrismaQuery(
     query.where = where;
   }
 
+  // 3. Handle Populate (populate=relation1,relation2)
+  if (params.populate) {
+    const relations = String(params.populate).split(',');
+    const include: any = {};
+    let hasInclude = false;
+
+    for (const relation of relations) {
+      const relationName = relation.trim();
+      // Verify relation exists in model definition
+      const relationDef = model.relations?.find((r) => r.name === relationName);
+
+      if (relationDef) {
+        include[relationName] = true;
+        hasInclude = true;
+      }
+    }
+
+    if (hasInclude) {
+      query.include = include;
+    }
+  }
+
   return query;
 }
 
@@ -355,13 +377,51 @@ export async function generateModelRoutes(
             });
           }
           if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            // P2002: Unique constraint violation
             if (error.code === 'P2002') {
+              const target = (error.meta?.target as string[]) || [];
               return (reply as any).status(409).send({
-                error: 'A record with this unique field already exists',
+                statusCode: 409,
+                error: 'Conflict',
+                message: 'Unique constraint violation',
+                errors: target.map((field) => ({
+                  field,
+                  message: 'Value must be unique',
+                })),
+              });
+            }
+            // P2003: Foreign key constraint violation
+            if (error.code === 'P2003') {
+              const fieldName = error.meta?.field_name as string;
+              return (reply as any).status(400).send({
+                statusCode: 400,
+                error: 'Bad Request',
+                message: 'Foreign key constraint violation',
+                errors: [
+                  {
+                    field: fieldName || 'unknown',
+                    message: 'Invalid reference: Value does not exist',
+                  },
+                ],
+              });
+            }
+            // P2025: Record not found (for nested operations)
+            if (error.code === 'P2025') {
+              return (reply as any).status(404).send({
+                statusCode: 404,
+                error: 'Not Found',
+                message:
+                  (error.meta?.cause as string) || 'Related record not found',
               });
             }
           }
-          throw error;
+          // Log unexpected errors and return generic message
+          fastify.log.error(error);
+          return (reply as any).status(500).send({
+            statusCode: 500,
+            error: 'Internal Server Error',
+            message: 'An unexpected error occurred',
+          });
         }
       }
     );
@@ -498,10 +558,37 @@ export async function generateModelRoutes(
       async (request, reply) => {
         const { id } = request.params as { id: string };
         const parsedId = parseId(id);
+        const query = request.query as any;
 
-        const record = await prismaModel.findUnique({
+        const findOptions: any = {
           where: { id: parsedId },
-        });
+        };
+
+        // Handle populate
+        if (query.populate) {
+          const relations = String(query.populate).split(',');
+          const include: any = {};
+          let hasInclude = false;
+
+          for (const relation of relations) {
+            const relationName = relation.trim();
+            // Verify relation exists in model definition
+            const relationDef = model.relations?.find(
+              (r) => r.name === relationName
+            );
+
+            if (relationDef) {
+              include[relationName] = true;
+              hasInclude = true;
+            }
+          }
+
+          if (hasInclude) {
+            findOptions.include = include;
+          }
+        }
+
+        const record = await prismaModel.findUnique(findOptions);
 
         if (!record) {
           return reply.status(404).send({
@@ -594,13 +681,50 @@ export async function generateModelRoutes(
             });
           }
           if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            // P2025: Record not found
             if (error.code === 'P2025') {
               return reply.status(404).send({
-                error: `${modelName} not found`,
+                statusCode: 404,
+                error: 'Not Found',
+                message: `${modelName} not found`,
+              });
+            }
+            // P2002: Unique constraint violation
+            if (error.code === 'P2002') {
+              const target = (error.meta?.target as string[]) || [];
+              return (reply as any).status(409).send({
+                statusCode: 409,
+                error: 'Conflict',
+                message: 'Unique constraint violation',
+                errors: target.map((field) => ({
+                  field,
+                  message: 'Value must be unique',
+                })),
+              });
+            }
+            // P2003: Foreign key constraint violation
+            if (error.code === 'P2003') {
+              const fieldName = error.meta?.field_name as string;
+              return (reply as any).status(400).send({
+                statusCode: 400,
+                error: 'Bad Request',
+                message: 'Foreign key constraint violation',
+                errors: [
+                  {
+                    field: fieldName || 'unknown',
+                    message: 'Invalid reference: Value does not exist',
+                  },
+                ],
               });
             }
           }
-          throw error;
+          // Log unexpected errors and return generic message
+          fastify.log.error(error);
+          return (reply as any).status(500).send({
+            statusCode: 500,
+            error: 'Internal Server Error',
+            message: 'An unexpected error occurred',
+          });
         }
       }
     );
@@ -708,13 +832,37 @@ export async function generateModelRoutes(
           };
         } catch (error) {
           if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            // P2025: Record not found
             if (error.code === 'P2025') {
               return reply.status(404).send({
-                error: `${modelName} not found`,
+                statusCode: 404,
+                error: 'Not Found',
+                message: `${modelName} not found`,
+              });
+            }
+            // P2003: Foreign key constraint violation (has dependent records)
+            if (error.code === 'P2003') {
+              return (reply as any).status(409).send({
+                statusCode: 409,
+                error: 'Conflict',
+                message: 'Foreign key constraint violation',
+                errors: [
+                  {
+                    field: 'id',
+                    message:
+                      'Cannot delete record because it has related records. Delete or update the related records first.',
+                  },
+                ],
               });
             }
           }
-          throw error;
+          // Log unexpected errors and return generic message
+          fastify.log.error(error);
+          return (reply as any).status(500).send({
+            statusCode: 500,
+            error: 'Internal Server Error',
+            message: 'An unexpected error occurred',
+          });
         }
       }
     );

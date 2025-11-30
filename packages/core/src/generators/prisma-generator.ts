@@ -37,8 +37,53 @@ datasource db {
     }
   }
 
+  // Build a map of opposite relations for each model
+  const oppositeRelations = new Map<
+    string,
+    Array<{ name: string; model: string; relationType: string }>
+  >();
+
   for (const model of models) {
-    output += generatePrismaModel(model, models);
+    if (model.relations) {
+      for (const rel of model.relations) {
+        if (rel.type === '1:n' && rel.model) {
+          // For 1:n relations, add the opposite relation to the parent model
+          // User has 1:n to Facility -> Facility should have users User[]
+          if (!oppositeRelations.has(rel.model)) {
+            oppositeRelations.set(rel.model, []);
+          }
+
+          // Use plural form of the child model name for the opposite relation
+          const oppositeName = pluralize(model.name.toLowerCase());
+          oppositeRelations.get(rel.model)!.push({
+            name: oppositeName,
+            model: model.name,
+            relationType: 'array',
+          });
+        } else if (rel.type === '1:1' && rel.model) {
+          // For 1:1 relations, add the opposite relation to the related model
+          if (!oppositeRelations.has(rel.model)) {
+            oppositeRelations.set(rel.model, []);
+          }
+
+          const oppositeName = model.name.toLowerCase();
+          oppositeRelations.get(rel.model)!.push({
+            name: oppositeName,
+            model: model.name,
+            relationType: 'optional',
+          });
+        }
+        // n:m relations are already bidirectional by nature in Prisma
+      }
+    }
+  }
+
+  for (const model of models) {
+    output += generatePrismaModel(
+      model,
+      models,
+      oppositeRelations.get(model.name) || []
+    );
     output += '\n';
   }
 
@@ -49,9 +94,30 @@ function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+function pluralize(str: string): string {
+  // Simple pluralization - can be enhanced with a library if needed
+  if (str.endsWith('y')) {
+    return str.slice(0, -1) + 'ies';
+  } else if (
+    str.endsWith('s') ||
+    str.endsWith('x') ||
+    str.endsWith('ch') ||
+    str.endsWith('sh')
+  ) {
+    return str + 'es';
+  } else {
+    return str + 's';
+  }
+}
+
 function generatePrismaModel(
   model: ModelDefinition,
-  allModels: ModelDefinition[]
+  allModels: ModelDefinition[],
+  oppositeRelations: Array<{
+    name: string;
+    model: string;
+    relationType: string;
+  }> = []
 ): string {
   // Validate that model has fields defined
   if (!model.fields || !Array.isArray(model.fields)) {
@@ -87,10 +153,19 @@ function generatePrismaModel(
     output += `  ${field.name} ${fieldType}${optional}${unique}${defaultValue}\n`;
   }
 
-  // Add relations
+  // Add relations defined in this model
   if (model.relations) {
     for (const rel of model.relations) {
       output += generatePrismaRelation(rel, model.name);
+    }
+  }
+
+  // Add opposite relations (automatically inferred from other models)
+  for (const oppRel of oppositeRelations) {
+    if (oppRel.relationType === 'array') {
+      output += `  ${oppRel.name} ${oppRel.model}[]\n`;
+    } else if (oppRel.relationType === 'optional') {
+      output += `  ${oppRel.name} ${oppRel.model}?\n`;
     }
   }
 
@@ -143,9 +218,13 @@ function generatePrismaRelation(
     );
   } else if (rel.type === '1:n') {
     // This model is the child (has foreign key)
+    // Check if relation is optional (defaults to required if not specified)
+    const isOptional = rel.required === false;
+    const optionalMarker = isOptional ? '?' : '';
+
     return (
-      `  ${rel.name} ${rel.model} @relation(fields: [${foreignKey}], references: [${references}]${onDelete})\n` +
-      `  ${foreignKey} String\n`
+      `  ${rel.name} ${rel.model}${optionalMarker} @relation(fields: [${foreignKey}], references: [${references}]${onDelete})\n` +
+      `  ${foreignKey} String${optionalMarker}\n`
     );
   } else if (rel.type === 'polymorphic') {
     // Polymorphic relation: Generate multiple nullable foreign keys

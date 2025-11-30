@@ -2,8 +2,8 @@
     "name": "@allium/fastify",
     "version": "1.0.0",
     "description": "This project was bootstrapped with Fastify-CLI.",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
+    "main": "src/server.ts",
+    "types": "src/server.ts",
     "directories": {
         "test": "test"
     },

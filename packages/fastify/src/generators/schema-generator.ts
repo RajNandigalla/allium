@@ -43,9 +43,9 @@ function generateProperties(fields: any[]): Record<string, any> {
 }
 
 /**
- * Inject polymorphic foreign keys into properties
+ * Inject relation foreign keys into properties
  */
-function injectPolymorphicFields(
+function injectRelationFields(
   properties: Record<string, any>,
   model: ModelDefinition
 ): Record<string, any> {
@@ -55,6 +55,7 @@ function injectPolymorphicFields(
 
   for (const rel of model.relations) {
     if (rel.type === 'polymorphic' && rel.models) {
+      // Polymorphic relations: add multiple foreign keys
       for (const targetModel of rel.models) {
         const fieldName =
           targetModel.charAt(0).toLowerCase() + targetModel.slice(1);
@@ -65,7 +66,55 @@ function injectPolymorphicFields(
           description: `Foreign key for ${targetModel} (Polymorphic)`,
         };
       }
+    } else if ((rel.type === '1:1' || rel.type === '1:n') && rel.model) {
+      // Regular 1:1 and 1:n relations: add single foreign key
+      const foreignKey = rel.foreignKey || `${rel.name}Id`;
+      const isOptional = rel.required === false;
+
+      newProps[foreignKey] = {
+        type: 'string',
+        description: `Foreign key for ${rel.model}${
+          isOptional ? ' (optional)' : ''
+        }`,
+      };
     }
+    // n:m relations don't have foreign keys in the model itself
+  }
+
+  return newProps;
+}
+
+/**
+ * Inject relation objects into properties (for response schema)
+ */
+function injectRelationObjects(
+  properties: Record<string, any>,
+  model: ModelDefinition
+): Record<string, any> {
+  if (!model.relations) return properties;
+
+  const newProps = { ...properties };
+
+  for (const rel of model.relations) {
+    if (rel.type === '1:1' || rel.type === '1:n') {
+      if (rel.model) {
+        // Add the related model as an optional property
+        newProps[rel.name] = {
+          $ref: `${rel.model}Schema#`,
+          description: `Related ${rel.model} record`,
+        };
+      }
+    } else if (rel.type === 'n:m') {
+      if (rel.model) {
+        newProps[rel.name] = {
+          type: 'array',
+          items: { $ref: `${rel.model}Schema#` },
+          description: `Related ${rel.model} records`,
+        };
+      }
+    }
+    // Polymorphic relations are harder to type in static schema without oneOf
+    // For now we skip them or could use type: object
   }
 
   return newProps;
@@ -90,14 +139,15 @@ export function registerSwaggerSchemas(
     }
 
     let properties = generateProperties(fields);
-    properties = injectPolymorphicFields(properties, model);
+    properties = injectRelationFields(properties, model);
     const required = fields
       .filter((f: any) => f.required !== false) // required is true by default
       .map((f: any) => f.name);
 
     // Add auto-generated fields to response schema
+    // Also inject relation objects (e.g. facility object) for populate support
     const responseProperties = {
-      ...properties,
+      ...injectRelationObjects(properties, model),
       id: { type: 'string', description: 'Unique identifier' },
       uuid: { type: 'string', description: 'UUID identifier' },
       createdAt: {
@@ -183,6 +233,10 @@ export function getListSchema(model: ModelDefinition) {
           description: 'Sort field:order (e.g., createdAt:desc)',
         },
         filter: { type: 'string', description: 'Filter conditions' },
+        populate: {
+          type: 'string',
+          description: 'Comma-separated list of relations to populate',
+        },
       },
     },
     response: {
@@ -224,6 +278,15 @@ export function getByIdSchema(model: ModelDefinition) {
         id: { type: 'string' },
       },
       required: ['id'],
+    },
+    querystring: {
+      type: 'object',
+      properties: {
+        populate: {
+          type: 'string',
+          description: 'Comma-separated list of relations to populate',
+        },
+      },
     },
     response: {
       200: { $ref: `${model.name}Schema#` },
