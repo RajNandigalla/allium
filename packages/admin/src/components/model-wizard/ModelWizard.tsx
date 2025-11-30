@@ -86,6 +86,8 @@ const modelWizardSchema = z.object({
 type ModelWizardFormData = z.infer<typeof modelWizardSchema>;
 
 interface ModelWizardProps {
+  initialData?: any;
+  mode?: 'create' | 'edit';
   onSubmit: (data: any) => Promise<void>;
   onCancel: () => void;
 }
@@ -108,9 +110,66 @@ const WIZARD_STEPS: WizardStepConfig[] = [
   { id: 'review', title: 'Review', description: 'Review and create' },
 ];
 
-export function ModelWizard({ onSubmit, onCancel }: ModelWizardProps) {
+export function ModelWizard({
+  initialData,
+  mode = 'create',
+  onSubmit,
+  onCancel,
+}: ModelWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Transform initialData to form format if editing
+  const defaultValues: Partial<ModelWizardFormData> = initialData
+    ? {
+        name: initialData.name,
+        description: initialData.description,
+        softDelete: initialData.softDelete || false,
+        auditTrail: initialData.auditTrail || false,
+        fields: initialData.fields?.map((f: any) => ({
+          ...f,
+          type: f.type || 'String',
+          required: f.required || false,
+          unique: f.unique || false,
+          // Flatten validation object
+          ...(f.validation || {}),
+          // Handle enum values
+          values: f.validation?.enum?.join(', '),
+          // Handle computed
+          computedTemplate: f.computed?.template,
+        })) || [{ name: '', type: 'String', required: false, unique: false }],
+        relations: initialData.relations || [],
+        // API Config
+        apiPrefix: initialData.api?.prefix,
+        apiVersion: initialData.api?.version,
+        operations: initialData.api?.operations || [
+          'create',
+          'read',
+          'update',
+          'delete',
+          'list',
+        ],
+        rateLimitMax: initialData.api?.rateLimit?.max,
+        rateLimitTimeWindow: initialData.api?.rateLimit?.timeWindow,
+        // Service Hooks
+        beforeCreate: initialData.service?.hooks?.beforeCreate,
+        afterCreate: initialData.service?.hooks?.afterCreate,
+        beforeUpdate: initialData.service?.hooks?.beforeUpdate,
+        afterUpdate: initialData.service?.hooks?.afterUpdate,
+        beforeDelete: initialData.service?.hooks?.beforeDelete,
+        afterDelete: initialData.service?.hooks?.afterDelete,
+        customMethods: initialData.service?.customMethods,
+        // Constraints
+        compoundUniqueInput: initialData.constraints?.unique?.[0]?.join(', '),
+        compoundIndexesInput: initialData.constraints?.indexes?.[0]?.join(', '),
+      }
+    : {
+        softDelete: false,
+        auditTrail: false,
+        fields: [{ name: '', type: 'String', required: false, unique: false }],
+        relations: [],
+        operations: ['create', 'read', 'update', 'delete', 'list'],
+      };
 
   const {
     register,
@@ -121,14 +180,8 @@ export function ModelWizard({ onSubmit, onCancel }: ModelWizardProps) {
     getValues,
     setValue,
   } = useForm<ModelWizardFormData>({
-    resolver: zodResolver(modelWizardSchema),
-    defaultValues: {
-      softDelete: false,
-      auditTrail: false,
-      fields: [{ name: '', type: 'String', required: false, unique: false }],
-      relations: [],
-      operations: ['create', 'read', 'update', 'delete', 'list'],
-    },
+    resolver: zodResolver(modelWizardSchema) as any,
+    defaultValues,
     mode: 'onChange',
   });
 

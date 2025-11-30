@@ -29,6 +29,10 @@ export default function ModelsPage() {
     {}
   );
 
+  const [editingModel, setEditingModel] = useState<ModelDefinition | null>(
+    null
+  );
+
   const toggleExpanded = (modelName: string) => {
     setExpandedModels((prev) => ({
       ...prev,
@@ -86,6 +90,33 @@ export default function ModelsPage() {
     }
   };
 
+  const handleUpdateModel = async (data: any) => {
+    if (!editingModel) return;
+
+    try {
+      console.log('Updating model:', data);
+      toast.loading(`Updating model ${data.name}...`, { id: 'update-model' });
+
+      // Update Model Definition
+      await adminApi.updateModel(editingModel.name, data);
+
+      toast.success(`Model ${data.name} updated successfully!`, {
+        id: 'update-model',
+      });
+      setEditingModel(null);
+      setIsCreatePanelOpen(false);
+
+      // Refresh models list
+      fetchModels();
+    } catch (error: any) {
+      console.error('Failed to update model:', error);
+      toast.error(error.message || 'Failed to update model', {
+        id: 'update-model',
+      });
+      throw error;
+    }
+  };
+
   const handleDeleteModel = async (modelName: string) => {
     if (
       !confirm(
@@ -136,6 +167,16 @@ export default function ModelsPage() {
     }
   };
 
+  const openCreateWizard = () => {
+    setEditingModel(null);
+    setIsCreatePanelOpen(true);
+  };
+
+  const openEditWizard = (model: ModelDefinition) => {
+    setEditingModel(model);
+    setIsCreatePanelOpen(true);
+  };
+
   const filteredModels = models.filter((model) => {
     const query = searchQuery.toLowerCase();
     const matchesSearch =
@@ -175,7 +216,7 @@ export default function ModelsPage() {
                 className='pl-9'
               />
             </div>
-            <Button onClick={() => setIsCreatePanelOpen(true)}>
+            <Button onClick={openCreateWizard}>
               <Plus className='w-4 h-4 mr-2' />
               Create Model
             </Button>
@@ -247,7 +288,7 @@ export default function ModelsPage() {
               <p className='text-slate-500 dark:text-slate-400 mt-2 mb-6'>
                 Get started by creating your first data model.
               </p>
-              <Button onClick={() => setIsCreatePanelOpen(true)}>
+              <Button onClick={openCreateWizard}>
                 <Plus className='w-4 h-4 mr-2' />
                 Create Model
               </Button>
@@ -262,6 +303,15 @@ export default function ModelsPage() {
             return (
               <Card key={model.name} className='relative group'>
                 <div className='absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2'>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    className='h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 p-0'
+                    onClick={() => openEditWizard(model)}
+                    title='Edit Model'
+                  >
+                    <Settings className='w-4 h-4' />
+                  </Button>
                   <Button
                     variant='ghost'
                     size='sm'
@@ -466,13 +516,27 @@ export default function ModelsPage() {
 
       <SidePanel
         open={isCreatePanelOpen}
-        onOpenChange={setIsCreatePanelOpen}
-        title='Create New Model'
-        description='Define a new data model with fields, relations, and configuration.'
+        onOpenChange={(open) => {
+          setIsCreatePanelOpen(open);
+          if (!open) setEditingModel(null);
+        }}
+        title={
+          editingModel ? `Edit Model: ${editingModel.name}` : 'Create New Model'
+        }
+        description={
+          editingModel
+            ? 'Modify existing model definition.'
+            : 'Define a new data model with fields, relations, and configuration.'
+        }
       >
         <ModelWizard
-          onSubmit={handleCreateModel}
-          onCancel={() => setIsCreatePanelOpen(false)}
+          initialData={editingModel}
+          mode={editingModel ? 'edit' : 'create'}
+          onSubmit={editingModel ? handleUpdateModel : handleCreateModel}
+          onCancel={() => {
+            setIsCreatePanelOpen(false);
+            setEditingModel(null);
+          }}
         />
       </SidePanel>
     </div>

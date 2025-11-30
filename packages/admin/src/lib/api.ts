@@ -141,6 +141,12 @@ export const adminApi = {
       body: JSON.stringify(data),
     }),
 
+  updateModel: (name: string, data: CreateModelInput) =>
+    fetchAdmin<CreateModelResponse>(`/models/${name}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
   syncSchema: () =>
     fetchAdmin<SyncResponse>('/sync', {
       method: 'POST',
