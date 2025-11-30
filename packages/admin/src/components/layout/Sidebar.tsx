@@ -41,15 +41,14 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
     >
       {/* Logo */}
       <div className='h-[61px] flex items-center px-6 border-b border-slate-200 dark:border-slate-800 whitespace-nowrap overflow-hidden'>
-        <motion.h1
-          layout
+        <h1
           className={clsx(
-            'font-bold text-slate-900 dark:text-white tracking-tight',
+            'font-bold text-slate-900 dark:text-white tracking-tight transition-all duration-200',
             isCollapsed ? 'text-sm text-center' : 'text-xl'
           )}
         >
           {isCollapsed ? 'A' : 'Allium Admin'}
-        </motion.h1>
+        </h1>
       </div>
 
       {/* Navigation */}
@@ -64,7 +63,7 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.96 }}
                 className={clsx(
-                  'flex items-center gap-3 px-4 py-2.5 rounded-md transition-colors duration-75 whitespace-nowrap',
+                  'flex items-center gap-3 px-4 py-2.5 rounded-md transition-colors duration-75 whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2',
                   isActive
                     ? 'bg-indigo-600 text-white'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100',

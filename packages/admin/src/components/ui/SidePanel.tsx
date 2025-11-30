@@ -46,7 +46,7 @@ export function SidePanel({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className='fixed inset-0 z-50 bg-black/40 backdrop-blur-sm'
+                className='fixed inset-0 z-50 bg-black/40'
               />
             </DialogPrimitive.Overlay>
             <DialogPrimitive.Content asChild>
@@ -69,7 +69,7 @@ export function SidePanel({
                   }
                 }}
                 className={cn(
-                  'fixed inset-y-0 right-0 z-50 h-full w-full gap-4 border-l bg-background p-6 shadow-lg sm:max-w-md',
+                  'fixed inset-y-0 right-0 z-50 h-full w-full gap-4 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-lg sm:max-w-md',
                   className
                 )}
               >
@@ -77,17 +77,17 @@ export function SidePanel({
                   <div className='flex items-center justify-between mb-6'>
                     <div>
                       {title && (
-                        <DialogPrimitive.Title className='text-lg font-semibold text-foreground'>
+                        <DialogPrimitive.Title className='text-lg font-semibold text-slate-900 dark:text-white'>
                           {title}
                         </DialogPrimitive.Title>
                       )}
                       {description && (
-                        <DialogPrimitive.Description className='text-sm text-muted-foreground mt-1'>
+                        <DialogPrimitive.Description className='text-sm text-slate-600 dark:text-slate-400 mt-1'>
                           {description}
                         </DialogPrimitive.Description>
                       )}
                     </div>
-                    <DialogPrimitive.Close className='rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary'>
+                    <DialogPrimitive.Close className='rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:pointer-events-none text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'>
                       <X className='h-5 w-5' />
                       <span className='sr-only'>Close</span>
                     </DialogPrimitive.Close>

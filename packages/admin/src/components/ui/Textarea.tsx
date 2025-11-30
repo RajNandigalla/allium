@@ -1,14 +1,14 @@
-import { forwardRef, InputHTMLAttributes } from 'react';
+import { forwardRef, TextareaHTMLAttributes } from 'react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
   helperText?: string;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, label, error, helperText, ...props }, ref) => {
     return (
       <div className='flex flex-col gap-1.5'>
@@ -17,7 +17,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {label}
           </label>
         )}
-        <input
+        <textarea
           ref={ref}
           className={twMerge(
             clsx(
@@ -25,6 +25,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent',
               'transition-all duration-200',
               'placeholder:text-slate-400 dark:placeholder:text-slate-500',
+              'resize-none',
               error
                 ? 'border-red-500'
                 : 'border-slate-300 dark:border-slate-700',
@@ -44,4 +45,4 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   }
 );
 
-Input.displayName = 'Input';
+Textarea.displayName = 'Textarea';

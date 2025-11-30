@@ -130,7 +130,7 @@ export default function Dashboard() {
           <h3 className='text-xl font-semibold mb-4'>Quick Actions</h3>
           <div className='space-y-3'>
             <Link href='/models'>
-              <button className='w-full flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors text-left'>
+              <button className='w-full flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
                 <Plus size={20} className='text-indigo-500' />
                 <div>
                   <p className='text-sm font-medium'>Create New Model</p>
@@ -141,7 +141,7 @@ export default function Dashboard() {
               </button>
             </Link>
             <Link href='/data'>
-              <button className='w-full flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors text-left'>
+              <button className='w-full flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
                 <LayoutDashboard size={20} className='text-cyan-500' />
                 <div>
                   <p className='text-sm font-medium'>Explore Data</p>
@@ -152,7 +152,7 @@ export default function Dashboard() {
               </button>
             </Link>
             <Link href='/api-keys'>
-              <button className='w-full flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors text-left'>
+              <button className='w-full flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
                 <Key size={20} className='text-green-500' />
                 <div>
                   <p className='text-sm font-medium'>Manage API Keys</p>

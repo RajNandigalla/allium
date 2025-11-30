@@ -5,6 +5,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { SidePanel } from '../../components/ui/SidePanel';
 import { Input } from '../../components/ui/Input';
+import { Textarea } from '../../components/ui/Textarea';
 import { Plus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -93,10 +94,11 @@ export default function ModelsPage() {
             helperText='Must start with a letter and contain only alphanumeric characters.'
           />
 
-          <Input
+          <Textarea
             label='Description (Optional)'
             placeholder='Describe what this model represents...'
             error={errors.description?.message}
+            rows={4}
             {...register('description')}
           />
 
