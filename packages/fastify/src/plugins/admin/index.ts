@@ -5,3 +5,5 @@ export * from './relations.routes';
 export * from './schema.routes';
 export * from './apikeys.routes';
 export * from './database.routes';
+export * from './data.routes';
+export * from './system.routes';

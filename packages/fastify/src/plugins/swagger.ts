@@ -61,6 +61,14 @@ export default fp(
             name: 'Admin - Database',
             description: 'Database operations (seed, reset, stats)',
           },
+          {
+            name: 'Admin - Data Explorer',
+            description: 'Generic CRUD operations for any model',
+          },
+          {
+            name: 'Admin - System',
+            description: 'System information and health status',
+          },
         ],
         components: {
           securitySchemes: {
