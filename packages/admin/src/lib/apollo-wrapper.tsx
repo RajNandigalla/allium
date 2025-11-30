@@ -11,7 +11,7 @@ import {
 function makeClient() {
   const httpLink = new HttpLink({
     // Proxy to the backend
-    uri: 'http://localhost:3000/graphql',
+    uri: process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:1337/graphql',
   });
 
   return new ApolloClient({
