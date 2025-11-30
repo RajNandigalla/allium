@@ -56,8 +56,8 @@ export function SidePanel({
                 exit={{ x: '100%' }}
                 transition={{
                   type: 'spring',
-                  damping: 40,
-                  stiffness: 400,
+                  damping: 25,
+                  stiffness: 300,
                   mass: 1,
                 }}
                 drag='x'

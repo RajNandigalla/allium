@@ -74,7 +74,7 @@ export default function Dashboard() {
           application
         </p>
         <div className='flex gap-4 justify-center'>
-          <Link href='/models/new'>
+          <Link href='/models'>
             <Button
               variant='secondary'
               size='md'
@@ -129,7 +129,7 @@ export default function Dashboard() {
         <Card>
           <h3 className='text-xl font-semibold mb-4'>Quick Actions</h3>
           <div className='space-y-3'>
-            <Link href='/models/new'>
+            <Link href='/models'>
               <button className='w-full flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors text-left'>
                 <Plus size={20} className='text-indigo-500' />
                 <div>

@@ -34,13 +34,13 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
     <motion.aside
       initial={false}
       animate={{ width: isCollapsed ? 64 : 256 }}
-      transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       className={clsx(
         'fixed left-4 top-4 bottom-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col z-40 rounded-xl overflow-hidden'
       )}
     >
       {/* Logo */}
-      <div className='p-6 border-b border-slate-200 dark:border-slate-800 whitespace-nowrap overflow-hidden'>
+      <div className='h-[61px] flex items-center px-6 border-b border-slate-200 dark:border-slate-800 whitespace-nowrap overflow-hidden'>
         <motion.h1
           layout
           className={clsx(
