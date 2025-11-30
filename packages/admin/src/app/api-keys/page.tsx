@@ -14,7 +14,7 @@ export default function ApiKeysPage() {
             Manage your API keys
           </p>
         </div>
-        <Button variant='primary' size='lg'>
+        <Button variant='primary' size='md'>
           <Plus size={20} />
           Generate Key
         </Button>

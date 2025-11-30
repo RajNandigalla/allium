@@ -77,7 +77,7 @@ export default function Dashboard() {
           <Link href='/models/new'>
             <Button
               variant='secondary'
-              size='lg'
+              size='md'
               className='bg-white text-gray-900 hover:bg-gray-100'
             >
               <Plus size={20} />
@@ -87,7 +87,7 @@ export default function Dashboard() {
           <Link href='/models'>
             <Button
               variant='ghost'
-              size='lg'
+              size='md'
               className='border-2 border-white text-white hover:bg-white/10'
             >
               <Eye size={20} />

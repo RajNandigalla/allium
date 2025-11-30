@@ -31,7 +31,7 @@ export default function DatabasePage() {
             <div className='w-3 h-3 bg-green-500 rounded-full'></div>
             <span className='text-sm'>Schema is in sync</span>
           </div>
-          <Button variant='primary' className='w-full'>
+          <Button variant='primary' size='md' className='w-full'>
             <RefreshCw size={20} />
             Sync Schema
           </Button>
@@ -48,7 +48,7 @@ export default function DatabasePage() {
                 Populate database with sample data
               </p>
             </div>
-            <Button variant='secondary'>
+            <Button variant='secondary' size='md'>
               <Database size={20} />
               Seed
             </Button>
@@ -60,7 +60,7 @@ export default function DatabasePage() {
                 Delete all data and reset schema
               </p>
             </div>
-            <Button variant='danger'>
+            <Button variant='danger' size='md'>
               <Trash2 size={20} />
               Reset
             </Button>

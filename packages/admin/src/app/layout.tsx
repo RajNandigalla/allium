@@ -4,6 +4,7 @@ import { ApolloWrapper } from '../lib/apollo-wrapper';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Header } from '../components/layout/Header';
 import { ToastProvider } from '../components/ui/Toast';
+import { TopProgressBar } from '../components/ui/TopProgressBar';
 import '../styles/index.scss';
 import { ThemeProvider } from '../components/providers/ThemeProvider';
 import { useState } from 'react';
@@ -24,6 +25,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <TopProgressBar />
           <ApolloWrapper>
             <div className='flex min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-150 p-4 gap-4'>
               <Sidebar isCollapsed={isSidebarCollapsed} />

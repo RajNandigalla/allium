@@ -19,7 +19,7 @@ export function Header({ onToggleSidebar, sidebarCollapsed }: HeaderProps) {
     >
       <Button
         variant='ghost'
-        size='sm'
+        size='md'
         onClick={onToggleSidebar}
         className='w-9 px-0'
         aria-label='Toggle sidebar'
