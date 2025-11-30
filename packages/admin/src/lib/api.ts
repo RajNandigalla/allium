@@ -163,4 +163,46 @@ export const adminApi = {
     fetchAdmin<{ success: boolean; count: number }>(`/models/${name}/data`, {
       method: 'DELETE',
     }),
+
+  // Data Management
+  listRecords: (
+    model: string,
+    params?: {
+      page?: number;
+      limit?: number;
+      sort?: string;
+      order?: 'asc' | 'desc';
+    }
+  ) => {
+    const query = new URLSearchParams();
+    if (params?.page) query.set('page', params.page.toString());
+    if (params?.limit) query.set('limit', params.limit.toString());
+    if (params?.sort) query.set('sort', params.sort);
+    if (params?.order) query.set('order', params.order);
+
+    return fetchAdmin<{
+      data: any[];
+      meta: { total: number; page: number; limit: number; pages: number };
+    }>(`/data/${model}?${query.toString()}`);
+  },
+
+  getRecord: (model: string, id: string) =>
+    fetchAdmin<{ data: any }>(`/data/${model}/${id}`),
+
+  createRecord: (model: string, data: any) =>
+    fetchAdmin<{ success: boolean; data: any }>(`/data/${model}`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateRecord: (model: string, id: string, data: any) =>
+    fetchAdmin<{ success: boolean; data: any }>(`/data/${model}/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  deleteRecord: (model: string, id: string) =>
+    fetchAdmin<{ success: boolean; message: string }>(`/data/${model}/${id}`, {
+      method: 'DELETE',
+    }),
 };

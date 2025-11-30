@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { SidePanel } from '../../components/ui/SidePanel';
@@ -494,6 +495,17 @@ export default function ModelsPage() {
                     )}
                   </div>
                 )}
+
+                {/* Browse Data Button */}
+                <Link
+                  href={`/models/${model.name.toLowerCase()}/data`}
+                  className='block'
+                >
+                  <Button variant='secondary' className='w-full mb-3'>
+                    <Database className='w-4 h-4 mr-2' />
+                    Browse Data
+                  </Button>
+                </Link>
 
                 {/* Feature Badges */}
                 <div className='pt-4 border-t border-slate-200 dark:border-slate-700 flex flex-wrap gap-2'>
