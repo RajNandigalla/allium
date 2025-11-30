@@ -40,7 +40,9 @@ export default function Dashboard() {
       {/* Header */}
       <div className='mb-8'>
         <h1 className='text-4xl font-bold mb-2'>Dashboard</h1>
-        <p className='text-gray-400'>Welcome to the Allium Admin Panel</p>
+        <p className='text-slate-600 dark:text-slate-400'>
+          Welcome to the Allium Admin Panel
+        </p>
       </div>
 
       {/* Stats Grid */}
@@ -51,9 +53,13 @@ export default function Dashboard() {
             <Card key={stat.name} glass hover>
               <div className='flex items-start justify-between'>
                 <div className='flex-1'>
-                  <p className='text-sm text-gray-400 mb-1'>{stat.name}</p>
+                  <p className='text-sm text-slate-600 dark:text-slate-400 mb-1'>
+                    {stat.name}
+                  </p>
                   <p className='text-3xl font-bold mb-2'>{stat.value}</p>
-                  <p className='text-xs text-gray-500'>{stat.change}</p>
+                  <p className='text-xs text-slate-500 dark:text-slate-500'>
+                    {stat.change}
+                  </p>
                 </div>
                 <div className={`p-3 rounded-lg bg-${stat.color}-600/20`}>
                   <Icon size={24} className={`text-${stat.color}-500`} />
@@ -78,7 +84,7 @@ export default function Dashboard() {
             <Button
               variant='secondary'
               size='md'
-              className='bg-white text-gray-900 hover:bg-gray-100'
+              className='bg-white text-slate-900 hover:bg-slate-100'
             >
               <Plus size={20} />
               Create Model
@@ -102,25 +108,31 @@ export default function Dashboard() {
         <Card>
           <h3 className='text-xl font-semibold mb-4'>Recent Activity</h3>
           <div className='space-y-3'>
-            <div className='flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg'>
+            <div className='flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg'>
               <div className='w-2 h-2 bg-green-500 rounded-full'></div>
               <div className='flex-1'>
                 <p className='text-sm font-medium'>User model created</p>
-                <p className='text-xs text-gray-400'>2 hours ago</p>
+                <p className='text-xs text-slate-500 dark:text-slate-400'>
+                  2 hours ago
+                </p>
               </div>
             </div>
-            <div className='flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg'>
+            <div className='flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg'>
               <div className='w-2 h-2 bg-indigo-500 rounded-full'></div>
               <div className='flex-1'>
                 <p className='text-sm font-medium'>Database synced</p>
-                <p className='text-xs text-gray-400'>5 hours ago</p>
+                <p className='text-xs text-slate-500 dark:text-slate-400'>
+                  5 hours ago
+                </p>
               </div>
             </div>
-            <div className='flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg'>
+            <div className='flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg'>
               <div className='w-2 h-2 bg-cyan-500 rounded-full'></div>
               <div className='flex-1'>
                 <p className='text-sm font-medium'>API key generated</p>
-                <p className='text-xs text-gray-400'>1 day ago</p>
+                <p className='text-xs text-slate-500 dark:text-slate-400'>
+                  1 day ago
+                </p>
               </div>
             </div>
           </div>
@@ -130,33 +142,33 @@ export default function Dashboard() {
           <h3 className='text-xl font-semibold mb-4'>Quick Actions</h3>
           <div className='space-y-3'>
             <Link href='/models'>
-              <button className='w-full flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
+              <button className='w-full flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
                 <Plus size={20} className='text-indigo-500' />
                 <div>
                   <p className='text-sm font-medium'>Create New Model</p>
-                  <p className='text-xs text-gray-400'>
+                  <p className='text-xs text-slate-500 dark:text-slate-400'>
                     Define a new data model
                   </p>
                 </div>
               </button>
             </Link>
             <Link href='/data'>
-              <button className='w-full flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
+              <button className='w-full flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
                 <LayoutDashboard size={20} className='text-cyan-500' />
                 <div>
                   <p className='text-sm font-medium'>Explore Data</p>
-                  <p className='text-xs text-gray-400'>
+                  <p className='text-xs text-slate-500 dark:text-slate-400'>
                     View and manage records
                   </p>
                 </div>
               </button>
             </Link>
             <Link href='/api-keys'>
-              <button className='w-full flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
+              <button className='w-full flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
                 <Key size={20} className='text-green-500' />
                 <div>
                   <p className='text-sm font-medium'>Manage API Keys</p>
-                  <p className='text-xs text-gray-400'>
+                  <p className='text-xs text-slate-500 dark:text-slate-400'>
                     Generate and revoke keys
                   </p>
                 </div>

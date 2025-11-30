@@ -60,14 +60,6 @@ export function SidePanel({
                   stiffness: 300,
                   mass: 1,
                 }}
-                drag='x'
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={{ left: 0, right: 0.5 }}
-                onDragEnd={(_, info) => {
-                  if (info.offset.x > 100 && info.velocity.x > 0) {
-                    onOpenChange?.(false);
-                  }
-                }}
                 className={cn(
                   'fixed inset-y-0 right-0 z-50 h-full w-full gap-4 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-lg sm:max-w-md',
                   className
@@ -92,7 +84,9 @@ export function SidePanel({
                       <span className='sr-only'>Close</span>
                     </DialogPrimitive.Close>
                   </div>
-                  <div className='flex-1 overflow-y-auto'>{children}</div>
+                  <div className='flex-1 overflow-y-auto px-1 -mx-1'>
+                    {children}
+                  </div>
                 </div>
               </motion.div>
             </DialogPrimitive.Content>

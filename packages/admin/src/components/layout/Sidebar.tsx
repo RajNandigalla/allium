@@ -93,7 +93,7 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
 
       {/* Footer */}
       <div className='p-4 border-t border-slate-200 dark:border-slate-800 space-y-4 whitespace-nowrap overflow-hidden'>
-        {!isCollapsed && <ThemeToggle />}
+        <ThemeToggle isCollapsed={isCollapsed} />
         <div
           className={clsx(
             'text-xs text-slate-500 dark:text-slate-500',

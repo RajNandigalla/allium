@@ -1,6 +1,6 @@
 'use client';
 
-import { Menu } from 'lucide-react';
+import { PanelLeft } from 'lucide-react';
 import { Breadcrumb } from '../ui/Breadcrumb';
 import { Button } from '../ui/Button';
 
@@ -24,7 +24,7 @@ export function Header({ onToggleSidebar, sidebarCollapsed }: HeaderProps) {
         className='w-9 px-0'
         aria-label='Toggle sidebar'
       >
-        <Menu className='h-5 w-5 text-slate-600 dark:text-slate-400' />
+        <PanelLeft className='h-5 w-5 text-slate-600 dark:text-slate-400' />
       </Button>
       <Breadcrumb />
     </header>
