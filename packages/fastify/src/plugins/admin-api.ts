@@ -62,6 +62,46 @@ const adminApi = async (fastify: FastifyInstance, options: AdminApiOptions) => {
         }
       );
 
+      // GET /_admin/types
+      routes.get(
+        '/types',
+        {
+          schema: {
+            tags: ['Admin'],
+            description: 'List available data types',
+            response: {
+              200: {
+                type: 'array',
+                items: { type: 'string' },
+              },
+            },
+          },
+        },
+        async () => {
+          return ['String', 'Int', 'Float', 'Boolean', 'DateTime', 'Json'];
+        }
+      );
+
+      // GET /_admin/relationships
+      routes.get(
+        '/relationships',
+        {
+          schema: {
+            tags: ['Admin'],
+            description: 'List available relationship types',
+            response: {
+              200: {
+                type: 'array',
+                items: { type: 'string' },
+              },
+            },
+          },
+        },
+        async () => {
+          return ['1:1', '1:n', 'n:m', 'polymorphic'];
+        }
+      );
+
       // GET /_admin/models
       routes.get(
         '/models',
@@ -219,4 +259,5 @@ export const ${modelName} = registerModel('${modelName}', {
 
 export default fp(adminApi, {
   name: 'admin-api',
+  dependencies: ['swagger'],
 });
