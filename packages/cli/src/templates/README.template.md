@@ -140,13 +140,15 @@ Edit model files in `src/models/*.model.ts` to add hooks:
 import { registerModel } from '@allium/core';
 
 export const User = registerModel('User', {
-  beforeCreate: async (data, context) => {
-    // Hash password, validate, etc.
-    return data;
-  },
+  functions: {
+    beforeCreate: async (data, context) => {
+      // Hash password, validate, etc.
+      return data;
+    },
 
-  afterCreate: async (record, context) => {
-    // Send welcome email, log, etc.
+    afterCreate: async (record, context) => {
+      // Send welcome email, log, etc.
+    },
   },
 });
 ```

@@ -290,10 +290,12 @@ async function generateModel(options: { definition?: string }) {
   const modelContent = `import { registerModel } from '@allium/core';
 
 export const ${modelDef.name} = registerModel('${modelDef.name}', {
-  // Add hooks here
-  // beforeCreate: async (data, context) => {
-  //   return data;
-  // },
+  functions: {
+    // Add hooks here
+    // beforeCreate: async (data, context) => {
+    //   return data;
+    // },
+  },
 });
 `;
 

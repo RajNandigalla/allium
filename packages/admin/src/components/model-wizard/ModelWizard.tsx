@@ -92,6 +92,48 @@ interface ModelWizardProps {
   onCancel: () => void;
 }
 
+// Helper function to remove empty values from objects
+function cleanEmptyValues(obj: any): any {
+  if (Array.isArray(obj)) {
+    const cleaned = obj.map(cleanEmptyValues).filter((item) => {
+      if (item === null || item === undefined) return false;
+      if (typeof item === 'object' && Object.keys(item).length === 0)
+        return false;
+      return true;
+    });
+    return cleaned.length > 0 ? cleaned : undefined;
+  }
+
+  if (obj !== null && typeof obj === 'object') {
+    const cleaned: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      // Skip empty strings, null, undefined (but NOT false boolean)
+      if (value === '' || value === null || value === undefined) continue;
+
+      // Skip empty arrays
+      if (Array.isArray(value) && value.length === 0) continue;
+
+      // Recursively clean nested objects (but preserve booleans)
+      if (typeof value === 'object' && typeof value !== 'boolean') {
+        const cleanedValue = cleanEmptyValues(value);
+        if (
+          cleanedValue !== undefined &&
+          Object.keys(cleanedValue).length > 0
+        ) {
+          cleaned[key] = cleanedValue;
+        }
+      } else {
+        // Keep all other values including false booleans
+        cleaned[key] = value;
+      }
+    }
+    // Return cleaned object if it has keys, otherwise return original to preserve structure
+    return Object.keys(cleaned).length > 0 ? cleaned : obj;
+  }
+
+  return obj;
+}
+
 const WIZARD_STEPS: WizardStepConfig[] = [
   { id: 'basic', title: 'Basic Info', description: 'Name and model options' },
   { id: 'fields', title: 'Fields', description: 'Define model fields' },
@@ -262,7 +304,17 @@ export function ModelWizard({
             virtual: true,
           }),
         })),
-        relations: formData.relations?.filter((r) => r.name && r.model),
+        relations: formData.relations
+          ?.filter((r) => r.name && r.model)
+          .map((r) => ({
+            name: r.name,
+            type: r.type,
+            model: r.model,
+            ...(r.foreignKey && { foreignKey: r.foreignKey }),
+            ...(r.references && { references: r.references }),
+            ...(r.onDelete && { onDelete: r.onDelete }),
+            required: r.required,
+          })),
         softDelete: formData.softDelete,
         auditTrail: formData.auditTrail,
         ...(formData.apiPrefix ||
@@ -340,7 +392,10 @@ export function ModelWizard({
           : {}),
       };
 
-      await onSubmit(modelData);
+      // Clean up empty values before sending
+      const cleanedModelData = cleanEmptyValues(modelData);
+
+      await onSubmit(cleanedModelData);
     } catch (error) {
       console.error('Failed to create model:', error);
       throw error;

@@ -26,6 +26,37 @@
             },
             "default": []
         },
+        "softDelete": {
+            "type": "boolean",
+            "default": false
+        },
+        "auditTrail": {
+            "type": "boolean",
+            "default": false
+        },
+        "constraints": {
+            "type": "object",
+            "properties": {
+                "unique": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "indexes": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "api": {
             "$ref": "#/definitions/apiConfig"
         }
@@ -86,6 +117,57 @@
                     "type": "boolean",
                     "default": false,
                     "description": "If true, field will be excluded from API responses"
+                },
+                "writePrivate": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "If true, field cannot be set by users (auto-generated only)"
+                },
+                "encrypted": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "masked": {
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "object",
+                            "required": [
+                                "pattern"
+                            ],
+                            "properties": {
+                                "pattern": {
+                                    "type": "string"
+                                },
+                                "visibleStart": {
+                                    "type": "integer"
+                                },
+                                "visibleEnd": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    ]
+                },
+                "virtual": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "computed": {
+                    "type": "object",
+                    "properties": {
+                        "template": {
+                            "type": "string"
+                        },
+                        "transform": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "jsonSchema": {
+                    "type": "object"
                 }
             }
         },
@@ -128,6 +210,14 @@
                     "type": "string",
                     "default": "id",
                     "description": "Referenced field in related model"
+                },
+                "onDelete": {
+                    "enum": [
+                        "Cascade",
+                        "SetNull",
+                        "NoAction",
+                        "Restrict"
+                    ]
                 }
             }
         },
@@ -145,15 +235,39 @@
                             "create",
                             "read",
                             "update",
-                            "delete"
+                            "delete",
+                            "list"
                         ]
                     },
                     "default": [
                         "create",
                         "read",
                         "update",
-                        "delete"
+                        "delete",
+                        "list"
                     ]
+                },
+                "rateLimit": {
+                    "type": "object",
+                    "required": [
+                        "max",
+                        "timeWindow"
+                    ],
+                    "properties": {
+                        "max": {
+                            "type": "integer"
+                        },
+                        "timeWindow": {
+                            "oneOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        }
+                    }
                 }
             }
         }

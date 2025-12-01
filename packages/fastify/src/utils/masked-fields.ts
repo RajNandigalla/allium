@@ -18,7 +18,22 @@ export function applyMasking(data: any | any[], model: ModelDefinition): any {
       if (typeof field.masked === 'function') {
         result[field.name] = field.masked(value);
       } else if (typeof field.masked === 'string') {
-        result[field.name] = applyPresetMask(value, field.masked);
+        // Check if it's a preset
+        const presets = ['creditCard', 'ssn', 'phone', 'email'];
+        if (presets.includes(field.masked)) {
+          result[field.name] = applyPresetMask(value, field.masked);
+        } else {
+          // Assume it's a function reference
+          const fnName = field.masked;
+          const fn = (model as any).functions?.[fnName];
+          if (typeof fn === 'function') {
+            result[field.name] = fn(value);
+          } else {
+            // Fallback or warning? For now, just return original if not found
+            // console.warn(`Mask function '${fnName}' not found for field '${field.name}'`);
+            result[field.name] = value;
+          }
+        }
       } else if (typeof field.masked === 'object') {
         result[field.name] = applyCustomMask(value, field.masked);
       }

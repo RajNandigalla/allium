@@ -5,13 +5,13 @@ import {
   FieldErrors,
   Control,
   useFieldArray,
-  useWatch,
 } from 'react-hook-form';
 import { WizardStep } from '../ui/WizardStep';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { Plus, Trash2, AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { adminApi } from '../../lib/api';
 
 export interface RelationData {
   name: string;
@@ -56,11 +56,25 @@ export function RelationsStep({
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
 
-  // Load available models (you'll need to implement this API call)
+  // Load available models from API
   useEffect(() => {
-    // TODO: Fetch available models from API
-    // For now, using placeholder
-    setAvailableModels(['User', 'Post', 'Comment', 'Category']);
+    const fetchModels = async () => {
+      setIsLoadingModels(true);
+      try {
+        const models = await adminApi.getModels();
+        // Extract model names from the response
+        const modelNames = models.map((model) => model.name);
+        setAvailableModels(modelNames);
+      } catch (error) {
+        console.error('Failed to fetch models:', error);
+        // Fallback to empty array on error
+        setAvailableModels([]);
+      } finally {
+        setIsLoadingModels(false);
+      }
+    };
+
+    fetchModels();
   }, []);
 
   return (
@@ -136,9 +150,16 @@ export function RelationsStep({
                       </label>
                       <select
                         className='flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-indigo-400 dark:focus:ring-offset-slate-900'
+                        disabled={isLoadingModels}
                         {...register(`relations.${index}.model`)}
                       >
-                        <option value=''>Select a model...</option>
+                        <option value=''>
+                          {isLoadingModels
+                            ? 'Loading models...'
+                            : availableModels.length === 0
+                            ? 'No models available'
+                            : 'Select a model...'}
+                        </option>
                         {availableModels.map((model) => (
                           <option key={model} value={model}>
                             {model}

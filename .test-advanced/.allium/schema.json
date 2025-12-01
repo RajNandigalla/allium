@@ -1,0 +1,29 @@
+{
+  "models": [
+    {
+      "name": "TestUser",
+      "fields": [
+        {
+          "name": "email",
+          "type": "String"
+        },
+        {
+          "name": "secret",
+          "type": "String",
+          "masked": "customMask"
+        },
+        {
+          "name": "price",
+          "type": "Float"
+        },
+        {
+          "name": "priceWithTax",
+          "type": "Float",
+          "computed": {
+            "transform": "calculateTax"
+          }
+        }
+      ]
+    }
+  ]
+}

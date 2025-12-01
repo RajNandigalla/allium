@@ -11,6 +11,47 @@ interface ReviewStepProps {
   onEdit: (step: number) => void;
 }
 
+// Helper function to remove empty values from objects
+function cleanEmptyValues(obj: any): any {
+  if (Array.isArray(obj)) {
+    const cleaned = obj.map(cleanEmptyValues).filter((item) => {
+      if (item === null || item === undefined) return false;
+      if (typeof item === 'object' && Object.keys(item).length === 0)
+        return false;
+      return true;
+    });
+    return cleaned.length > 0 ? cleaned : undefined;
+  }
+
+  if (obj !== null && typeof obj === 'object') {
+    const cleaned: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      // Skip empty strings, null, undefined (but NOT false boolean)
+      if (value === '' || value === null || value === undefined) continue;
+
+      // Skip empty arrays
+      if (Array.isArray(value) && value.length === 0) continue;
+
+      // Recursively clean nested objects (but preserve booleans)
+      if (typeof value === 'object' && typeof value !== 'boolean') {
+        const cleanedValue = cleanEmptyValues(value);
+        if (
+          cleanedValue !== undefined &&
+          Object.keys(cleanedValue).length > 0
+        ) {
+          cleaned[key] = cleanedValue;
+        }
+      } else {
+        // Keep all other values including false booleans
+        cleaned[key] = value;
+      }
+    }
+    return Object.keys(cleaned).length > 0 ? cleaned : undefined;
+  }
+
+  return obj;
+}
+
 export function ReviewStep({ data, onEdit }: ReviewStepProps) {
   const [showJson, setShowJson] = useState(false);
 
@@ -213,7 +254,7 @@ export function ReviewStep({ data, onEdit }: ReviewStepProps) {
           {showJson && (
             <div className='p-4 bg-slate-900 dark:bg-slate-950'>
               <pre className='text-xs text-green-400 font-mono overflow-x-auto'>
-                {JSON.stringify(data, null, 2)}
+                {JSON.stringify(cleanEmptyValues(data), null, 2)}
               </pre>
             </div>
           )}

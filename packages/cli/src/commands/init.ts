@@ -160,9 +160,11 @@ start();
     const exampleModel = `import { registerModel } from '@allium/core';
 
 export const User = registerModel('User', {
-  beforeCreate: async (data, context) => {
-    // Example hook
-    return data;
+  functions: {
+    beforeCreate: async (data, context) => {
+      // Example hook
+      return data;
+    },
   },
 });
 `;

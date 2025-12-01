@@ -38,7 +38,17 @@ export function addComputedFields(
         result[field.name] = translate(template, templateData);
       } else if (transform) {
         // Function-based computation
-        result[field.name] = transform(record);
+        if (typeof transform === 'function') {
+          result[field.name] = transform(record);
+        } else if (typeof transform === 'string') {
+          const fnName = transform;
+          const fn = (model as any).functions?.[fnName];
+          if (typeof fn === 'function') {
+            result[field.name] = fn(record);
+          } else {
+            // console.warn(`Transform function '${fnName}' not found for field '${field.name}'`);
+          }
+        }
       }
     }
 

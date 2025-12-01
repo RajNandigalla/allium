@@ -109,6 +109,12 @@ export interface ModelDefinition {
   /** Route configuration */
   routes?: Record<string, RouteConfig>;
 
+  /**
+   * Map of named functions bound to the model.
+   * Used to resolve function references in JSON schema.
+   */
+  functions?: Record<string, Function>;
+
   /** Introspected metadata (populated at runtime) */
   metadata?: {
     fields: Array<{

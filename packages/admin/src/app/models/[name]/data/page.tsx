@@ -36,6 +36,9 @@ export default function DataBrowserPage() {
   const [editingRecord, setEditingRecord] = useState<any | null>(null);
   const [formData, setFormData] = useState<Record<string, any>>({});
 
+  // Relation data cache
+  const [relationData, setRelationData] = useState<Record<string, any[]>>({});
+
   const fetchModelDefinition = async () => {
     try {
       const def = await adminApi.getModels();
@@ -43,6 +46,25 @@ export default function DataBrowserPage() {
         (m) => m.name.toLowerCase() === modelName.toLowerCase()
       );
       setModelDef(model || null);
+
+      // Fetch related records for all relations
+      if (model?.relations) {
+        const relData: Record<string, any[]> = {};
+        for (const relation of model.relations) {
+          if (relation.model) {
+            try {
+              const response = await adminApi.listRecords(relation.model, {
+                limit: 100,
+              });
+              relData[relation.name] = response.data;
+            } catch (err) {
+              console.error(`Failed to fetch ${relation.model} records:`, err);
+              relData[relation.name] = [];
+            }
+          }
+        }
+        setRelationData(relData);
+      }
     } catch (err) {
       console.error('Failed to fetch model definition:', err);
     }
@@ -187,6 +209,45 @@ export default function DataBrowserPage() {
         onChange={handleChange}
         helperText={field.required ? 'Required' : undefined}
       />
+    );
+  };
+
+  const renderRelationField = (relation: any) => {
+    const relatedRecords = relationData[relation.name] || [];
+    const value = formData[relation.name] || '';
+
+    // For n:m relations, we might need to handle arrays
+    const isMultiple = relation.type === 'n:m' || relation.type === '1:n';
+
+    return (
+      <div key={relation.name} className='space-y-2'>
+        <label className='text-sm font-medium text-slate-700 dark:text-slate-200'>
+          {relation.name} ({relation.model})
+          {relation.required && <span className='text-red-500 ml-1'>*</span>}
+        </label>
+        <select
+          value={value}
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              [relation.name]: e.target.value,
+            }))
+          }
+          className='w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg'
+        >
+          <option value=''>-- Select {relation.model} --</option>
+          {relatedRecords.map((record) => (
+            <option key={record.id} value={record.id}>
+              {record.name || record.title || record.id}
+            </option>
+          ))}
+        </select>
+        <p className='text-xs text-slate-500'>
+          {isMultiple
+            ? 'Multiple selection (coming soon)'
+            : `Select a ${relation.model} record`}
+        </p>
+      </div>
     );
   };
 
@@ -346,7 +407,20 @@ export default function DataBrowserPage() {
         }
       >
         <div className='space-y-4'>
+          {/* Regular Fields */}
           {modelDef?.fields?.map(renderFormField)}
+
+          {/* Relation Fields */}
+          {modelDef?.relations && modelDef.relations.length > 0 && (
+            <>
+              <div className='pt-4 border-t border-slate-200 dark:border-slate-700'>
+                <h4 className='text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3'>
+                  Relations
+                </h4>
+              </div>
+              {modelDef.relations.map(renderRelationField)}
+            </>
+          )}
 
           <div className='flex gap-3 pt-4'>
             <Button onClick={handleSubmit} className='flex-1'>

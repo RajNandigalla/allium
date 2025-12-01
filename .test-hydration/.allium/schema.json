@@ -1,0 +1,16 @@
+{
+  "models": [
+    {
+      "name": "TestUser",
+      "fields": [
+        {
+          "name": "email",
+          "type": "String"
+        }
+      ],
+      "hooks": {
+        "beforeCreate": "hashPassword"
+      }
+    }
+  ]
+}

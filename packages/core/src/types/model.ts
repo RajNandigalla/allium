@@ -22,8 +22,8 @@ export interface ComputedFieldConfig {
   template?: string;
 
   // Function-based: (record) => record.price * 1.1
-  // Only works with registerModel (TypeScript), not JSON
-  transform?: (record: any) => any;
+  // Can be a function (legacy) or a string name referencing a function in model.functions
+  transform?: ((record: any) => any) | string;
 }
 
 export type MaskPattern =
@@ -32,7 +32,8 @@ export type MaskPattern =
   | 'phone'
   | 'email'
   | { pattern: string; visibleStart?: number; visibleEnd?: number }
-  | ((value: any) => any);
+  | ((value: any) => any)
+  | string; // Allow string for function reference or custom preset
 
 export interface Field {
   name: string;
@@ -45,11 +46,9 @@ export interface Field {
   private?: boolean; // If true, field will be excluded from API responses
   writePrivate?: boolean; // If true, field cannot be set by users (auto-generated only)
   masked?: MaskPattern; // Masking configuration
-  hasMaskTransform?: boolean; // True when using custom masking function
   jsonSchema?: Record<string, any>; // JSON Schema definition for validation
   encrypted?: boolean; // If true, field will be encrypted at rest
   virtual?: boolean; // Auto-set to true when "computed" is present
-  hasTransform?: boolean; // True when using "transform" function
   computed?: ComputedFieldConfig;
 }
 

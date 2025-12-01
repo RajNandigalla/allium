@@ -1,0 +1,16 @@
+{
+  "name": "TestUser",
+  "fields": [
+    {
+      "name": "id",
+      "type": "String",
+      "unique": true,
+      "default": "cuid()"
+    },
+    {
+      "name": "email",
+      "type": "String",
+      "unique": true
+    }
+  ]
+}

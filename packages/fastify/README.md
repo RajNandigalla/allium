@@ -62,16 +62,33 @@ npx prisma db push
 
 ### 2. Define Your Models
 
-Define your models and optional hooks:
+### 2. Define Your Models
+
+1. Create a JSON definition in `.allium/models/user.json`:
+
+```json
+{
+  "name": "User",
+  "softDelete": true,
+  "auditTrail": true,
+  "fields": [
+    { "name": "email", "type": "String", "unique": true },
+    { "name": "name", "type": "String" }
+  ],
+  "hooks": {
+    "beforeCreate": "logCreation"
+  }
+}
+```
+
+2. Register the model and hooks in `src/models/user.model.ts`:
 
 ```typescript
 import { registerModel } from '@allium/core';
 
 export const User = registerModel('User', {
-  softDelete: true,
-  auditTrail: true,
-  hooks: {
-    beforeCreate: async (data, context) => {
+  functions: {
+    logCreation: async (data, context) => {
       context.logger.info('Creating new user...');
       return data;
     },
@@ -222,34 +239,36 @@ GET /api/user?sort[0]=role:asc&sort[1]=createdAt:desc
 
 You can define validation rules, enums, and default values directly in your model definition:
 
-```typescript
-registerModel('User', {
-  fields: [
+````typescript
+```json
+{
+  "name": "User",
+  "fields": [
     {
-      name: 'role',
-      type: 'Enum',
-      values: ['user', 'admin', 'moderator'],
-      default: 'user',
+      "name": "role",
+      "type": "Enum",
+      "values": ["user", "admin", "moderator"],
+      "default": "user"
     },
     {
-      name: 'email',
-      type: 'String',
-      unique: true,
-      validation: {
-        pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
-      },
+      "name": "email",
+      "type": "String",
+      "unique": true,
+      "validation": {
+        "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      }
     },
     {
-      name: 'age',
-      type: 'Int',
-      validation: {
-        min: 18,
-        max: 100,
-      },
-    },
-  ],
-});
-```
+      "name": "age",
+      "type": "Int",
+      "validation": {
+        "min": 18,
+        "max": 100
+      }
+    }
+  ]
+}
+````
 
 **Features:**
 
@@ -260,22 +279,24 @@ registerModel('User', {
 
 **Private Fields Example:**
 
-```typescript
-registerModel('User', {
-  fields: [
+````typescript
+```json
+{
+  "name": "User",
+  "fields": [
     {
-      name: 'password',
-      type: 'String',
-      private: true, // Never returned in API responses
+      "name": "password",
+      "type": "String",
+      "private": true
     },
     {
-      name: 'apiKey',
-      type: 'String',
-      private: true,
-    },
-  ],
-});
-```
+      "name": "apiKey",
+      "type": "String",
+      "private": true
+    }
+  ]
+}
+````
 
 Private fields are automatically excluded from all CRUD responses (CREATE, LIST, GET, UPDATE) but remain accessible for internal queries and updates.
 
@@ -285,39 +306,54 @@ Define calculated fields that appear in API responses but are NOT stored in the 
 
 **Template-based** (works in JSON & TypeScript):
 
-```typescript
-registerModel('User', {
-  fields: [
-    { name: 'firstName', type: 'String' },
-    { name: 'lastName', type: 'String' },
+**Template-based** (JSON):
+
+```json
+{
+  "name": "User",
+  "fields": [
+    { "name": "firstName", "type": "String" },
+    { "name": "lastName", "type": "String" },
     {
-      name: 'fullName',
-      type: 'String',
-      virtual: true,
-      computed: {
-        template: '{firstName} {lastName}', // Supports nested paths like {address.city}
-      },
-    },
-  ],
-});
+      "name": "fullName",
+      "type": "String",
+      "virtual": true,
+      "computed": {
+        "template": "{firstName} {lastName}"
+      }
+    }
+  ]
+}
 ```
 
-**Function-based** (TypeScript `registerModel` only):
+**Function-based** (JSON + TypeScript):
+
+1. Define in JSON:
+
+```json
+{
+  "name": "Product",
+  "fields": [
+    { "name": "price", "type": "Float" },
+    {
+      "name": "priceWithTax",
+      "type": "Float",
+      "virtual": true,
+      "computed": {
+        "transform": "calculateTax"
+      }
+    }
+  ]
+}
+```
+
+2. Implement in TypeScript:
 
 ```typescript
 registerModel('Product', {
-  fields: [
-    { name: 'price', type: 'Float' },
-    {
-      name: 'priceWithTax',
-      type: 'Float',
-      virtual: true,
-      hasTransform: true,
-      computed: {
-        transform: (record) => record.price * 1.1,
-      },
-    },
-  ],
+  functions: {
+    calculateTax: (record) => record.price * 1.1,
+  },
 });
 ```
 
@@ -327,7 +363,7 @@ registerModel('Product', {
 - Cannot query or sort by virtual fields
 - Use `virtual: true` flag for identification
 - Use `virtual: true` flag for identification
-- `hasTransform: true` indicates custom function logic (for introspection)
+- `virtual: true` flag for identification
 
 ## Compound Unique Constraints
 
@@ -335,17 +371,19 @@ Enforce uniqueness across multiple fields at the database level to prevent dupli
 
 **Example** (Likes - prevent liking the same post twice):
 
-```typescript
-registerModel('Like', {
-  fields: [
-    { name: 'userId', type: 'String' },
-    { name: 'postId', type: 'String' },
+````typescript
+```json
+{
+  "name": "Like",
+  "fields": [
+    { "name": "userId", "type": "String" },
+    { "name": "postId", "type": "String" }
   ],
-  constraints: {
-    unique: [['userId', 'postId']],
-  },
-});
-```
+  "constraints": {
+    "unique": [["userId", "postId"]]
+  }
+}
+````
 
 **Generated Prisma Schema:**
 
@@ -384,17 +422,19 @@ constraints: {
 
 Optimize query performance with multi-field database indexes.
 
-```typescript
-registerModel('Post', {
-  fields: [
-    { name: 'userId', type: 'String' },
-    { name: 'createdAt', type: 'DateTime' },
+````typescript
+```json
+{
+  "name": "Post",
+  "fields": [
+    { "name": "userId", "type": "String" },
+    { "name": "createdAt", "type": "DateTime" }
   ],
-  constraints: {
-    indexes: [['userId', 'createdAt']],
-  },
-});
-```
+  "constraints": {
+    "indexes": [["userId", "createdAt"]]
+  }
+}
+````
 
 **Generated Prisma:**
 
@@ -414,17 +454,19 @@ registerModel('Post', {
 
 Selectively enable or disable API endpoints per model.
 
-```typescript
-registerModel('Config', {
-  fields: [
-    { name: 'key', type: 'String' },
-    { name: 'value', type: 'String' },
+````typescript
+```json
+{
+  "name": "Config",
+  "fields": [
+    { "name": "key", "type": "String" },
+    { "name": "value", "type": "String" }
   ],
-  api: {
-    operations: ['read', 'list'], // Only GET endpoints
-  },
-});
-```
+  "api": {
+    "operations": ["read", "list"]
+  }
+}
+````
 
 **Available Operations:**
 
@@ -446,16 +488,16 @@ registerModel('Config', {
 
 Override the default `/api/{model}` path for specific models.
 
-```typescript
-registerModel('Auth', {
-  fields: [
-    /*...*/
-  ],
-  api: {
-    prefix: '/api/v1/auth', // Custom path
-  },
-});
-```
+````typescript
+```json
+{
+  "name": "Auth",
+  "fields": [],
+  "api": {
+    "prefix": "/api/v1/auth"
+  }
+}
+````
 
 **Resulting Routes:**
 
@@ -492,16 +534,18 @@ Automatically mask sensitive data in API responses while preserving full values 
 
 **Preset Patterns:**
 
-```typescript
-registerModel('User', {
-  fields: [
-    { name: 'creditCard', type: 'String', masked: 'creditCard' }, // ****-****-****-1234
-    { name: 'ssn', type: 'String', masked: 'ssn' }, // ***-**-1234
-    { name: 'phone', type: 'String', masked: 'phone' }, // ***-***-5678
-    { name: 'email', type: 'String', masked: 'email' }, // j***@example.com
-  ],
-});
-```
+````typescript
+```json
+{
+  "name": "User",
+  "fields": [
+    { "name": "creditCard", "type": "String", "masked": "creditCard" },
+    { "name": "ssn", "type": "String", "masked": "ssn" },
+    { "name": "phone", "type": "String", "masked": "phone" },
+    { "name": "email", "type": "String", "masked": "email" }
+  ]
+}
+````
 
 **Custom Configuration:**
 
@@ -519,12 +563,11 @@ registerModel('User', {
 
 **Custom Function:**
 
-```typescript
+```json
 {
-  name: 'secretCode',
-  type: 'String',
-  hasMaskTransform: true, // Indicates custom logic (for introspection)
-  masked: (val) => `SECRET-${val.slice(-4)}` // Output: SECRET-5678
+  "name": "secretCode",
+  "type": "String",
+  "masked": "customMaskFn"
 }
 ```
 
@@ -538,21 +581,23 @@ Validate JSON fields with schemas and filter by nested properties.
 
 **Schema Validation:**
 ```typescript
-registerModel('Config', {
-  fields: [
+```json
+{
+  "name": "Config",
+  "fields": [
     {
-      name: 'metadata',
-      type: 'Json',
-      jsonSchema: {
-        type: 'object',
-        required: ['theme'],
-        properties: {
-          theme: { type: 'string', enum: ['light', 'dark'] }
+      "name": "metadata",
+      "type": "Json",
+      "jsonSchema": {
+        "type": "object",
+        "required": ["theme"],
+        "properties": {
+          "theme": { "type": "string", "enum": ["light", "dark"] }
         }
       }
     }
   ]
-});
+}
 ````
 
 **Nested Filtering:**
@@ -571,15 +616,17 @@ Automatically encrypt sensitive data at rest using AES-256-GCM.
 
 **Usage:**
 ```typescript
-registerModel('User', {
-  fields: [
+```json
+{
+  "name": "User",
+  "fields": [
     {
-      name: 'stripeKey',
-      type: 'String',
-      encrypted: true
+      "name": "stripeKey",
+      "type": "String",
+      "encrypted": true
     }
   ]
-});
+}
 ````
 
 **Environment:**
@@ -603,12 +650,14 @@ ENCRYPTION_KEY=your-32-character-secret-key-here-minimum
 
 Enable these features in `registerModel`:
 
-```typescript
-registerModel('User', {
-  softDelete: true, // Adds deletedAt, enables restore/forceDelete
-  auditTrail: true, // Adds createdBy, updatedBy, deletedBy
-});
-```
+````typescript
+```json
+{
+  "name": "User",
+  "softDelete": true,
+  "auditTrail": true
+}
+````
 
 **Soft Deletes:**
 
@@ -627,18 +676,20 @@ registerModel('User', {
 
 Ensure data integrity by automatically deleting related records.
 
-```typescript
-registerModel('Post', {
-  fields: [
+````typescript
+```json
+{
+  "name": "Post",
+  "fields": [
     {
-      name: 'user',
-      type: 'Relation',
-      model: 'User',
-      relation: { onDelete: 'Cascade' },
-    },
-  ],
-});
-```
+      "name": "user",
+      "type": "Relation",
+      "model": "User",
+      "relation": { "onDelete": "Cascade" }
+    }
+  ]
+}
+````
 
 **Supported Actions:**
 
@@ -671,16 +722,18 @@ initAllium({
 
 Override limits for specific models:
 
-```typescript
-registerModel('Auth', {
-  api: {
-    rateLimit: {
-      max: 5,
-      timeWindow: '1 minute',
-    },
-  },
-});
-```
+````typescript
+```json
+{
+  "name": "Auth",
+  "api": {
+    "rateLimit": {
+      "max": 5,
+      "timeWindow": "1 minute"
+    }
+  }
+}
+````
 
 **JSON:**
 
@@ -772,17 +825,20 @@ Available hooks:
 - `beforeDelete(id, context)`
 - `afterDelete(id, record, context)`
 
+````typescript
 ```typescript
 registerModel('User', {
-  beforeCreate: async (data, { request, logger }) => {
-    // Access Fastify request object
-    if (!request.user.isAdmin) {
-      throw new Error('Unauthorized');
-    }
-    return data;
+  functions: {
+    beforeCreate: async (data, { request, logger }) => {
+      // Access Fastify request object
+      if (!request.user.isAdmin) {
+        throw new Error('Unauthorized');
+      }
+      return data;
+    },
   },
 });
-```
+````
 
 ## License
 

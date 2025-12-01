@@ -234,7 +234,10 @@ export const ${modelName} = registerModel('${modelName}', {
             type: 'object',
             properties: {
               success: { type: 'boolean' },
-              model: { type: 'object' },
+              model: {
+                type: 'object',
+                additionalProperties: true, // Allow any properties in the model
+              },
             },
           },
           404: {

@@ -79,10 +79,12 @@ export async function generateModuleFiles(
     const modelContent = `import { registerModel } from '@allium/core';
 
 export const ${model.name} = registerModel('${model.name}', {
-  // Add hooks here
-  // beforeCreate: async (data, context) => {
-  //   return data;
-  // },
+  functions: {
+    // Add hooks here
+    // beforeCreate: async (data, context) => {
+    //   return data;
+    // },
+  },
 });
 `;
     fs.writeFileSync(modelFilePath, modelContent);
