@@ -165,20 +165,17 @@ export const adminApi = {
     }),
 
   // Data Management
-  listRecords: (
-    model: string,
-    params?: {
-      page?: number;
-      limit?: number;
-      sort?: string;
-      order?: 'asc' | 'desc';
-    }
-  ) => {
+  listRecords: (model: string, params?: Record<string, any>) => {
     const query = new URLSearchParams();
-    if (params?.page) query.set('page', params.page.toString());
-    if (params?.limit) query.set('limit', params.limit.toString());
-    if (params?.sort) query.set('sort', params.sort);
-    if (params?.order) query.set('order', params.order);
+
+    // Add all params to query string
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          query.set(key, String(value));
+        }
+      });
+    }
 
     return fetchAdmin<{
       data: any[];

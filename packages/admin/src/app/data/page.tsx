@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { adminApi, ModelDefinition } from '../../lib/api';
+import { DataFilters, Filter } from '../../components/data/DataFilters';
 
 export default function GlobalDataPage() {
   const searchParams = useSearchParams();
@@ -40,6 +41,10 @@ export default function GlobalDataPage() {
 
   // Relation data cache
   const [relationData, setRelationData] = useState<Record<string, any[]>>({});
+
+  // Filters
+  const [filters, setFilters] = useState<Filter[]>([]);
+  const [appliedFilters, setAppliedFilters] = useState<Filter[]>([]);
 
   // Fetch available models
   useEffect(() => {
@@ -102,10 +107,24 @@ export default function GlobalDataPage() {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await adminApi.listRecords(selectedModel, {
-        page,
-        limit,
+
+      // Build query params with Strapi-style filters
+      const params: any = { page, limit };
+
+      // Add filters in Strapi format: filters[field][$op]=value
+      appliedFilters.forEach((filter) => {
+        if (
+          filter.value !== '' &&
+          filter.value !== null &&
+          filter.value !== undefined
+        ) {
+          const operator =
+            filter.operator === 'equals' ? '$eq' : `$${filter.operator}`;
+          params[`filters[${filter.field}][${operator}]`] = filter.value;
+        }
       });
+
+      const response = await adminApi.listRecords(selectedModel, params);
       setRecords(response.data);
       setTotal(response.meta.total);
       setPages(response.meta.pages);
@@ -121,15 +140,16 @@ export default function GlobalDataPage() {
   };
 
   useEffect(() => {
-    if (selectedModel && models.length > 0) {
-      fetchModelDefinition();
+    if (selectedModel && modelDef) {
       fetchRecords();
     } else {
       setRecords([]);
+      setTotal(0);
+      setPages(0);
       setModelDef(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedModel, page, models, limit]);
+  }, [selectedModel, page, models, limit, appliedFilters]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this record?')) {
@@ -349,6 +369,39 @@ export default function GlobalDataPage() {
         </Card>
       ) : (
         <>
+          {/* Filters */}
+          <Card className='mb-6'>
+            <DataFilters
+              modelDef={modelDef}
+              filters={filters}
+              onChange={setFilters}
+            />
+            {filters.length > 0 && (
+              <div className='mt-4 flex gap-2'>
+                <Button
+                  onClick={() => {
+                    setAppliedFilters(filters);
+                    setPage(1); // Reset to first page when applying filters
+                  }}
+                  size='sm'
+                >
+                  Apply Filters
+                </Button>
+                <Button
+                  variant='secondary'
+                  onClick={() => {
+                    setFilters([]);
+                    setAppliedFilters([]);
+                    setPage(1);
+                  }}
+                  size='sm'
+                >
+                  Clear All
+                </Button>
+              </div>
+            )}
+          </Card>
+
           {/* Data Table */}
           {isLoading ? (
             <div className='flex justify-center items-center h-64'>

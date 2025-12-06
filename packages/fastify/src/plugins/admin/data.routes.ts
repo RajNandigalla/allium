@@ -2,13 +2,72 @@ import { FastifyInstance } from 'fastify';
 import path from 'path';
 import fs from 'fs-extra';
 
+// Type definitions
+interface FieldDefinition {
+  name: string;
+  type: string;
+  required?: boolean;
+  unique?: boolean;
+  default?: any;
+}
+
+interface RelationDefinition {
+  name: string;
+  type: string;
+  model: string;
+  foreignKey?: string;
+}
+
+interface ModelDefinition {
+  name: string;
+  fields?: FieldDefinition[];
+  relations?: RelationDefinition[];
+}
+
+interface Schema {
+  models: ModelDefinition[];
+}
+
+// Strapi-style filter operators
+type FilterOperator =
+  | '$eq'
+  | '$ne'
+  | '$gt'
+  | '$gte'
+  | '$lt'
+  | '$lte'
+  | '$contains'
+  | '$startsWith'
+  | '$endsWith'
+  | '$in'
+  | '$notIn';
+
+// Type for filter query parameters
+// Supports patterns like: filters[fieldName][$operator]=value
+type FilterParam =
+  | `filters[${string}][${FilterOperator}]`
+  | `filters[${string}]`;
+
+interface FilterQueryParams {
+  page?: number;
+  limit?: number;
+  sort?: string;
+  order?: 'asc' | 'desc';
+}
+
+// Extend FilterQueryParams to include dynamic filter parameters
+// This allows filters[field][$op]=value while maintaining type safety
+type QueryParamsWithFilters = FilterQueryParams & {
+  [K in FilterParam]?: string | number | boolean;
+};
+
 export async function registerDataRoutes(
   fastify: FastifyInstance,
   alliumDir: string
 ) {
   // Load schema for relation info
   const schemaPath = path.join(alliumDir, 'schema.json');
-  let schema: any = { models: [] };
+  let schema: Schema = { models: [] };
 
   try {
     if (await fs.pathExists(schemaPath)) {
@@ -35,9 +94,9 @@ export async function registerDataRoutes(
   };
 
   // Helper to get model definition from schema
-  const getModelDef = (modelName: string) => {
+  const getModelDef = (modelName: string): ModelDefinition | undefined => {
     return schema.models.find(
-      (m: any) => m.name.toLowerCase() === modelName.toLowerCase()
+      (m) => m.name.toLowerCase() === modelName.toLowerCase()
     );
   };
 
@@ -83,41 +142,75 @@ export async function registerDataRoutes(
   // GET /_admin/data/:model - List records
   fastify.get<{
     Params: { model: string };
-    Querystring: {
-      page?: number;
-      limit?: number;
-      sort?: string;
-      order?: 'asc' | 'desc';
-      q?: string; // Simple search query
-    };
+    Querystring: QueryParamsWithFilters;
   }>(
     '/data/:model',
     {
       schema: {
         tags: ['Admin - Data Explorer'],
-        description: 'List records for a model with pagination and sorting',
+        description: `List records for a model with pagination, sorting, and filtering (Strapi-style).
+
+**Filter Syntax:**
+Use query parameters in the format: \`filters[fieldName][$operator]=value\`
+
+**Supported Operators:**
+- \`$eq\` - Equals (exact match)
+- \`$ne\` - Not equals
+- \`$gt\` - Greater than
+- \`$gte\` - Greater than or equal
+- \`$lt\` - Less than
+- \`$lte\` - Less than or equal
+- \`$contains\` - Contains (case-insensitive)
+- \`$startsWith\` - Starts with (case-insensitive)
+- \`$endsWith\` - Ends with (case-insensitive)
+- \`$in\` - In array (comma-separated values)
+- \`$notIn\` - Not in array (comma-separated values)
+
+**Examples:**
+- \`?filters[name][$eq]=John Doe\` - Exact name match
+- \`?filters[email][$contains]=@example.com\` - Email contains
+- \`?filters[age][$gte]=18&filters[age][$lte]=65\` - Age range
+- \`?filters[status][$eq]=active&filters[role][$in]=admin,user\` - Multiple filters`,
         params: {
           type: 'object',
           properties: {
-            model: { type: 'string' },
+            model: { type: 'string', description: 'Model name' },
           },
           required: ['model'],
         },
         querystring: {
           type: 'object',
           properties: {
-            page: { type: 'integer', default: 1 },
-            limit: { type: 'integer', default: 10 },
-            sort: { type: 'string', default: 'createdAt' },
-            order: { type: 'string', enum: ['asc', 'desc'], default: 'desc' },
-            q: { type: 'string' },
+            page: {
+              type: 'integer',
+              default: 1,
+              description: 'Page number for pagination',
+            },
+            limit: {
+              type: 'integer',
+              default: 10,
+              description: 'Number of records per page',
+            },
+            sort: {
+              type: 'string',
+              default: 'createdAt',
+              description: 'Field to sort by',
+            },
+            order: {
+              type: 'string',
+              enum: ['asc', 'desc'],
+              default: 'desc',
+              description: 'Sort order',
+            },
           },
+          // Allow arbitrary filter parameters
+          additionalProperties: true,
         },
         response: {
           200: {
             type: 'object',
             properties: {
-              data: { type: 'array' },
+              data: { type: 'array', items: { type: 'object' } },
               meta: {
                 type: 'object',
                 properties: {
@@ -128,25 +221,27 @@ export async function registerDataRoutes(
                 },
               },
             },
+            description: 'Successfully retrieved records',
           },
           404: {
             type: 'object',
             properties: {
               error: { type: 'string' },
             },
+            description: 'Model not found',
           },
         },
       },
     },
     async (req, reply) => {
       const { model } = req.params;
+      const params = req.query;
       const {
         page = 1,
         limit = 10,
         sort = 'createdAt',
         order = 'desc',
-        q,
-      } = req.query;
+      } = params;
 
       const prismaModel = getModel(model);
       if (!prismaModel) {
@@ -158,19 +253,95 @@ export async function registerDataRoutes(
       const skip = (page - 1) * limit;
       const orderBy = { [sort]: order };
 
-      // Basic filtering if 'q' is provided (searches 'id' or 'name' if they exist)
-      // This is a naive implementation; a real one would inspect the schema to find searchable fields
-      let where = {};
-      if (q) {
-        where = {
-          OR: [
-            // We try to filter by common fields if they exist.
-            // Prisma throws if field doesn't exist, so we should ideally inspect schema first.
-            // For safety in this generic endpoint without schema inspection, we might skip complex filtering
-            // or wrap in try/catch.
-            // For now, let's just return all data if no generic search is implemented safely.
-          ],
-        };
+      // Build where clause from Strapi-style filters
+      // Format: filters[field][$op]=value
+      const filterKeys = Object.keys(params).filter((k) =>
+        k.startsWith('filters')
+      );
+      const where: Record<string, any> = {};
+
+      const modelDef = getModelDef(model);
+
+      for (const key of filterKeys) {
+        // Match filters[field][$op]
+        const match = key.match(/^filters\[(\w+)\]\[(\$\w+)\]$/);
+        if (match) {
+          const [, field, op] = match;
+          const value = (params as Record<string, any>)[key];
+
+          if (!where[field]) where[field] = {};
+
+          // Helper to convert type based on model definition
+          const convertType = (val: any) => {
+            const fieldDef = modelDef?.fields?.find(
+              (f: FieldDefinition) => f.name === field
+            );
+            if (!fieldDef) return val;
+            if (fieldDef.type === 'Int') return Number(val);
+            if (fieldDef.type === 'Boolean') return val === 'true';
+            if (fieldDef.type === 'DateTime') return new Date(val);
+            return val;
+          };
+
+          const typedValue = convertType(value);
+
+          switch (op) {
+            case '$eq':
+              where[field] = typedValue;
+              break;
+            case '$ne':
+              where[field].not = typedValue;
+              break;
+            case '$gt':
+              where[field].gt = typedValue;
+              break;
+            case '$gte':
+              where[field].gte = typedValue;
+              break;
+            case '$lt':
+              where[field].lt = typedValue;
+              break;
+            case '$lte':
+              where[field].lte = typedValue;
+              break;
+            case '$contains':
+              where[field].contains = String(value);
+              where[field].mode = 'insensitive';
+              break;
+            case '$startsWith':
+              where[field].startsWith = String(value);
+              where[field].mode = 'insensitive';
+              break;
+            case '$endsWith':
+              where[field].endsWith = String(value);
+              where[field].mode = 'insensitive';
+              break;
+            case '$in':
+              where[field].in = Array.isArray(value)
+                ? value.map(convertType)
+                : String(value).split(',').map(convertType);
+              break;
+            case '$notIn':
+              where[field].notIn = Array.isArray(value)
+                ? value.map(convertType)
+                : String(value).split(',').map(convertType);
+              break;
+          }
+        } else {
+          // Handle simple equality: filters[field]=value
+          const simpleMatch = key.match(/^filters\[(\w+)\]$/);
+          if (simpleMatch) {
+            const [, field] = simpleMatch;
+            const value = (params as Record<string, any>)[key];
+            const fieldDef = modelDef?.fields?.find(
+              (f: FieldDefinition) => f.name === field
+            );
+            let typedValue = value;
+            if (fieldDef?.type === 'Int') typedValue = Number(value);
+            if (fieldDef?.type === 'Boolean') typedValue = value === 'true';
+            where[field] = typedValue;
+          }
+        }
       }
 
       try {
@@ -178,11 +349,12 @@ export async function registerDataRoutes(
           prismaModel.findMany({
             skip,
             take: limit,
-            orderBy: sort !== 'id' ? orderBy : undefined, // Avoid error if sort field doesn't exist?
-            // Actually, if sort field doesn't exist, Prisma throws.
-            // We'll assume 'createdAt' exists or user specifies valid sort.
+            orderBy: sort !== 'id' ? orderBy : undefined,
+            where: Object.keys(where).length > 0 ? where : undefined,
           }),
-          prismaModel.count({ where }),
+          prismaModel.count({
+            where: Object.keys(where).length > 0 ? where : undefined,
+          }),
         ]);
 
         return {
@@ -195,11 +367,17 @@ export async function registerDataRoutes(
           },
         };
       } catch (error: any) {
-        // Fallback: try without sorting if it failed (e.g. model doesn't have createdAt)
+        // Fallback: try without sorting if it failed
         try {
           const [data, total] = await fastify.prisma.$transaction([
-            prismaModel.findMany({ skip, take: limit }),
-            prismaModel.count(),
+            prismaModel.findMany({
+              skip,
+              take: limit,
+              where: Object.keys(where).length > 0 ? where : undefined,
+            }),
+            prismaModel.count({
+              where: Object.keys(where).length > 0 ? where : undefined,
+            }),
           ]);
           return {
             data,

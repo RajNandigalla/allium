@@ -233,23 +233,62 @@ export function getCreateSchema(model: ModelDefinition) {
 export function getListSchema(model: ModelDefinition) {
   return {
     tags: [model.name],
-    description: `List all ${model.name} records`,
+    description: `List all ${model.name} records with pagination, sorting, and filtering (Strapi-style).
+
+**Filter Syntax:**
+Use query parameters in the format: \`filters[fieldName][$operator]=value\`
+
+**Supported Operators:**
+- \`$eq\` - Equals (exact match)
+- \`$ne\` - Not equals
+- \`$gt\` - Greater than
+- \`$gte\` - Greater than or equal
+- \`$lt\` - Less than
+- \`$lte\` - Less than or equal
+- \`$contains\` - Contains (case-insensitive)
+- \`$startsWith\` - Starts with (case-insensitive)
+- \`$endsWith\` - Ends with (case-insensitive)
+- \`$in\` - In array (comma-separated values)
+- \`$notIn\` - Not in array (comma-separated values)
+
+**Examples:**
+- \`?filters[name][$eq]=John Doe\` - Exact name match
+- \`?filters[email][$contains]=@example.com\` - Email contains
+- \`?filters[age][$gte]=18&filters[age][$lte]=65\` - Age range
+- \`?filters[status][$eq]=active&filters[role][$in]=admin,user\` - Multiple filters
+
+**Sorting:**
+- Use \`sort[0]=field:order\` format (e.g., \`sort[0]=createdAt:desc\`)
+- Or simple \`sort=field:order\` format
+
+**Populate:**
+- Use \`populate=relation1,relation2\` to include related data`,
     querystring: {
       type: 'object',
       properties: {
-        cursor: { type: 'string', description: 'Cursor for pagination' },
-        page: { type: 'integer', minimum: 1 },
-        limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
-        sort: {
+        cursor: {
           type: 'string',
-          description: 'Sort field:order (e.g., createdAt:desc)',
+          description: 'Cursor for cursor-based pagination',
         },
-        filter: { type: 'string', description: 'Filter conditions' },
+        page: {
+          type: 'integer',
+          minimum: 1,
+          description: 'Page number for offset-based pagination',
+        },
+        limit: {
+          type: 'integer',
+          minimum: 1,
+          maximum: 100,
+          default: 10,
+          description: 'Number of records per page',
+        },
         populate: {
           type: 'string',
-          description: 'Comma-separated list of relations to populate',
+          description:
+            'Comma-separated list of relations to populate (e.g., "author,category")',
         },
       },
+      additionalProperties: true, // Allow filter parameters
     },
     response: {
       200: {

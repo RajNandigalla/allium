@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { adminApi, ModelDefinition } from '../../../../lib/api';
+import { DataFilters, Filter } from '../../../../components/data/DataFilters';
 
 export default function DataBrowserPage() {
   const params = useParams();
@@ -38,6 +39,10 @@ export default function DataBrowserPage() {
 
   // Relation data cache
   const [relationData, setRelationData] = useState<Record<string, any[]>>({});
+
+  // Filters
+  const [filters, setFilters] = useState<Filter[]>([]);
+  const [appliedFilters, setAppliedFilters] = useState<Filter[]>([]);
 
   const fetchModelDefinition = async () => {
     try {
@@ -71,10 +76,29 @@ export default function DataBrowserPage() {
   };
 
   const fetchRecords = async () => {
+    if (!modelName) return;
+
     try {
       setIsLoading(true);
       setError(null);
-      const response = await adminApi.listRecords(modelName, { page, limit });
+
+      // Build query params with Strapi-style filters
+      const params: any = { page, limit };
+
+      // Add filters in Strapi format: filters[field][$op]=value
+      appliedFilters.forEach((filter) => {
+        if (
+          filter.value !== '' &&
+          filter.value !== null &&
+          filter.value !== undefined
+        ) {
+          const operator =
+            filter.operator === 'equals' ? '$eq' : `$${filter.operator}`;
+          params[`filters[${filter.field}][${operator}]`] = filter.value;
+        }
+      });
+
+      const response = await adminApi.listRecords(modelName, params);
       setRecords(response.data);
       setTotal(response.meta.total);
       setPages(response.meta.pages);
@@ -91,7 +115,8 @@ export default function DataBrowserPage() {
       fetchModelDefinition();
       fetchRecords();
     }
-  }, [modelName, page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modelName, page, limit, appliedFilters]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this record?')) {
@@ -287,7 +312,7 @@ export default function DataBrowserPage() {
         </Button>
       </div>
 
-      {/* Data Table */}
+      {/* Page Content */}
       {isLoading ? (
         <div className='flex justify-center items-center h-64'>
           <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600'></div>
@@ -297,107 +322,148 @@ export default function DataBrowserPage() {
         <div className='bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg'>
           {error}
         </div>
-      ) : records.length === 0 ? (
-        <Card className='text-center py-12'>
-          <p className='text-slate-500'>No records found.</p>
-          <Button variant='secondary' className='mt-4' onClick={openCreateForm}>
-            <Plus className='w-4 h-4 mr-2' />
-            Create First Record
-          </Button>
-        </Card>
       ) : (
         <>
-          <Card className='overflow-x-auto'>
-            <table className='w-full'>
-              <thead className='bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700'>
-                <tr>
-                  {columns.map((col) => (
-                    <th
-                      key={col}
-                      className='px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider'
-                    >
-                      {col}
-                    </th>
-                  ))}
-                  <th className='px-4 py-3 text-right text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider'>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className='divide-y divide-slate-200 dark:divide-slate-700'>
-                {records.map((record, idx) => (
-                  <tr
-                    key={record.id || idx}
-                    className='hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors'
-                  >
-                    {columns.map((col) => (
-                      <td
-                        key={col}
-                        className='px-4 py-3 text-sm text-slate-900 dark:text-slate-100'
-                      >
-                        {typeof record[col] === 'object'
-                          ? JSON.stringify(record[col])
-                          : String(record[col] ?? '')}
-                      </td>
-                    ))}
-                    <td className='px-4 py-3 text-right'>
-                      <div className='flex justify-end gap-2'>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='h-8 w-8 p-0'
-                          onClick={() => openEditForm(record)}
-                        >
-                          <Edit className='w-4 h-4' />
-                        </Button>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20'
-                          onClick={() => handleDelete(record.id)}
-                        >
-                          <Trash2 className='w-4 h-4' />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Filters */}
+          <Card className='mb-6'>
+            <DataFilters
+              modelDef={modelDef}
+              filters={filters}
+              onChange={setFilters}
+            />
+            {filters.length > 0 && (
+              <div className='mt-4 flex gap-2'>
+                <Button
+                  onClick={() => {
+                    setAppliedFilters(filters);
+                    setPage(1);
+                  }}
+                  size='sm'
+                >
+                  Apply Filters
+                </Button>
+                <Button
+                  variant='secondary'
+                  onClick={() => {
+                    setFilters([]);
+                    setAppliedFilters([]);
+                    setPage(1);
+                  }}
+                  size='sm'
+                >
+                  Clear All
+                </Button>
+              </div>
+            )}
           </Card>
 
-          {/* Pagination */}
-          <div className='flex items-center justify-between'>
-            <p className='text-sm text-slate-500'>
-              Showing {(page - 1) * limit + 1} to{' '}
-              {Math.min(page * limit, total)} of {total} records
-            </p>
-            <div className='flex gap-2'>
+          {records.length === 0 ? (
+            <Card className='text-center py-12'>
+              <p className='text-slate-500'>No records found.</p>
               <Button
                 variant='secondary'
-                size='sm'
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
+                className='mt-4'
+                onClick={openCreateForm}
               >
-                <ChevronLeft className='w-4 h-4' />
-                Previous
+                <Plus className='w-4 h-4 mr-2' />
+                Create First Record
               </Button>
-              <div className='flex items-center gap-2 px-4'>
-                <span className='text-sm text-slate-600 dark:text-slate-400'>
-                  Page {page} of {pages}
-                </span>
+            </Card>
+          ) : (
+            <>
+              <Card className='overflow-x-auto'>
+                <table className='w-full'>
+                  <thead className='bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700'>
+                    <tr>
+                      {columns.map((col) => (
+                        <th
+                          key={col}
+                          className='px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider'
+                        >
+                          {col}
+                        </th>
+                      ))}
+                      <th className='px-4 py-3 text-right text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider'>
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className='divide-y divide-slate-200 dark:divide-slate-700'>
+                    {records.map((record, idx) => (
+                      <tr
+                        key={record.id || idx}
+                        className='hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors'
+                      >
+                        {columns.map((col) => (
+                          <td
+                            key={col}
+                            className='px-4 py-3 text-sm text-slate-900 dark:text-slate-100'
+                          >
+                            {typeof record[col] === 'object'
+                              ? JSON.stringify(record[col])
+                              : String(record[col] ?? '')}
+                          </td>
+                        ))}
+                        <td className='px-4 py-3 text-right'>
+                          <div className='flex justify-end gap-2'>
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              className='h-8 w-8 p-0'
+                              onClick={() => openEditForm(record)}
+                            >
+                              <Edit className='w-4 h-4' />
+                            </Button>
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              className='h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20'
+                              onClick={() => handleDelete(record.id)}
+                            >
+                              <Trash2 className='w-4 h-4' />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Card>
+
+              {/* Pagination */}
+              <div className='flex items-center justify-between'>
+                <p className='text-sm text-slate-500'>
+                  Showing {(page - 1) * limit + 1} to{' '}
+                  {Math.min(page * limit, total)} of {total} records
+                </p>
+                <div className='flex gap-2'>
+                  <Button
+                    variant='secondary'
+                    size='sm'
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft className='w-4 h-4' />
+                    Previous
+                  </Button>
+                  <div className='flex items-center gap-2 px-4'>
+                    <span className='text-sm text-slate-600 dark:text-slate-400'>
+                      Page {page} of {pages}
+                    </span>
+                  </div>
+                  <Button
+                    variant='secondary'
+                    size='sm'
+                    onClick={() => setPage((p) => Math.min(pages, p + 1))}
+                    disabled={page === pages}
+                  >
+                    Next
+                    <ChevronRight className='w-4 h-4' />
+                  </Button>
+                </div>
               </div>
-              <Button
-                variant='secondary'
-                size='sm'
-                onClick={() => setPage((p) => Math.min(pages, p + 1))}
-                disabled={page === pages}
-              >
-                Next
-                <ChevronRight className='w-4 h-4' />
-              </Button>
-            </div>
-          </div>
+            </>
+          )}
         </>
       )}
 
