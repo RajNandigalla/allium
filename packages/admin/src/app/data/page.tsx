@@ -252,7 +252,13 @@ export default function GlobalDataPage() {
 
   const renderRelationField = (relation: any) => {
     const relatedRecords = relationData[relation.name] || [];
-    const value = formData[relation.name] || '';
+    // Try to find value in foreign key first (e.g. authorId), then relation name (e.g. author)
+    // If the value is an object (relation included), try to get its ID
+    let value = formData[relation.foreignKey] || formData[relation.name] || '';
+
+    if (typeof value === 'object' && value !== null) {
+      value = value.id || '';
+    }
 
     // For n:m relations, we might need to handle arrays
     const isMultiple = relation.type === 'n:m' || relation.type === '1:n';
