@@ -2,14 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard,
-  Box,
-  Database,
-  Key,
-  Settings,
-  Table,
-} from 'lucide-react';
+import { LayoutDashboard, Box, Database, Key, Settings } from 'lucide-react';
 import { clsx } from 'clsx';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,7 +10,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Models', href: '/models', icon: Box },
-  { name: 'Data Explorer', href: '/data', icon: Table },
   { name: 'API Keys', href: '/api-keys', icon: Key },
   { name: 'Database', href: '/database', icon: Database },
   { name: 'Settings', href: '/settings', icon: Settings },

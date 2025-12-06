@@ -205,4 +205,46 @@ export const adminApi = {
     fetchAdmin<{ success: boolean; message: string }>(`/data/${model}/${id}`, {
       method: 'DELETE',
     }),
+
+  // API Keys Management
+  listApiKeys: () =>
+    fetchAdmin<
+      Array<{
+        id: string;
+        name: string;
+        key: string;
+        service: string;
+        isActive: boolean;
+        expiresAt: string | null;
+        lastUsedAt: string | null;
+        createdAt: string;
+        updatedAt: string;
+      }>
+    >('/api-keys'),
+
+  generateApiKey: (data: {
+    name: string;
+    service: string;
+    expiresAt?: string;
+  }) =>
+    fetchAdmin<{
+      success: boolean;
+      apiKey: {
+        id: string;
+        name: string;
+        key: string;
+        service: string;
+        isActive: boolean;
+        expiresAt: string | null;
+        createdAt: string;
+      };
+    }>('/api-keys', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  revokeApiKey: (id: string) =>
+    fetchAdmin<{ success: boolean; message: string }>(`/api-keys/${id}`, {
+      method: 'DELETE',
+    }),
 };
