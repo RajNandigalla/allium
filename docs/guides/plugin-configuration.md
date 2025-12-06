@@ -149,6 +149,89 @@ Uses `FastifySensibleOptions` from `@fastify/sensible`.
 sensible?: FastifySensibleOptions;
 ```
 
+### Security (Optional)
+
+Configure comprehensive security features including XSS protection, CSRF tokens, SQL injection detection, and encryption.
+
+```typescript
+security?: {
+  xss?: {
+    enabled?: boolean;
+    whiteList?: Record<string, string[]>;
+    exemptRoutes?: string[];
+    exemptFields?: string[];
+  };
+  csrf?: {
+    enabled?: boolean;
+    cookieOpts?: {
+      signed?: boolean;
+      httpOnly?: boolean;
+      sameSite?: 'strict' | 'lax' | 'none';
+      secure?: boolean;
+      path?: string;
+      domain?: string;
+    };
+    exemptRoutes?: string[];
+    sessionKey?: string;
+    cookieSecret?: string;
+  };
+  sqlInjectionGuard?: {
+    enabled?: boolean;
+    logOnly?: boolean;
+    exemptRoutes?: string[];
+  };
+  encryption?: {
+    keyRotation?: {
+      enabled?: boolean;
+      keys?: Record<number, string>;
+      currentVersion?: number;
+    };
+  };
+};
+```
+
+**Example**:
+
+```typescript
+const app = await initAllium({
+  models,
+  prisma: { datasourceUrl: process.env.DATABASE_URL },
+  security: {
+    xss: {
+      enabled: true,
+      exemptRoutes: ['/api/content/*'],
+      exemptFields: ['htmlContent'],
+    },
+    csrf: {
+      enabled: true,
+      cookieOpts: {
+        signed: true,
+        httpOnly: true,
+        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production',
+      },
+      exemptRoutes: ['/api/webhooks/*'],
+    },
+    sqlInjectionGuard: {
+      enabled: true,
+      logOnly: false,
+    },
+    encryption: {
+      keyRotation: {
+        enabled: true,
+        keys: {
+          1: process.env.ENCRYPTION_KEY_V1,
+          2: process.env.ENCRYPTION_KEY_V2,
+        },
+        currentVersion: 2,
+      },
+    },
+  },
+});
+```
+
+See the [Security Guide](./SECURITY.md) for detailed documentation.
+
 ## Benefits
 
 ✅ **Type-Safe**: Full TypeScript support with autocomplete

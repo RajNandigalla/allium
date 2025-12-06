@@ -62,7 +62,7 @@ Shared core functionality used by the CLI and future UI.
 - **🔐 Compound Unique Constraints**: Enforce uniqueness across multiple fields (e.g., `[userId, postId]`).
 - **🎭 Masked Fields**: Automatically mask sensitive data (credit cards, SSNs) in API responses.
 - **📦 JSON Field Support**: Schema validation and nested filtering for JSON fields.
-- **🔐 Encrypted Fields**: At-rest encryption for sensitive data using AES-256-GCM.
+- **🔐 Encrypted Fields**: At-rest encryption for sensitive data using AES-256-GCM with key rotation support.
 - **📊 Compound Indexes**: Multi-field database indexes for query performance optimization.
 - **🎛️ API Control**: Enable/Disable specific CRUD operations per model.
 - **🛣️ Custom Route Prefixes**: Override default API paths per model.
@@ -72,6 +72,11 @@ Shared core functionality used by the CLI and future UI.
 - **🔑 Built-in API Key Auth**: Service-to-service authentication with auto-generated keys.
 - **🔗 Relation Population**: Fetch related records in a single request with `?populate=relation`.
 - **⚠️ Detailed Error Messages**: Field-specific validation errors with clear, actionable messages.
+- **🛡️ SQL Injection Prevention**: Prisma parameterized queries + additional detection layer.
+- **🔒 XSS Protection**: Input sanitization middleware with configurable exemptions.
+- **🔐 CSRF Token Support**: Token-based protection against Cross-Site Request Forgery.
+- **🔒 Security Headers**: Production-ready headers (CSP, HSTS, X-Frame-Options) via Helmet.
+- **🔑 Key Rotation**: Versioned encryption keys for secure key rotation.
 
 ## 🚀 Development
 
@@ -172,6 +177,8 @@ allium db studio     # Open database GUI
 - [Auto-Load Models](./docs/guides/auto-load-models.md) - Using fastify-autoload with models
 - [Advanced Features](./docs/guides/ADVANCED_FEATURES.md) - Relations, population, and error handling
 - [API Key Authentication](./docs/guides/API_KEY_AUTH.md) - Built-in service-to-service authentication
+- [Security Guide](./docs/guides/SECURITY.md) - Comprehensive security features and best practices
+- [Security Quick Reference](./docs/guides/SECURITY_QUICK_REF.md) - Quick lookup for security configurations
 
 ## 🛠️ Tech Stack
 

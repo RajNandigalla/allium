@@ -15,6 +15,13 @@ All notable changes to this project will be documented in this file.
   - Date validation errors include expected format with examples
   - Type mismatch errors specify expected type
   - Development mode includes detailed error information
+- **Security Features**: Comprehensive security suite for production-ready APIs
+  - **XSS Protection**: Input sanitization middleware with configurable exemptions
+  - **CSRF Token Support**: Token-based protection against Cross-Site Request Forgery
+  - **SQL Injection Detection**: Additional detection layer on top of Prisma's parameterized queries
+  - **Enhanced Security Headers**: Production-ready defaults (CSP, HSTS, X-Frame-Options, Referrer-Policy)
+  - **Key Rotation**: Versioned encryption keys for secure key rotation
+  - **JSON Field Encryption**: Encrypt entire JSON objects with `encryptJSON` and `decryptJSON`
 
 ### Changed
 
@@ -22,6 +29,7 @@ All notable changes to this project will be documented in this file.
 - **Error responses**: All error responses now include field-level details in the `errors` array
 - **Unique constraint errors**: Message format changed from "Unique constraint violation" to "Unique constraint failed on field: {fieldName}"
 - **Validation errors**: Now include specific field information instead of generic "Invalid data format"
+- **Helmet plugin**: Now environment-aware with production-ready defaults when `NODE_ENV=production`
 
 ### Fixed
 
@@ -34,6 +42,9 @@ All notable changes to this project will be documented in this file.
 - Updated `docs/guides/ADVANCED_FEATURES.md` with improved error handling examples
 - Added `docs/reference/field-properties.md` with complete field property reference
 - Updated `README.md` to highlight `writePrivate` and improved error handling
+- **Added `docs/guides/SECURITY.md`**: Comprehensive security guide covering all security features, configuration examples, threat model, and best practices
+- Updated `README.md` with security features in key features list
+- Updated `docs/ROADMAP.md` to mark security features as completed
 
 ---
 

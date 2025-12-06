@@ -54,7 +54,9 @@ export interface AlliumServerConfig extends AlliumPluginOptions {
    * Helmet security headers configuration
    * @see https://github.com/fastify/fastify-helmet
    */
-  helmet?: FastifyHelmetOptions;
+  helmet?:
+    | FastifyHelmetOptions
+    | { enableProductionDefaults?: boolean; helmet?: FastifyHelmetOptions };
 
   /**
    * Rate limiting configuration
@@ -73,6 +75,59 @@ export interface AlliumServerConfig extends AlliumPluginOptions {
    * @see https://github.com/fastify/fastify-sensible
    */
   sensible?: FastifySensibleOptions;
+
+  /**
+   * Security configuration
+   */
+  security?: {
+    /**
+     * XSS protection configuration
+     */
+    xss?: {
+      enabled?: boolean;
+      whiteList?: Record<string, string[]>;
+      exemptRoutes?: string[];
+      exemptFields?: string[];
+    };
+
+    /**
+     * CSRF protection configuration
+     */
+    csrf?: {
+      enabled?: boolean;
+      cookieOpts?: {
+        signed?: boolean;
+        httpOnly?: boolean;
+        sameSite?: 'strict' | 'lax' | 'none';
+        secure?: boolean;
+        path?: string;
+        domain?: string;
+      };
+      exemptRoutes?: string[];
+      sessionKey?: string;
+      cookieSecret?: string;
+    };
+
+    /**
+     * SQL injection detection configuration (additional layer)
+     */
+    sqlInjectionGuard?: {
+      enabled?: boolean;
+      logOnly?: boolean;
+      exemptRoutes?: string[];
+    };
+
+    /**
+     * Encryption configuration
+     */
+    encryption?: {
+      keyRotation?: {
+        enabled?: boolean;
+        keys?: Record<number, string>;
+        currentVersion?: number;
+      };
+    };
+  };
 
   /**
    * Any additional plugin configurations

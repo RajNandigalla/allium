@@ -340,11 +340,11 @@
 
 ### Security
 
-- [ ] SQL injection prevention
-- [ ] XSS protection
-- [ ] CSRF tokens
-- [ ] Security headers configuration
-- [ ] Encryption at rest
+- [x] SQL injection prevention
+- [x] XSS protection
+- [x] CSRF tokens
+- [x] Security headers configuration
+- [x] Encryption at rest
 
 ---
 

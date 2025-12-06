@@ -9,6 +9,12 @@ export interface AppOptions
     Partial<AutoloadPluginOptions>,
     Partial<AlliumPluginOptions> {
   prisma?: PrismaPluginOptions;
+  security?: {
+    xss?: any;
+    csrf?: any;
+    sqlInjectionGuard?: any;
+    encryption?: any;
+  };
 }
 
 // Pass --options via CLI arguments in command to enable these options.

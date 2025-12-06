@@ -61,3 +61,89 @@ export function getEncryptionKey(): string {
   }
   return key;
 }
+
+/**
+ * Encrypt a string value with version support for key rotation
+ * Format: version:encryptedData
+ */
+export function encryptWithVersion(
+  text: string,
+  masterKey: string,
+  version: number = 1
+): string {
+  const encrypted = encrypt(text, masterKey);
+  return `${version}:${encrypted}`;
+}
+
+/**
+ * Decrypt a string value with version support for key rotation
+ * Supports both versioned (version:data) and unversioned (legacy) formats
+ */
+export function decryptWithVersion(
+  encryptedData: string,
+  masterKeys: Record<number, string>
+): string {
+  // Check if data has version prefix
+  const versionMatch = encryptedData.match(/^(\d+):(.+)$/);
+
+  if (versionMatch) {
+    // Versioned format
+    const version = parseInt(versionMatch[1], 10);
+    const data = versionMatch[2];
+    const key = masterKeys[version];
+
+    if (!key) {
+      throw new Error(`Encryption key for version ${version} not found`);
+    }
+
+    return decrypt(data, key);
+  } else {
+    // Legacy format (no version) - try with version 1 key
+    const key = masterKeys[1] || Object.values(masterKeys)[0];
+    if (!key) {
+      throw new Error('No encryption key available for decryption');
+    }
+    return decrypt(encryptedData, key);
+  }
+}
+
+/**
+ * Encrypt an entire JSON object
+ * The object is serialized to JSON, then encrypted
+ */
+export function encryptJSON(data: object, masterKey: string): string {
+  const jsonString = JSON.stringify(data);
+  return encrypt(jsonString, masterKey);
+}
+
+/**
+ * Decrypt an encrypted JSON object
+ * Returns the parsed object
+ */
+export function decryptJSON(encryptedData: string, masterKey: string): object {
+  const jsonString = decrypt(encryptedData, masterKey);
+  return JSON.parse(jsonString);
+}
+
+/**
+ * Encrypt a JSON object with version support
+ */
+export function encryptJSONWithVersion(
+  data: object,
+  masterKey: string,
+  version: number = 1
+): string {
+  const jsonString = JSON.stringify(data);
+  return encryptWithVersion(jsonString, masterKey, version);
+}
+
+/**
+ * Decrypt a versioned JSON object
+ */
+export function decryptJSONWithVersion(
+  encryptedData: string,
+  masterKeys: Record<number, string>
+): object {
+  const jsonString = decryptWithVersion(encryptedData, masterKeys);
+  return JSON.parse(jsonString);
+}
