@@ -57,8 +57,7 @@ packages/admin/src/
 │   │   └── page.tsx              # Global data explorer
 │   ├── api-keys/
 │   │   └── page.tsx              # API key management
-│   ├── database/
-│   │   └── page.tsx              # Database operations
+
 │   └── settings/
 │       └── page.tsx              # System settings
 ├── components/
@@ -191,7 +190,7 @@ Build reusable components with consistent styling:
    - Collapsible navigation
    - Active route highlighting
    - Icon + label format
-   - Sections: Models, Data, API Keys, Database, Settings
+   - Sections: Models, Data, API Keys, Settings
    - Smooth hover effects
 
 2. **Header** (`components/layout/Header.tsx`)
@@ -222,12 +221,11 @@ Build reusable components with consistent styling:
   - System uptime
 - Recent activity feed
 - Quick links to common tasks
-- Database sync status indicator
 
 **API Calls**:
 
 - `GET /_admin/models` (count)
-- `GET /_admin/db/stats` (record counts)
+
 - `GET /_admin/schema/status` (sync status)
 - `GET /_admin/system/info` (uptime)
 
@@ -256,7 +254,6 @@ Build reusable components with consistent styling:
 **API Calls**:
 
 - `GET /_admin/models`
-- `GET /_admin/db/stats`
 
 #### 2.3 Model Editor Page
 
@@ -364,7 +361,7 @@ Build reusable components with consistent styling:
 
 Same as global data explorer but pre-filtered to specific model.
 
-### Phase 4: API Keys & Database Management (Priority: MEDIUM)
+### Phase 4: API Keys Management (Priority: MEDIUM)
 
 #### 4.1 API Keys Page
 
@@ -387,30 +384,6 @@ Same as global data explorer but pre-filtered to specific model.
 - `GET /_admin/api-keys`
 - `POST /_admin/api-keys`
 - `DELETE /_admin/api-keys/:id`
-
-#### 4.2 Database Operations Page
-
-**File**: `src/app/database/page.tsx`
-
-**Features**:
-
-- Database statistics:
-  - Total records per model
-  - Database size (future)
-  - Connection status
-- Danger zone:
-  - Seed database button
-  - Reset database button (with confirmation)
-- Schema sync status
-- Manual sync trigger
-
-**API Calls**:
-
-- `GET /_admin/db/stats`
-- `POST /_admin/db/seed`
-- `POST /_admin/db/reset`
-- `POST /_admin/sync`
-- `GET /_admin/schema/status`
 
 ### Phase 5: Settings & System Info (Priority: LOW)
 
@@ -508,16 +481,6 @@ class AdminApiClient {
     /* ... */
   }
   async deleteApiKey(id: string) {
-    /* ... */
-  }
-
-  async seedDatabase() {
-    /* ... */
-  }
-  async resetDatabase() {
-    /* ... */
-  }
-  async getDatabaseStats() {
     /* ... */
   }
 
@@ -633,7 +596,7 @@ export function useModels() {
 ### Step 4: API Keys & Database (Week 4)
 
 1. Implement API keys management
-2. Build database operations page
+2. Build database operations page (Removed)
 3. Add confirmation modals for destructive actions
 4. Integrate all API endpoints
 
@@ -653,7 +616,7 @@ export function useModels() {
 - ✅ CRUD operations for models, fields, relations
 - ✅ Data explorer with filtering and sorting
 - ✅ API key management
-- ✅ Database operations (seed, reset, stats)
+
 - ✅ Schema sync functionality
 
 ### Non-Functional Requirements

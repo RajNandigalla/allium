@@ -70,14 +70,6 @@ Manage API keys for service-to-service authentication.
 - `POST /_admin/api-keys`: Generate a new API key.
 - `DELETE /_admin/api-keys/:id`: Revoke (delete) an API key.
 
-### 7. Database Operations (`Admin - Database`)
-
-Development tools for database management.
-
-- `POST /_admin/db/seed`: Run the database seed script (`npx prisma db seed`).
-- `POST /_admin/db/reset`: Reset the database (`npx prisma migrate reset --force`). **Destructive!**
-- `GET /_admin/db/stats`: Get record counts for all models.
-
 ### 8. Data Explorer (`Admin - Data Explorer`)
 
 "God Mode" generic CRUD endpoints to view and manage data in any model, bypassing public API restrictions.
@@ -100,12 +92,6 @@ Development tools for database management.
 1.  **Create Model:** `POST /_admin/models` with `{ name: "Post", fields: [...] }`.
 2.  **Sync Schema:** `POST /_admin/sync` to generate the Prisma schema and client.
 3.  **Verify:** `GET /_admin/schema/status` should return `inSync: true`.
-
-### Seeding Data
-
-1.  **Reset DB (Optional):** `POST /_admin/db/reset` to clear all data.
-2.  **Run Seed:** `POST /_admin/db/seed` to populate initial data.
-3.  **Check Stats:** `GET /_admin/db/stats` to verify record counts.
 
 ### Inspecting Data
 

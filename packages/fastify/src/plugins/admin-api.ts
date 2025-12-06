@@ -10,7 +10,6 @@ import {
   registerRelationsRoutes,
   registerSchemaRoutes,
   registerApiKeysRoutes,
-  registerDatabaseRoutes,
   registerDataRoutes,
   registerSystemRoutes,
 } from './admin';
@@ -74,8 +73,8 @@ const adminApi = async (fastify: FastifyInstance, opts: AdminApiOptions) => {
       await registerRelationsRoutes(routes, alliumDir, triggerSync);
       await registerSchemaRoutes(routes, alliumDir, triggerSync);
       await registerApiKeysRoutes(routes);
-      await registerDatabaseRoutes(routes, alliumDir);
-      await registerDataRoutes(routes);
+
+      await registerDataRoutes(routes, alliumDir);
       await registerSystemRoutes(routes);
     },
     { prefix: '/_admin' }

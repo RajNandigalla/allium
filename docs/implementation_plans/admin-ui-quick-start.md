@@ -76,7 +76,7 @@ Build a **premium, modern admin dashboard** for the Allium framework that provid
   - [ ] `DataFilters.tsx` - Filter builder
   - [ ] `RecordEditor.tsx` - CRUD modal
 
-### Phase 4: API Keys & Database
+### Phase 4: API Keys
 
 - [ ] **API Keys** (`src/app/api-keys/page.tsx`)
 
@@ -84,12 +84,6 @@ Build a **premium, modern admin dashboard** for the Allium framework that provid
   - [ ] Generate new key
   - [ ] Revoke key with confirmation
   - [ ] Copy to clipboard
-
-- [ ] **Database** (`src/app/database/page.tsx`)
-  - [ ] Database statistics
-  - [ ] Seed database action
-  - [ ] Reset database (with warning)
-  - [ ] Schema sync status
 
 ### Phase 5: Integration & Polish
 
@@ -191,12 +185,6 @@ Start with **Phase 1** - the design system and core components. These are the fo
 - `GET /_admin/api-keys` - List keys
 - `POST /_admin/api-keys` - Generate key
 - `DELETE /_admin/api-keys/:id` - Revoke key
-
-### Database
-
-- `GET /_admin/db/stats` - Get statistics
-- `POST /_admin/db/seed` - Seed database
-- `POST /_admin/db/reset` - Reset database
 
 ### Schema
 

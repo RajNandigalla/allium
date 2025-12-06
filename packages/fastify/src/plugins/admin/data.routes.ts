@@ -1,6 +1,23 @@
 import { FastifyInstance } from 'fastify';
+import path from 'path';
+import fs from 'fs-extra';
 
-export async function registerDataRoutes(fastify: FastifyInstance) {
+export async function registerDataRoutes(
+  fastify: FastifyInstance,
+  alliumDir: string
+) {
+  // Load schema for relation info
+  const schemaPath = path.join(alliumDir, 'schema.json');
+  let schema: any = { models: [] };
+
+  try {
+    if (await fs.pathExists(schemaPath)) {
+      schema = await fs.readJson(schemaPath);
+    }
+  } catch (e) {
+    fastify.log.warn('Failed to load schema.json for data routes');
+  }
+
   // Helper to get Prisma model delegate safely
   const getModel = (modelName: string) => {
     // Try camelCase first (standard Prisma)
@@ -15,6 +32,52 @@ export async function registerDataRoutes(fastify: FastifyInstance) {
     if (client[modelName.toLowerCase()]) return client[modelName.toLowerCase()];
 
     return null;
+  };
+
+  // Helper to get model definition from schema
+  const getModelDef = (modelName: string) => {
+    return schema.models.find(
+      (m: any) => m.name.toLowerCase() === modelName.toLowerCase()
+    );
+  };
+
+  // Helper to transform data for Prisma (handle relations)
+  const transformData = (modelName: string, data: any) => {
+    const modelDef = getModelDef(modelName);
+    if (!modelDef) return data;
+
+    const transformed = { ...data };
+
+    // Handle relations
+    if (modelDef.relations) {
+      for (const relation of modelDef.relations) {
+        const fieldName = relation.name;
+        const value = data[fieldName];
+
+        // If value is present and is a string/number (ID), convert to connect
+        if (value !== undefined && value !== null) {
+          // Check if it's a primitive (ID) rather than an object
+          if (typeof value !== 'object') {
+            // For 1:1 or n:1, we connect
+            transformed[fieldName] = {
+              connect: { id: value },
+            };
+          } else if (Array.isArray(value)) {
+            // For 1:n or n:m, if array of strings/numbers, connect multiple
+            const isArrayOfPrimitives = value.every(
+              (v: any) => typeof v !== 'object'
+            );
+            if (isArrayOfPrimitives) {
+              transformed[fieldName] = {
+                connect: value.map((id: any) => ({ id })),
+              };
+            }
+          }
+        }
+      }
+    }
+
+    return transformed;
   };
 
   // GET /_admin/data/:model - List records
@@ -262,8 +325,9 @@ export async function registerDataRoutes(fastify: FastifyInstance) {
       }
 
       try {
+        const transformedData = transformData(model, req.body);
         const data = await prismaModel.create({
-          data: req.body,
+          data: transformedData,
         });
         return { success: true, data };
       } catch (error: any) {
@@ -313,27 +377,27 @@ export async function registerDataRoutes(fastify: FastifyInstance) {
       }
 
       try {
+        const transformedData = transformData(model, req.body);
         const data = await prismaModel.update({
           where: { id },
-          data: req.body,
+          data: transformedData,
         });
         return { success: true, data };
       } catch (error: any) {
         // Try Int ID
         if (error.message?.includes('Argument `id`')) {
           try {
+            const transformedData = transformData(model, req.body);
             const data = await prismaModel.update({
               where: { id: parseInt(id) },
-              data: req.body,
+              data: transformedData,
             });
             return { success: true, data };
           } catch (e) {
-            return reply
-              .code(400)
-              .send({
-                error: 'Failed to update record',
-                details: error.message,
-              });
+            return reply.code(400).send({
+              error: 'Failed to update record',
+              details: error.message,
+            });
           }
         }
         return reply
@@ -391,12 +455,10 @@ export async function registerDataRoutes(fastify: FastifyInstance) {
             });
             return { success: true, message: 'Record deleted' };
           } catch (e) {
-            return reply
-              .code(400)
-              .send({
-                error: 'Failed to delete record',
-                details: error.message,
-              });
+            return reply.code(400).send({
+              error: 'Failed to delete record',
+              details: error.message,
+            });
           }
         }
         return reply

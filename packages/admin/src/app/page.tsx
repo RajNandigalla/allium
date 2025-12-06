@@ -218,17 +218,6 @@ export default function Dashboard() {
                 </div>
               </button>
             </Link>
-            <Link href='/database'>
-              <button className='w-full flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
-                <Activity size={20} className='text-green-500' />
-                <div>
-                  <p className='text-sm font-medium'>Database Status</p>
-                  <p className='text-xs text-slate-500 dark:text-slate-400'>
-                    Check connection and sync
-                  </p>
-                </div>
-              </button>
-            </Link>
           </div>
         </Card>
       </div>

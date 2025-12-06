@@ -36,7 +36,8 @@ export const db = async (command: string, options: any) => {
       break;
     case 'studio':
       console.log(chalk.blue('Opening Prisma Studio...'));
-      prismaCommand = `npx prisma studio --schema "${schemaPath}"`;
+      // Prisma Studio doesn't support --schema flag, so we rely on package.json config
+      prismaCommand = `npx prisma studio`;
       break;
     default:
       if (!command) {

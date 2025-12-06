@@ -83,6 +83,9 @@ export const init = async (options: {
         'ts-node-dev': '^2.0.0',
         prisma: '^7.0.0',
       },
+      prisma: {
+        schema: '.allium/prisma/schema.prisma',
+      },
     };
 
     if (database === 'sqlite') {
