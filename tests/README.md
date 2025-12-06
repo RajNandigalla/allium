@@ -12,6 +12,16 @@ tests/
 │   ├── test-security-additional.js
 │   ├── test-csrf-browser.js
 │   └── MANUAL_CSRF_TEST.md
+├── verification/       # Feature verification scripts
+│   ├── README.md
+│   ├── verify-advanced-fields.ts
+│   ├── verify-hydration.ts
+│   ├── verify-schema.ts
+│   └── verify-sync.ts
+├── fixtures/          # Test data and fixtures
+│   ├── .test-advanced/
+│   ├── .test-hydration/
+│   └── .test-sync/
 └── README.md          # This file
 ```
 
@@ -28,6 +38,19 @@ node test-csrf-browser.js  # Requires Playwright
 ```
 
 See `tests/security/README.md` for detailed information.
+
+### Verification Tests
+
+```bash
+# Run verification scripts
+cd tests/verification
+npx ts-node verify-advanced-fields.ts
+npx ts-node verify-hydration.ts
+npx ts-node verify-schema.ts
+npx ts-node verify-sync.ts
+```
+
+See `tests/verification/README.md` for detailed information.
 
 ## Adding New Tests
 
