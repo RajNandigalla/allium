@@ -95,37 +95,91 @@ export interface AlliumServerConfig extends AlliumPluginOptions {
      */
     csrf?: {
       enabled?: boolean;
-      cookieOpts?: {
-        signed?: boolean;
-        httpOnly?: boolean;
-        sameSite?: 'strict' | 'lax' | 'none';
-        secure?: boolean;
-        path?: string;
-        domain?: string;
-      };
+      cookieOpts?: any;
       exemptRoutes?: string[];
       sessionKey?: string;
       cookieSecret?: string;
     };
 
     /**
-     * SQL injection detection configuration (additional layer)
+     * SQL injection detection configuration
      */
     sqlInjectionGuard?: {
       enabled?: boolean;
       logOnly?: boolean;
-      exemptRoutes?: string[];
     };
 
     /**
      * Encryption configuration
      */
     encryption?: {
-      keyRotation?: {
-        enabled?: boolean;
-        keys?: Record<number, string>;
-        currentVersion?: number;
-      };
+      key?: string;
+      keys?: Record<number, string>;
+    };
+  };
+
+  /**
+   * Cache configuration
+   */
+  cache?: {
+    /**
+     * Enable/disable caching
+     */
+    enabled?: boolean;
+
+    /**
+     * Redis connection configuration
+     */
+    redis?: {
+      url?: string;
+      host?: string;
+      port?: number;
+      password?: string;
+      db?: number;
+    };
+
+    /**
+     * Default TTL in seconds
+     */
+    ttl?: number;
+
+    /**
+     * Cache key prefix
+     */
+    keyPrefix?: string;
+
+    /**
+     * Routes to exclude from caching (glob patterns)
+     */
+    excludeRoutes?: string[];
+
+    /**
+     * Exclude authenticated requests from caching
+     */
+    excludeAuthenticatedRequests?: boolean;
+
+    /**
+     * Use private cache (Cache-Control: private)
+     */
+    cachePrivate?: boolean;
+
+    /**
+     * Cache invalidation configuration
+     */
+    invalidation?: {
+      enabled?: boolean;
+    };
+  };
+
+  /**
+   * Database connection pool configuration
+   */
+  database?: {
+    connectionPool?: {
+      min?: number;
+      max?: number;
+      idleTimeoutMillis?: number;
+      connectionTimeoutMillis?: number;
     };
   };
 

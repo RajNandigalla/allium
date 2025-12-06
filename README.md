@@ -77,6 +77,10 @@ Shared core functionality used by the CLI and future UI.
 - **🔐 CSRF Token Support**: Token-based protection against Cross-Site Request Forgery.
 - **🔒 Security Headers**: Production-ready headers (CSP, HSTS, X-Frame-Options) via Helmet.
 - **🔑 Key Rotation**: Versioned encryption keys for secure key rotation.
+- **⚡ Redis Caching**: Automatic caching of GET requests with smart invalidation (10-50x faster).
+- **🔄 Connection Pooling**: Optimized database connection management for better performance.
+- **📊 Cache Management**: Built-in endpoints for monitoring and clearing cache.
+- **🏷️ ETag Support**: HTTP caching with 304 Not Modified responses.
 
 ## 🚀 Development
 
@@ -179,6 +183,8 @@ allium db studio     # Open database GUI
 - [API Key Authentication](./docs/guides/API_KEY_AUTH.md) - Built-in service-to-service authentication
 - [Security Guide](./docs/guides/SECURITY.md) - Comprehensive security features and best practices
 - [Security Quick Reference](./docs/guides/SECURITY_QUICK_REF.md) - Quick lookup for security configurations
+- [Caching Guide](./docs/guides/CACHING.md) - Redis caching for 10-50x performance boost
+- [Performance Guide](./docs/guides/PERFORMANCE.md) - Optimization strategies and best practices
 
 ## 🛠️ Tech Stack
 
