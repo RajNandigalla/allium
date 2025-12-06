@@ -241,6 +241,22 @@
 - [ ] Rollback support
 - [ ] Interactive Console (REPL)
 
+**Multi-Project/Service Architecture**
+
+- [ ] Workspace/Monorepo support (`allium workspace init`)
+- [ ] Create multiple services in one workspace
+- [ ] Service-level configuration and isolation
+- [ ] Shared types and models across services
+- [ ] Inter-service communication (REST/GraphQL)
+- [ ] Service discovery and registry
+- [ ] Unified development commands (`allium dev --all`)
+- [ ] API Gateway integration
+- [ ] GraphQL Federation support
+- [ ] Per-service database management
+- [ ] Shared authentication across services
+- [ ] Centralized logging and monitoring
+- [ ] Service templates (microservice, monolith, gateway)
+
 **Documentation Generation**
 
 - [ ] Auto-generate API documentation
@@ -322,7 +338,7 @@
 
 ### Advanced Integrations
 
-- [ ] Redis caching layer
+- [x] Redis caching layer
 - [ ] Message queue support (RabbitMQ, Kafka)
 - [ ] WebSocket support
 - [ ] File storage (S3, local)
@@ -335,8 +351,8 @@
 
 - [ ] Query optimization suggestions
 - [ ] N+1 query detection
-- [ ] Database connection pooling
-- [ ] Caching strategies
+- [x] Database connection pooling
+- [x] Caching strategies
 
 ### Security
 
