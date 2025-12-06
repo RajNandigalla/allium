@@ -247,4 +247,37 @@ export const adminApi = {
     fetchAdmin<{ success: boolean; message: string }>(`/api-keys/${id}`, {
       method: 'DELETE',
     }),
+
+  // System Information
+  getSystemInfo: () =>
+    fetchAdmin<{
+      os: {
+        platform: string;
+        release: string;
+        type: string;
+        arch: string;
+        cpus: number;
+        totalMem: number;
+        freeMem: number;
+      };
+      node: {
+        version: string;
+        env: string;
+        uptime: number;
+        memoryUsage: {
+          rss: number;
+          heapTotal: number;
+          heapUsed: number;
+          external: number;
+        };
+      };
+    }>('/system/info'),
+
+  // Project Configuration
+  getConfig: () =>
+    fetchAdmin<{
+      name: string;
+      version: string;
+      root: string;
+    }>('/config'),
 };
