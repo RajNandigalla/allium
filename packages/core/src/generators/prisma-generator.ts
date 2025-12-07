@@ -104,6 +104,25 @@ datasource db {
 `;
   }
 
+  // Check if ApiMetric model is present, if not append it
+  const hasApiMetric = models.some((m) => m.name === 'ApiMetric');
+  if (!hasApiMetric) {
+    output += `model ApiMetric {
+  id          String   @id @default(uuid())
+  endpoint    String
+  method      String
+  statusCode  Int
+  latency     Int
+  timestamp   DateTime @default(now())
+  errorType   String?
+  errorMessage String?
+
+  @@index([endpoint, timestamp])
+  @@index([timestamp])
+}
+`;
+  }
+
   return output;
 }
 

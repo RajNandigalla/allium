@@ -1,6 +1,11 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
-import { ApiKeyModel, ModelDefinition, SchemaIntrospector } from '@allium/core';
+import {
+  ApiKeyModel,
+  ApiMetricModel,
+  ModelDefinition,
+  SchemaIntrospector,
+} from '@allium/core';
 import modelSchemasPlugin from '../framework/model-schemas';
 import modelRoutesPlugin from '../framework/model-routes';
 import apiKeyAuthPlugin, { PublicRouteConfig } from './api-key-auth';
@@ -8,6 +13,7 @@ import { generateGraphQLTypeDefs } from '../generators/graphql-generator';
 import { generateResolvers } from '../generators/graphql-resolvers';
 import { ApolloServer } from '@apollo/server';
 import { fastifyApolloHandler } from '@as-integrations/fastify';
+import analyticsPlugin from './analytics';
 
 export interface AlliumPluginOptions {
   /**
@@ -130,6 +136,13 @@ export default fp<AlliumPluginOptions>(
       await fastify.register(apiKeyAuthPlugin, opts.apiKeyAuth);
     }
 
+    // Always inject ApiMetric model for analytics
+    const hasApiMetricModel = models.some((m) => m.name === 'ApiMetric');
+    if (!hasApiMetricModel) {
+      fastify.log.info('Injecting built-in ApiMetric model for analytics');
+      models = [...models, ApiMetricModel]; // Use spread to create new array
+    }
+
     // 0. Introspect models to populate metadata
     // This must be done before registering schemas
     const introspector = new SchemaIntrospector();
@@ -144,7 +157,10 @@ export default fp<AlliumPluginOptions>(
     // 1. Register Swagger schemas
     await fastify.register(modelSchemasPlugin, { models });
 
-    // 2. Generate CRUD routes
+    // 2. Register Analytics
+    await fastify.register(analyticsPlugin);
+
+    // 3. Generate CRUD routes
     await fastify.register(modelRoutesPlugin, {
       models,
       routePrefix,

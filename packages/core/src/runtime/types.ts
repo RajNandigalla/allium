@@ -1,6 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 import { FastifyRequest } from 'fastify';
-import { ApiConfig, Field, Relation, RouteConfig } from '../types/model';
+import {
+  ApiConfig,
+  Field,
+  ModelConstraints,
+  Relation,
+  RouteConfig,
+} from '../types/model';
 
 /**
  * Context provided to all lifecycle hooks
@@ -102,6 +108,9 @@ export interface ModelDefinition {
 
   /** Model relations definition */
   relations?: Relation[];
+
+  /** Model-level constraints (indexes, unique) */
+  constraints?: ModelConstraints;
 
   /** API configuration */
   api?: ApiConfig;

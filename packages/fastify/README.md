@@ -11,6 +11,8 @@ A powerful, opinionated Fastify framework for building type-safe REST APIs with 
 - 🛡️ **Type-Safe**: Built with TypeScript and Prisma for end-to-end type safety.
 - 🗑️ **Soft Deletes**: Built-in support for soft deletion with restore capabilities.
 - 📝 **Audit Trails**: Automatic tracking of `createdBy`, `updatedBy`, and `deletedBy`.
+- ⚡ **Built-in Caching**: Redis-backed caching for high performance.
+- 🕸️ **GraphQL Support**: Optional GraphQL endpoint integration.
 
 ## Installation
 
@@ -115,6 +117,13 @@ async function start() {
     server: {
       logger: true,
     },
+    // Optional extras
+    caching: {
+      enable: true,
+      provider: 'memory', // or 'redis'
+      ttl: 300,
+    },
+    graphql: true, // Enable /graphql endpoint
   });
 
   await app.listen({ port: 3000 });
@@ -754,6 +763,52 @@ Override limits for specific models:
 - Returns `429 Too Many Requests` when limit exceeded.
 - Tracks limits per client IP.
 - Custom routes can use Fastify's native `config.rateLimit`.
+
+## Caching
+
+Speed up your API with built-in caching support.
+
+```typescript
+initAllium({
+  caching: {
+    enable: true,
+    provider: 'redis', // 'memory' for dev, 'redis' for prod
+    redisUrl: process.env.REDIS_URL,
+    ttl: 300, // 5 minutes default
+    max: 1000, // Max items in memory cache
+    excludeRoutes: ['/api/health', '/api/metrics'], // Skip caching for these
+  },
+});
+```
+
+- **Smart Invalidation**: Creating, updating, or deleting a record automatically invalidates relevant cache entries (lists and individual records).
+- **Control**: Use `excludeRoutes` to bypass cache for sensitive or real-time endpoints.
+
+## GraphQL
+
+Enable a GraphQL endpoint alongside your REST API.
+
+```typescript
+initAllium({
+  graphql: true,
+});
+```
+
+Access the playground at `/graphql`.
+
+## API Documentation (Swagger)
+
+Swagger UI is automatically generated and available at `/documentation`. It reflects your current models, fields, and enabled operations.
+
+## Analytics
+
+Allium includes a built-in, low-overhead analytics system.
+
+- **Automatic Tracking**: Capture data on every request (Method, Path, Status, Latency).
+- **Zero Config**: Works automatically if the `ApiMetric` model exists.
+- **Async Logging**: Does not impact API response time.
+
+👉 [**Read the full Analytics Guide**](../../docs/guides/ANALYTICS.md)
 
 ## Cursor-based Pagination
 

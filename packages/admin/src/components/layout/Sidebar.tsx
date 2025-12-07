@@ -15,8 +15,16 @@ import { ThemeToggle } from '../ui/ThemeToggle';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Models', href: '/models', icon: Box },
+  {
+    name: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    name: 'Models',
+    href: '/models',
+    icon: Database,
+  },
   { name: 'API Keys', href: '/api-keys', icon: Key },
   { name: 'Data', href: '/data', icon: Database },
   { name: 'Import / Export', href: '/import-export', icon: ArrowLeftRight },

@@ -7,3 +7,4 @@ export * from './apikeys.routes';
 
 export * from './data.routes';
 export * from './system.routes';
+export * from './analytics.routes';
