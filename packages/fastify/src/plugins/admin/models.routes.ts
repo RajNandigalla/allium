@@ -405,4 +405,157 @@ export const ${modelName} = registerModel('${modelName}', {
       }
     }
   );
+
+  // POST /_admin/models/import
+  fastify.post<{
+    Body: {
+      models: any[];
+      strategy: 'skip' | 'overwrite';
+    };
+  }>(
+    '/models/import',
+    {
+      schema: {
+        tags: ['Admin - Models'],
+        description: 'Import multiple models from a JSON schema',
+        body: {
+          type: 'object',
+          required: ['models'],
+          properties: {
+            models: {
+              type: 'array',
+              description: 'Array of model definitions to import',
+              items: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  fields: { type: 'array' },
+                  relations: { type: 'array' },
+                },
+              },
+            },
+            strategy: {
+              type: 'string',
+              enum: ['skip', 'overwrite'],
+              default: 'skip',
+              description:
+                'How to handle existing models: skip (ignore) or overwrite',
+            },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean' },
+              imported: { type: 'number' },
+              skipped: { type: 'number' },
+              errors: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    name: { type: 'string' },
+                    error: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+    async (req, reply) => {
+      const { models, strategy = 'skip' } = req.body;
+
+      if (!models || !Array.isArray(models) || models.length === 0) {
+        return reply.code(400).send({ error: 'No models provided for import' });
+      }
+
+      let imported = 0;
+      let skipped = 0;
+      const errors: Array<{ name: string; error: string }> = [];
+
+      await fs.ensureDir(path.join(alliumDir, 'models'));
+      await fs.ensureDir(modelsDir);
+
+      for (const model of models) {
+        if (!model.name) {
+          errors.push({ name: 'unknown', error: 'Model name is required' });
+          continue;
+        }
+
+        const modelName = model.name;
+        const fileName = `${modelName.toLowerCase()}.json`;
+        const filePath = path.join(alliumDir, 'models', fileName);
+        const tsFilePath = path.join(
+          modelsDir,
+          `${modelName.toLowerCase()}.model.ts`
+        );
+
+        try {
+          const exists = await fs.pathExists(filePath);
+
+          if (exists && strategy === 'skip') {
+            skipped++;
+            continue;
+          }
+
+          // Write JSON definition
+          const modelDef = {
+            name: modelName,
+            fields: model.fields || [],
+            relations: model.relations || [],
+            api: model.api,
+            service: model.service,
+            softDelete: model.softDelete,
+            auditTrail: model.auditTrail,
+            constraints: model.constraints,
+            description: model.description,
+            routes: model.routes || {
+              create: { path: `/${modelName.toLowerCase()}` },
+              read: { path: `/${modelName.toLowerCase()}/:id` },
+              update: { path: `/${modelName.toLowerCase()}/:id` },
+              delete: { path: `/${modelName.toLowerCase()}/:id` },
+              list: { path: `/${modelName.toLowerCase()}` },
+            },
+          };
+
+          await fs.writeJson(filePath, modelDef, { spaces: 2 });
+
+          // Create TS file if it doesn't exist
+          if (!(await fs.pathExists(tsFilePath))) {
+            const tsContent = `import { registerModel } from '@allium/core';
+
+export const ${modelName} = registerModel('${modelName}', {
+  // Add hooks here
+});
+`;
+            await fs.writeFile(tsFilePath, tsContent);
+          }
+
+          imported++;
+        } catch (error: any) {
+          errors.push({ name: modelName, error: error.message });
+        }
+      }
+
+      // Trigger sync after all models are imported
+      if (imported > 0) {
+        try {
+          await triggerSync();
+        } catch (error: any) {
+          fastify.log.error({ error }, 'Sync failed after import');
+        }
+      }
+
+      return { success: true, imported, skipped, errors };
+    }
+  );
 }

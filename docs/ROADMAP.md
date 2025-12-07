@@ -316,7 +316,7 @@
 - [ ] Visual model designer
 - [ ] Drag-and-drop relationship builder
 - [ ] Live preview of generated code
-- [ ] Model import/export
+- [x] Model import/export
 
 **Admin Panel Generation**
 

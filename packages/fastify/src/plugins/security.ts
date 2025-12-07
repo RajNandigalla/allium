@@ -70,6 +70,6 @@ export default fp<SecurityPluginOptions>(
   },
   {
     name: 'security-plugin',
-    dependencies: ['sensible'], // Requires sensible for httpErrors
+    dependencies: ['@fastify/sensible'], // Requires sensible for httpErrors
   }
 );

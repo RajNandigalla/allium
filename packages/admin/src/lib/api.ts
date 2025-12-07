@@ -277,4 +277,19 @@ export const adminApi = {
       version: string;
       root: string;
     }>('/config'),
+
+  // Model Import/Export
+  importModels: (
+    models: ModelDefinition[],
+    strategy: 'skip' | 'overwrite' = 'skip'
+  ) =>
+    fetchAdmin<{
+      success: boolean;
+      imported: number;
+      skipped: number;
+      errors: Array<{ name: string; error: string }>;
+    }>('/models/import', {
+      method: 'POST',
+      body: JSON.stringify({ models, strategy }),
+    }),
 };

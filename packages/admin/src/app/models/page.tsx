@@ -13,11 +13,14 @@ import {
   Eraser,
   Settings,
   Search,
+  Download,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { adminApi, ModelDefinition } from '../../lib/api';
 import { ModelWizard } from '../../components/model-wizard/ModelWizard';
 import { Input } from '../../components/ui/Input';
+import packageJson from '../../../package.json';
+import { downloadJSON } from '../../lib/download';
 
 export default function ModelsPage() {
   const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
@@ -55,9 +58,11 @@ export default function ModelsPage() {
       setError(null);
       const data = await adminApi.getModels();
       setModels(data);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to fetch models:', err);
-      setError(err.message || 'Failed to load models');
+      const message =
+        err instanceof Error ? err.message : 'Failed to load models';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +72,7 @@ export default function ModelsPage() {
     fetchModels();
   }, []);
 
-  const handleCreateModel = async (data: any) => {
+  const handleCreateModel = async (data: ModelDefinition) => {
     try {
       console.log('Creating model:', data);
       toast.loading(`Creating model ${data.name}...`, { id: 'create-model' });
@@ -82,16 +87,18 @@ export default function ModelsPage() {
 
       // Refresh models list
       fetchModels();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to create model:', error);
-      toast.error(error.message || 'Failed to create model', {
+      const message =
+        error instanceof Error ? error.message : 'Failed to create model';
+      toast.error(message, {
         id: 'create-model',
       });
       throw error;
     }
   };
 
-  const handleUpdateModel = async (data: any) => {
+  const handleUpdateModel = async (data: ModelDefinition) => {
     if (!editingModel) return;
 
     try {
@@ -109,9 +116,11 @@ export default function ModelsPage() {
 
       // Refresh models list
       fetchModels();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to update model:', error);
-      toast.error(error.message || 'Failed to update model', {
+      const message =
+        error instanceof Error ? error.message : 'Failed to update model';
+      toast.error(message, {
         id: 'update-model',
       });
       throw error;
@@ -134,9 +143,11 @@ export default function ModelsPage() {
         id: 'delete-model',
       });
       fetchModels();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to delete model:', error);
-      toast.error(error.message || 'Failed to delete model', {
+      const message =
+        error instanceof Error ? error.message : 'Failed to delete model';
+      toast.error(message, {
         id: 'delete-model',
       });
     }
@@ -165,6 +176,26 @@ export default function ModelsPage() {
       );
     } catch (error) {
       console.error('Failed to clear data:', error);
+    }
+  };
+
+  const handleExportModel = async (model: ModelDefinition) => {
+    try {
+      const exportData = {
+        version: packageJson.version,
+        exportedAt: new Date().toISOString(),
+        models: [model],
+      };
+
+      const filename = `${model.name.toLowerCase()}-${
+        new Date().toISOString().split('T')[0]
+      }.json`;
+      downloadJSON(exportData, filename);
+
+      toast.success(`Exported ${model.name} successfully`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Export failed: ${message}`);
     }
   };
 
@@ -304,6 +335,15 @@ export default function ModelsPage() {
             return (
               <Card key={model.name} className='relative group'>
                 <div className='absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2'>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    className='h-8 w-8 text-slate-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 p-0'
+                    onClick={() => handleExportModel(model)}
+                    title='Export Model'
+                  >
+                    <Download className='w-4 h-4' />
+                  </Button>
                   <Button
                     variant='ghost'
                     size='sm'
@@ -484,7 +524,7 @@ export default function ModelsPage() {
                         </h4>
                         <div className='text-xs space-y-1 text-slate-600 dark:text-slate-400'>
                           {Object.entries(model.service.hooks)
-                            .filter(([_, value]) => value)
+                            .filter((entry) => entry[1])
                             .map(([hook, fn]) => (
                               <div key={hook}>
                                 {hook}: <span className='font-mono'>{fn}</span>

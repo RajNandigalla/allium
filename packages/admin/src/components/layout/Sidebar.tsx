@@ -2,7 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Box, Key, Settings, Database } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Box,
+  Key,
+  Settings,
+  Database,
+  ArrowLeftRight,
+} from 'lucide-react';
 import { clsx } from 'clsx';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,7 +19,7 @@ const navigation = [
   { name: 'Models', href: '/models', icon: Box },
   { name: 'API Keys', href: '/api-keys', icon: Key },
   { name: 'Data', href: '/data', icon: Database },
-
+  { name: 'Import / Export', href: '/import-export', icon: ArrowLeftRight },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

@@ -11,5 +11,8 @@ export default fp<FastifySensibleOptions>(
   async (fastify: FastifyInstance, opts: any) => {
     const sensibleConfig = opts.sensible || {};
     fastify.register(sensible, sensibleConfig);
+  },
+  {
+    name: '@fastify/sensible',
   }
 );
