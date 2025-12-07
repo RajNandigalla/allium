@@ -1,0 +1,51 @@
+{
+  "Basic Model": {
+    "prefix": "allium-model",
+    "body": [
+      "{",
+      "  \"name\": \"${1:ModelName}\",",
+      "  \"fields\": [",
+      "    {",
+      "      \"name\": \"${2:fieldName}\",",
+      "      \"type\": \"${3|String,Int,Float,Boolean,DateTime,Json,Enum|}\",",
+      "      \"required\": ${4|true,false|}",
+      "    }",
+      "  ]",
+      "}"
+    ],
+    "description": "Create a basic Allium model"
+  },
+  "String Field": {
+    "prefix": "allium-field-string",
+    "body": [
+      "{",
+      "  \"name\": \"${1:fieldName}\",",
+      "  \"type\": \"String\",",
+      "  \"required\": ${2|true,false|}",
+      "}"
+    ],
+    "description": "Add a String field"
+  },
+  "Enum Field": {
+    "prefix": "allium-field-enum",
+    "body": [
+      "{",
+      "  \"name\": \"${1:status}\",",
+      "  \"type\": \"Enum\",",
+      "  \"values\": [${2:\"active\", \"inactive\"}]",
+      "}"
+    ],
+    "description": "Add an Enum field"
+  },
+  "One-to-Many Relation": {
+    "prefix": "allium-relation-1n",
+    "body": [
+      "{",
+      "  \"name\": \"${1:relationName}\",",
+      "  \"model\": \"${2:RelatedModel}\",",
+      "  \"type\": \"1:n\"",
+      "}"
+    ],
+    "description": "Add a one-to-many relation"
+  }
+}

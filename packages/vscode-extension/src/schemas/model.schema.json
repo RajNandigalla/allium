@@ -59,21 +59,6 @@
         },
         "api": {
             "$ref": "#/definitions/apiConfig"
-        },
-        "routes": {
-            "type": "object",
-            "additionalProperties": {
-                "$ref": "#/definitions/routeConfig"
-            }
-        },
-        "service": {
-            "$ref": "#/definitions/serviceConfig"
-        },
-        "controller": {
-            "$ref": "#/definitions/controllerConfig"
-        },
-        "hasOverrides": {
-            "$ref": "#/definitions/overrideInfo"
         }
     },
     "definitions": {
@@ -162,8 +147,7 @@
                                 "visibleEnd": {
                                     "type": "integer"
                                 }
-                            },
-                            "additionalProperties": false
+                            }
                         }
                     ]
                 },
@@ -184,45 +168,8 @@
                 },
                 "jsonSchema": {
                     "type": "object"
-                },
-                "validation": {
-                    "type": "object",
-                    "properties": {
-                        "min": {
-                            "type": "number"
-                        },
-                        "max": {
-                            "type": "number"
-                        },
-                        "minLength": {
-                            "type": "integer"
-                        },
-                        "maxLength": {
-                            "type": "integer"
-                        },
-                        "pattern": {
-                            "type": "string"
-                        },
-                        "enum": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
-                        "regex": {
-                            "type": "string"
-                        },
-                        "message": {
-                            "type": "string"
-                        },
-                        "custom": {
-                            "type": "string"
-                        }
-                    },
-                    "additionalProperties": false
                 }
-            },
-            "additionalProperties": false
+            }
         },
         "relation": {
             "type": "object",
@@ -281,9 +228,6 @@
                     "type": "string",
                     "pattern": "^/.*"
                 },
-                "version": {
-                    "type": "string"
-                },
                 "operations": {
                     "type": "array",
                     "items": {
@@ -323,182 +267,6 @@
                                 }
                             ]
                         }
-                    }
-                }
-            }
-        },
-        "routeConfig": {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "string"
-                },
-                "method": {
-                    "enum": [
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "PATCH"
-                    ]
-                },
-                "middleware": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "rateLimit": {
-                    "type": "object",
-                    "properties": {
-                        "max": {
-                            "type": "integer"
-                        },
-                        "timeWindow": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "auth": {
-                    "oneOf": [
-                        {
-                            "type": "boolean"
-                        },
-                        {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    ]
-                },
-                "customHandler": {
-                    "type": "string"
-                }
-            }
-        },
-        "serviceConfig": {
-            "type": "object",
-            "properties": {
-                "methods": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "object",
-                        "properties": {
-                            "enabled": {
-                                "type": "boolean"
-                            },
-                            "pagination": {
-                                "type": "boolean"
-                            },
-                            "softDelete": {
-                                "type": "boolean"
-                            }
-                        }
-                    }
-                },
-                "hooks": {
-                    "type": "object",
-                    "properties": {
-                        "beforeCreate": {
-                            "type": "string"
-                        },
-                        "afterCreate": {
-                            "type": "string"
-                        },
-                        "beforeUpdate": {
-                            "type": "string"
-                        },
-                        "afterUpdate": {
-                            "type": "string"
-                        },
-                        "beforeDelete": {
-                            "type": "string"
-                        },
-                        "afterDelete": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "customMethods": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "name": {
-                                "type": "string"
-                            },
-                            "description": {
-                                "type": "string"
-                            }
-                        },
-                        "required": [
-                            "name"
-                        ]
-                    }
-                }
-            }
-        },
-        "controllerConfig": {
-            "type": "object",
-            "properties": {
-                "validation": {
-                    "type": "object",
-                    "properties": {
-                        "create": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        },
-                        "update": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                },
-                "transform": {
-                    "type": "object",
-                    "properties": {
-                        "input": {
-                            "type": "string"
-                        },
-                        "output": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "errorHandling": {
-                    "type": "object",
-                    "properties": {
-                        "custom": {
-                            "type": "boolean"
-                        },
-                        "handler": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "overrideInfo": {
-            "type": "object",
-            "properties": {
-                "service": {
-                    "type": "boolean"
-                },
-                "controller": {
-                    "type": "boolean"
-                },
-                "routes": {
-                    "type": "boolean"
-                },
-                "customMethods": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
                     }
                 }
             }

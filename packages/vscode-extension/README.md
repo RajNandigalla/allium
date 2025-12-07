@@ -1,71 +1,132 @@
-# allium-vscode README
+# Allium VSCode Extension
 
-This is the README for your extension "allium-vscode". After writing up a brief description, we recommend including the following sections.
+IntelliSense and tooling for Allium model JSON files.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- ✅ **IntelliSense & Auto-complete**: Smart suggestions for field types, relation types, and model names
+- ✅ **Real-time Validation**: Instant error detection for invalid model references
+- ✅ **Code Snippets**: Quick templates for models, fields, and relations
+- ✅ **Configurable**: Custom model directory path via settings
+- ⏳ **Model Visualization**: Interactive diagrams (coming soon)
 
-For example if there is an image subfolder under your extension project workspace:
+## Installation
 
-\!\[feature X\]\(images/feature-x.png\)
+### For Development
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+1. Navigate to the extension directory:
 
-## Requirements
+   ```bash
+   cd packages/vscode-extension
+   ```
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+2. Install dependencies:
 
-## Extension Settings
+   ```bash
+   npm install
+   ```
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+3. Compile the extension:
 
-For example:
+   ```bash
+   npm run compile
+   ```
 
-This extension contributes the following settings:
+4. Press `F5` in VSCode to launch Extension Development Host
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+### From VSIX (Local Install)
 
-## Known Issues
+```bash
+npm run package
+code --install-extension allium-vscode-0.1.0.vsix
+```
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+## Usage
 
-## Release Notes
+### Auto-complete
 
-Users appreciate release notes as you update your extension.
+Open any `.json` file in your `.allium/models/` directory and start typing:
 
-### 1.0.0
+- Type `"type":` to see field type suggestions (String, Int, Float, Boolean, DateTime, Json, Enum)
+- Type `"model":` to see available model names for relations
+- Type `allium-` to see available code snippets
 
-Initial release of ...
+### Snippets
 
-### 1.0.1
+- `allium-model` - Create a basic model
+- `allium-field-string` - Add a String field
+- `allium-field-enum` - Add an Enum field
+- `allium-relation-1n` - Add a one-to-many relation
 
-Fixed issue #.
+### Commands
 
-### 1.1.0
+Open Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`):
 
-Added features X, Y, and Z.
+- **Allium: Visualize Current Model** - View diagram of current model (placeholder)
+- **Allium: Visualize All Models** - View all models in workspace (placeholder)
 
----
+### Settings
 
-## Following extension guidelines
+Configure the model directory in VSCode settings:
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+```json
+{
+  "allium.modelDirectory": ".allium/models"
+}
+```
 
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+## Development
 
-## Working with Markdown
+### Project Structure
 
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
+```
+src/
+├── extension.ts              # Main entry point
+├── providers/
+│   ├── completionProvider.ts # Auto-complete logic
+│   └── diagnosticProvider.ts # Validation logic
+├── utils/
+│   ├── config.ts            # Configuration management
+│   └── modelLoader.ts       # Model caching & watching
+└── schemas/
+    └── model.schema.json    # Allium model schema
+```
 
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
+### Building
 
-## For more information
+```bash
+npm run compile        # Compile with webpack
+npm run watch         # Watch mode for development
+npm run package       # Create .vsix package
+```
 
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+### Schema Management
 
-**Enjoy!**
+> **Important:** The extension uses a JSON schema (`src/schemas/model.schema.json`) to provide validation and IntelliSense. This schema must be kept in sync with the core model types defined in `@allium/core`. If you update the model types, please ensure the JSON schema is updated accordingly to match the new definitions.
+
+### Testing
+
+1. Open the extension directory in VSCode
+2. Press `F5` to launch Extension Development Host
+3. Open an Allium project with model files
+4. Test IntelliSense, validation, and snippets
+
+## Roadmap
+
+- [ ] Complete model visualization with Mermaid.js
+- [ ] Add hover provider with documentation
+- [ ] Expand snippet library
+- [ ] Add JSON schema validation
+- [ ] Publish to VSCode Marketplace
+
+## Contributing
+
+Contributions are welcome! Please ensure:
+
+1. Code follows existing patterns
+2. TypeScript compiles without errors
+3. Extension works in Development Host
+
+## License
+
+MIT

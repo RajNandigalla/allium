@@ -1,21 +1,55 @@
 {
   "name": "allium-vscode",
-  "displayName": "allium-vscode",
+  "displayName": "Allium Model Tools",
   "description": "IntelliSense and tooling for Allium model JSON files",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "publisher": "allium-framework",
+  "icon": "media/icon.png",
   "engines": {
     "vscode": "^1.106.1"
   },
   "categories": [
-    "Other"
+    "Programming Languages",
+    "Snippets",
+    "Visualization"
   ],
-  "activationEvents": [],
+  "keywords": [
+    "allium",
+    "model",
+    "json",
+    "api",
+    "code-generation"
+  ],
+  "activationEvents": [
+    "onLanguage:json",
+    "workspaceContains:**/.allium/models/*.json"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "allium-vscode.helloWorld",
-        "title": "Hello World"
+        "command": "allium.visualizeModel",
+        "title": "Allium: Visualize Current Model"
+      },
+      {
+        "command": "allium.visualizeAllModels",
+        "title": "Allium: Visualize All Models"
+      }
+    ],
+    "configuration": {
+      "title": "Allium",
+      "properties": {
+        "allium.modelDirectory": {
+          "type": "string",
+          "default": ".allium/models",
+          "description": "Directory path where model JSON files are located (relative to workspace root)"
+        }
+      }
+    },
+    "snippets": [
+      {
+        "language": "json",
+        "path": "./snippets/allium-models.json"
       }
     ]
   },
@@ -30,10 +64,14 @@
     "lint": "eslint src",
     "test": "vscode-test"
   },
+  "dependencies": {
+    "@allium/core": "*"
+  },
   "devDependencies": {
     "@types/vscode": "^1.106.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
+    "@vscode/vsce": "^3.7.1",
     "typescript-eslint": "^8.48.1",
     "eslint": "^9.39.1",
     "typescript": "^5.9.3",

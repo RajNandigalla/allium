@@ -1,26 +1,67 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { ModelLoader } from './utils/modelLoader';
+import { isModelFile } from './utils/config';
+import { AlliumCompletionProvider } from './providers/completionProvider';
+import { AlliumDiagnosticProvider } from './providers/diagnosticProvider';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+let modelLoader: ModelLoader;
+let diagnosticProvider: AlliumDiagnosticProvider;
+
 export function activate(context: vscode.ExtensionContext) {
+  console.log('Allium Model Tools extension is now active!');
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "allium-vscode" is now active!');
+  modelLoader = new ModelLoader();
+  diagnosticProvider = new AlliumDiagnosticProvider(modelLoader);
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('allium-vscode.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from allium-vscode!');
-	});
+  const completionProvider = vscode.languages.registerCompletionItemProvider(
+    { language: 'json', pattern: '**/.allium/models/*.json' },
+    new AlliumCompletionProvider(modelLoader),
+    '"',
+    ':'
+  );
 
-	context.subscriptions.push(disposable);
+  const visualizeModelCommand = vscode.commands.registerCommand(
+    'allium.visualizeModel',
+    () => {
+      vscode.window.showInformationMessage('Model visualization coming soon!');
+    }
+  );
+
+  const visualizeAllModelsCommand = vscode.commands.registerCommand(
+    'allium.visualizeAllModels',
+    () => {
+      vscode.window.showInformationMessage(
+        'All models visualization coming soon!'
+      );
+    }
+  );
+
+  vscode.workspace.onDidOpenTextDocument((document) => {
+    if (isModelFile(document)) {
+      diagnosticProvider.validateDocument(document);
+    }
+  });
+
+  vscode.workspace.onDidChangeTextDocument((event) => {
+    if (isModelFile(event.document)) {
+      diagnosticProvider.validateDocument(event.document);
+    }
+  });
+
+  context.subscriptions.push(
+    completionProvider,
+    visualizeModelCommand,
+    visualizeAllModelsCommand,
+    { dispose: () => modelLoader.dispose() },
+    { dispose: () => diagnosticProvider.dispose() }
+  );
 }
 
-// This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() {
+  if (modelLoader) {
+    modelLoader.dispose();
+  }
+  if (diagnosticProvider) {
+    diagnosticProvider.dispose();
+  }
+}
