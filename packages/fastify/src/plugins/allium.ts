@@ -13,7 +13,7 @@ import { generateGraphQLTypeDefs } from '../generators/graphql-generator';
 import { generateResolvers } from '../generators/graphql-resolvers';
 import { ApolloServer } from '@apollo/server';
 import { fastifyApolloHandler } from '@as-integrations/fastify';
-import analyticsPlugin from './analytics';
+import analyticsPlugin from '../framework/analytics';
 
 export interface AlliumPluginOptions {
   /**

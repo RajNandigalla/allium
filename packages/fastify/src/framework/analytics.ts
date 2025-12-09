@@ -18,10 +18,13 @@ export default fp(
       const statusCode = reply.statusCode;
 
       // Skip health checks, swagger docs, and favicon
+      // Skip health checks, swagger docs, favicon, admin-api, and OPTIONS
       if (
         url.startsWith('/health') ||
         url.startsWith('/documentation') ||
-        url === '/favicon.ico'
+        // url.startsWith('/_admin') ||
+        url === '/favicon.ico' ||
+        method === 'OPTIONS'
       ) {
         return;
       }
