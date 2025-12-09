@@ -53,10 +53,24 @@ The easiest way to view your analytics is through the auto-generated Admin Panel
 - **Error Rate**: Percentage of failed requests.
 - **Average Latency**: System performance monitoring.
 - **Top Endpoints**: Which routes are most used.
+- **Filtering**: Support for preset ranges (24h, 7d, 30d) and **custom date ranges**.
 
 ### Direct Access
 
-You can query the `ApiMetric` model directly using Prisma if you need custom reports:
+You can query the `ApiMetric` model directly using Prisma, or use the Admin API endpoints.
+
+**API Endpoints:**
+
+- `GET /_admin/analytics/overview?range=24h`
+- `GET /_admin/analytics/chart?from=2023-01-01&to=2023-01-31`
+
+Supported Query Parameters:
+
+- `range`: Preset range (`24h`, `7d`, `30d`). Default is `24h`.
+- `from`, `to`: ISO date strings for custom ranges (overrides `range`).
+
+**Prisma Example:**
+If you need custom reports via code:
 
 ```typescript
 const metrics = await prisma.apiMetric.groupBy({
