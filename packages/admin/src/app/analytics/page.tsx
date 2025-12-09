@@ -9,8 +9,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
 } from 'recharts';
 import { adminApi, AnalyticsOverview, AnalyticsChartData } from '../../lib/api';
 import { Card } from '../../components/ui/Card';
@@ -24,7 +22,7 @@ import {
 } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 
-export default function DashboardPage() {
+export default function AnalyticsPage() {
   const [range, setRange] = useState<'24h' | '7d' | '30d' | 'custom'>('24h');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');

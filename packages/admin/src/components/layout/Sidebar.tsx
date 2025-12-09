@@ -9,6 +9,7 @@ import {
   Settings,
   Database,
   ArrowLeftRight,
+  TrendingUp,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { ThemeToggle } from '../ui/ThemeToggle';
@@ -17,8 +18,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 const navigation = [
   {
     name: 'Dashboard',
-    href: '/dashboard',
+    href: '/',
     icon: LayoutDashboard,
+  },
+  {
+    name: 'Analytics',
+    href: '/analytics',
+    icon: TrendingUp,
   },
   {
     name: 'Models',
