@@ -14,6 +14,37 @@ export interface ValidationRules {
   enum?: string[];
 }
 
+export interface AnalyticsOverview {
+  totalRequests: number;
+  requestsTrend: number;
+  avgLatency: number;
+  errorRate: number;
+}
+
+export interface AnalyticsUsage {
+  endpoint: string;
+  method: string;
+  requests: number;
+  avgLatency: number;
+}
+
+export interface AnalyticsError {
+  id: string;
+  statusCode: number;
+  method: string;
+  endpoint: string;
+  timestamp: string;
+  errorType?: string;
+  errorMessage?: string;
+}
+
+export interface AnalyticsChartData {
+  date: string;
+  requests: number;
+  errors: number;
+  avgLatency: number;
+}
+
 export interface ComputedFieldConfig {
   template?: string;
   transform?: (record: any) => any;
@@ -292,4 +323,33 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify({ models, strategy }),
     }),
+
+  // Analytics
+  getAnalyticsOverview: (range: string = '24h', from?: string, to?: string) => {
+    const query = new URLSearchParams({ range });
+    if (from) query.set('from', from);
+    if (to) query.set('to', to);
+    return fetchAdmin<AnalyticsOverview>(`/analytics/overview?${query}`);
+  },
+
+  getAnalyticsUsage: (range: string = '24h', from?: string, to?: string) => {
+    const query = new URLSearchParams({ range });
+    if (from) query.set('from', from);
+    if (to) query.set('to', to);
+    return fetchAdmin<AnalyticsUsage[]>(`/analytics/usage?${query}`);
+  },
+
+  getAnalyticsErrors: (range: string = '24h', from?: string, to?: string) => {
+    const query = new URLSearchParams({ range });
+    if (from) query.set('from', from);
+    if (to) query.set('to', to);
+    return fetchAdmin<AnalyticsError[]>(`/analytics/errors?${query}`);
+  },
+
+  getAnalyticsChart: (range: string = '24h', from?: string, to?: string) => {
+    const query = new URLSearchParams({ range });
+    if (from) query.set('from', from);
+    if (to) query.set('to', to);
+    return fetchAdmin<AnalyticsChartData[]>(`/analytics/chart?${query}`);
+  },
 };

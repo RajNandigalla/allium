@@ -1,7 +1,41 @@
 import { FastifyInstance } from 'fastify';
 
 interface AnalyticsQuery {
-  range: '24h' | '7d' | '30d';
+  range?: '24h' | '7d' | '30d';
+  from?: string;
+  to?: string;
+}
+
+function getDateRange(query: AnalyticsQuery) {
+  const { range = '24h', from, to } = query;
+  const now = new Date();
+
+  if (from && to) {
+    return {
+      startDate: new Date(from),
+      endDate: new Date(to),
+      previousStartDate: new Date(
+        new Date(from).getTime() -
+          (new Date(to).getTime() - new Date(from).getTime())
+      ),
+    };
+  }
+
+  const startDate = new Date();
+  const previousStartDate = new Date();
+
+  if (range === '24h') {
+    startDate.setHours(startDate.getHours() - 24);
+    previousStartDate.setHours(previousStartDate.getHours() - 48);
+  } else if (range === '7d') {
+    startDate.setDate(startDate.getDate() - 7);
+    previousStartDate.setDate(previousStartDate.getDate() - 14);
+  } else if (range === '30d') {
+    startDate.setDate(startDate.getDate() - 30);
+    previousStartDate.setDate(previousStartDate.getDate() - 60);
+  }
+
+  return { startDate, endDate: now, previousStartDate };
 }
 
 export async function registerAnalyticsRoutes(fastify: FastifyInstance) {
@@ -25,33 +59,20 @@ export async function registerAnalyticsRoutes(fastify: FastifyInstance) {
         };
       }
 
-      const { range = '24h' } = req.query;
-      let startDate = new Date();
-      let previousStartDate = new Date();
-
-      if (range === '24h') {
-        startDate.setHours(startDate.getHours() - 24);
-        previousStartDate.setHours(previousStartDate.getHours() - 48);
-      } else if (range === '7d') {
-        startDate.setDate(startDate.getDate() - 7);
-        previousStartDate.setDate(previousStartDate.getDate() - 14);
-      } else if (range === '30d') {
-        startDate.setDate(startDate.getDate() - 30);
-        previousStartDate.setDate(previousStartDate.getDate() - 60);
-      }
+      const { startDate, endDate, previousStartDate } = getDateRange(req.query);
 
       // Current period metrics
       const [totalRequests, avgLatencyAgg, errorCount] = await Promise.all([
         prisma.apiMetric.count({
-          where: { timestamp: { gte: startDate } },
+          where: { timestamp: { gte: startDate, lte: endDate } },
         }),
         prisma.apiMetric.aggregate({
-          where: { timestamp: { gte: startDate } },
+          where: { timestamp: { gte: startDate, lte: endDate } },
           _avg: { latency: true },
         }),
         prisma.apiMetric.count({
           where: {
-            timestamp: { gte: startDate },
+            timestamp: { gte: startDate, lte: endDate },
             statusCode: { gte: 400 },
           },
         }),
@@ -88,17 +109,12 @@ export async function registerAnalyticsRoutes(fastify: FastifyInstance) {
       const prisma = (fastify as any).prisma;
       if (!prisma?.apiMetric) return [];
 
-      const { range = '24h' } = req.query;
-      const startDate = new Date();
-
-      if (range === '24h') startDate.setHours(startDate.getHours() - 24);
-      else if (range === '7d') startDate.setDate(startDate.getDate() - 7);
-      else if (range === '30d') startDate.setDate(startDate.getDate() - 30);
+      const { startDate, endDate } = getDateRange(req.query);
 
       // Group by endpoint
       const usage = await prisma.apiMetric.groupBy({
         by: ['endpoint', 'method'],
-        where: { timestamp: { gte: startDate } },
+        where: { timestamp: { gte: startDate, lte: endDate } },
         _count: { endpoint: true },
         _avg: { latency: true },
         orderBy: { _count: { endpoint: 'desc' } },
@@ -121,16 +137,11 @@ export async function registerAnalyticsRoutes(fastify: FastifyInstance) {
       const prisma = (fastify as any).prisma;
       if (!prisma?.apiMetric) return [];
 
-      const { range = '24h' } = req.query;
-      const startDate = new Date();
-
-      if (range === '24h') startDate.setHours(startDate.getHours() - 24);
-      else if (range === '7d') startDate.setDate(startDate.getDate() - 7);
-      else if (range === '30d') startDate.setDate(startDate.getDate() - 30);
+      const { startDate, endDate } = getDateRange(req.query);
 
       const errors = await prisma.apiMetric.findMany({
         where: {
-          timestamp: { gte: startDate },
+          timestamp: { gte: startDate, lte: endDate },
           statusCode: { gte: 400 },
         },
         orderBy: { timestamp: 'desc' },
@@ -158,20 +169,11 @@ export async function registerAnalyticsRoutes(fastify: FastifyInstance) {
       if (!prisma?.apiMetric) return [];
 
       const { range = '24h' } = req.query;
-      const startDate = new Date();
-
-      // Determine interval and format based on range
-      // Since Prisma groupBy doesn't natively support Date truncation cross-db without raw queries
-      // We will fetch all data and aggregate in memory for now (simpler than raw SQL for multiple DBs)
-      // Optimization: For production, raw SQL date_trunc is better.
-
-      if (range === '24h') startDate.setHours(startDate.getHours() - 24);
-      else if (range === '7d') startDate.setDate(startDate.getDate() - 7);
-      else if (range === '30d') startDate.setDate(startDate.getDate() - 30);
+      const { startDate, endDate } = getDateRange(req.query);
 
       // Fetch minimal data needed for chart
       const metrics = await prisma.apiMetric.findMany({
-        where: { timestamp: { gte: startDate } },
+        where: { timestamp: { gte: startDate, lte: endDate } },
         select: { timestamp: true, latency: true, statusCode: true },
         orderBy: { timestamp: 'asc' },
       });
@@ -186,7 +188,7 @@ export async function registerAnalyticsRoutes(fastify: FastifyInstance) {
         let key: string;
         const date = new Date(m.timestamp);
 
-        if (range === '24h') {
+        if (range === '24h' && !req.query.from) {
           // Group by hour: "14:00"
           date.setMinutes(0, 0, 0);
           key = date.toISOString();
