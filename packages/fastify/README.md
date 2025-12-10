@@ -901,6 +901,26 @@ This will automatically instrument:
 
 You can visualize traces using tools like [Jaeger](https://www.jaegertracing.io/), [Zipkin](https://zipkin.io/), or any OTLP-compatible APM (Datadog, Honeycomb, New Relic).
 
+### Metrics (Prometheus)
+
+You can enable a Prometheus-compatible metrics endpoint (via OpenTelemetry) to monitor your application's health and performance.
+
+```typescript
+initAllium({
+  // ...
+  opentelemetry: {
+    serviceName: 'my-service',
+    metrics: {
+      enabled: true,
+      port: 9464, // Optional: Defaults to 9464
+      endpoint: '/metrics', // Optional: Defaults to /metrics
+    },
+  },
+});
+```
+
+This will expose a scraping endpoint at `http://localhost:9464/metrics`.
+
 ## Health Checks
 
 Allium comes with a built-in health check endpoint to monitor the application status and its dependencies (database, cache).

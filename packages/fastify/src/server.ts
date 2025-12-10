@@ -18,6 +18,7 @@ import { nodeProfilingIntegration } from '@sentry/profiling-node';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { PrometheusExporter } from '@opentelemetry/exporter-prometheus';
 
 import FastifyOtelInstrumentation from '@fastify/otel';
 
@@ -234,6 +235,22 @@ export interface AlliumServerConfig extends AlliumPluginOptions {
   opentelemetry?: {
     serviceName: string;
     otlpEndpoint?: string;
+    /**
+     * Prometheus metrics configuration
+     */
+    metrics?: {
+      enabled: boolean;
+      /**
+       * Port to expose metrics on
+       * @default 9464
+       */
+      port?: number;
+      /**
+       * Endpoint path for metrics
+       * @default '/metrics'
+       */
+      endpoint?: string;
+    };
   };
 
   /**
@@ -303,6 +320,15 @@ export async function initAllium(config: AlliumServerConfig) {
 
   // Initialize OpenTelemetry
   if (alliumConfig.opentelemetry) {
+    // Configure Metrics (Prometheus)
+    let metricReader;
+    if (alliumConfig.opentelemetry.metrics?.enabled) {
+      metricReader = new PrometheusExporter({
+        port: alliumConfig.opentelemetry.metrics.port || 9464,
+        endpoint: alliumConfig.opentelemetry.metrics.endpoint || '/metrics',
+      });
+    }
+
     const sdk = new NodeSDK({
       serviceName: alliumConfig.opentelemetry.serviceName,
       traceExporter: new OTLPTraceExporter({
@@ -310,6 +336,7 @@ export async function initAllium(config: AlliumServerConfig) {
           alliumConfig.opentelemetry.otlpEndpoint ||
           'http://localhost:4318/v1/traces',
       }),
+      metricReader,
       instrumentations: [
         getNodeAutoInstrumentations({
           // Disable deprecated fastify instrumentation in favor of @fastify/otel
