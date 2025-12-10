@@ -516,6 +516,7 @@ export const ${modelName} = registerModel('${modelName}', {
             service: model.service,
             softDelete: model.softDelete,
             auditTrail: model.auditTrail,
+            draftPublish: model.draftPublish,
             constraints: model.constraints,
             description: model.description,
             routes: model.routes || {

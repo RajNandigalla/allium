@@ -103,6 +103,9 @@ export interface ModelDefinition {
   /** Enable audit trails (adds createdBy, updatedBy, deletedBy fields) */
   auditTrail?: boolean;
 
+  /** Enable draft/publish functionality */
+  draftPublish?: boolean;
+
   /** Model fields definition */
   fields?: Field[];
 

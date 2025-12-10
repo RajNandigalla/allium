@@ -232,6 +232,12 @@ function generatePrismaModel(
     output += `  deletedBy String?\n`;
   }
 
+  // Add Draft/Publish fields
+  if (model.draftPublish) {
+    output += `  status String @default("DRAFT")\n`; // DRAFT, PUBLISHED, ARCHIVED
+    output += `  publishedAt DateTime?\n`;
+  }
+
   // Add compound unique constraints
   if (model.constraints?.unique) {
     for (const fields of model.constraints.unique) {

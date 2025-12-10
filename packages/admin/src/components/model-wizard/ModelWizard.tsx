@@ -52,6 +52,7 @@ const modelWizardSchema = z.object({
   description: z.string().optional(),
   softDelete: z.boolean().default(false),
   auditTrail: z.boolean().default(false),
+  draftPublish: z.boolean().default(false),
 
   // Step 2: Fields
   fields: z.array(fieldSchema).min(1, 'At least one field is required'),
@@ -168,6 +169,7 @@ export function ModelWizard({
         description: initialData.description,
         softDelete: initialData.softDelete || false,
         auditTrail: initialData.auditTrail || false,
+        draftPublish: initialData.draftPublish || false,
         fields: initialData.fields?.map((f: any) => ({
           ...f,
           type: f.type || 'String',
@@ -208,6 +210,7 @@ export function ModelWizard({
     : {
         softDelete: false,
         auditTrail: false,
+        draftPublish: false,
         fields: [{ name: '', type: 'String', required: false, unique: false }],
         relations: [],
         operations: ['create', 'read', 'update', 'delete', 'list'],
@@ -232,7 +235,13 @@ export function ModelWizard({
 
     switch (currentStep) {
       case 0:
-        fieldsToValidate = ['name', 'description', 'softDelete', 'auditTrail'];
+        fieldsToValidate = [
+          'name',
+          'description',
+          'softDelete',
+          'auditTrail',
+          'draftPublish',
+        ];
         break;
       case 1:
         fieldsToValidate = ['fields'];
@@ -317,6 +326,7 @@ export function ModelWizard({
           })),
         softDelete: formData.softDelete,
         auditTrail: formData.auditTrail,
+        draftPublish: formData.draftPublish,
         ...(formData.apiPrefix ||
         formData.apiVersion ||
         formData.operations?.length

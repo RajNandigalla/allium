@@ -315,7 +315,33 @@ export default function GlobalDataPage() {
     );
   };
 
-  const columns = records.length > 0 ? Object.keys(records[0]) : [];
+  // Determine visible columns
+  const columns =
+    records.length > 0
+      ? (() => {
+          const allKeys = Object.keys(records[0]).filter(
+            (key) =>
+              !key.startsWith('_') &&
+              key !== 'uuid' &&
+              key !== 'createdBy' &&
+              key !== 'updatedBy' &&
+              key !== 'deletedBy'
+          );
+
+          // For draftPublish models, ensure status and publishedAt are visible
+          if (modelDef?.draftPublish) {
+            const result = [];
+            if (allKeys.includes('status')) result.push('status');
+            result.push(
+              ...allKeys.filter((k) => k !== 'status' && k !== 'publishedAt')
+            );
+            if (allKeys.includes('publishedAt')) result.push('publishedAt');
+            return result.slice(0, 8);
+          }
+
+          return allKeys.slice(0, 8);
+        })()
+      : [];
 
   return (
     <div className='space-y-6 p-8'>
@@ -456,9 +482,29 @@ export default function GlobalDataPage() {
                             key={col}
                             className='px-4 py-3 text-sm text-slate-900 dark:text-slate-100'
                           >
-                            {typeof record[col] === 'object'
-                              ? JSON.stringify(record[col])
-                              : String(record[col] ?? '')}
+                            {col === 'status' ? (
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  record[col] === 'PUBLISHED'
+                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                                    : record[col] === 'ARCHIVED'
+                                    ? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                                    : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
+                                }`}
+                              >
+                                {record[col]}
+                              </span>
+                            ) : col === 'publishedAt' ? (
+                              record[col] ? (
+                                new Date(record[col]).toLocaleString()
+                              ) : (
+                                <span className='text-slate-400'>Not set</span>
+                              )
+                            ) : typeof record[col] === 'object' ? (
+                              JSON.stringify(record[col])
+                            ) : (
+                              String(record[col] ?? '')
+                            )}
                           </td>
                         ))}
                         <td className='px-4 py-3 text-right'>
@@ -536,6 +582,57 @@ export default function GlobalDataPage() {
             <div className='space-y-4'>
               {/* Regular Fields */}
               {modelDef?.fields?.map(renderFormField)}
+
+              {/* Draft/Publish Fields */}
+              {modelDef?.draftPublish && (
+                <div className='pt-4 border-t border-slate-200 dark:border-slate-700 space-y-4'>
+                  <h4 className='text-sm font-semibold text-slate-700 dark:text-slate-300'>
+                    Publishing
+                  </h4>
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium text-slate-700 dark:text-slate-200'>
+                      Status
+                    </label>
+                    <select
+                      value={formData['status'] || 'DRAFT'}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          status: e.target.value,
+                        }))
+                      }
+                      className='w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg'
+                    >
+                      <option value='DRAFT'>Draft</option>
+                      <option value='PUBLISHED'>Published</option>
+                      <option value='ARCHIVED'>Archived</option>
+                    </select>
+                  </div>
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium text-slate-700 dark:text-slate-200'>
+                      Published At
+                    </label>
+                    <Input
+                      type='datetime-local'
+                      value={
+                        formData['publishedAt']
+                          ? new Date(formData['publishedAt'])
+                              .toISOString()
+                              .slice(0, 16)
+                          : ''
+                      }
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          publishedAt: e.target.value
+                            ? new Date(e.target.value).toISOString()
+                            : null,
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Relation Fields */}
               {modelDef?.relations && modelDef.relations.length > 0 && (

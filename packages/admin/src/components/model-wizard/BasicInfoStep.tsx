@@ -4,6 +4,7 @@ import { UseFormRegister, FieldErrors } from 'react-hook-form';
 import { WizardStep } from '../ui/WizardStep';
 import { Input } from '../ui/Input';
 import { Textarea } from '../ui/Textarea';
+import { Checkbox } from '../ui/Checkbox';
 import { Info } from 'lucide-react';
 
 export interface BasicInfoData {
@@ -11,6 +12,7 @@ export interface BasicInfoData {
   description?: string;
   softDelete: boolean;
   auditTrail: boolean;
+  draftPublish: boolean;
 }
 
 interface BasicInfoStepProps {
@@ -46,39 +48,23 @@ export function BasicInfoStep({ register, errors }: BasicInfoStepProps) {
         </h3>
 
         <div className='space-y-3 pl-1'>
-          <label className='flex items-start gap-3 cursor-pointer group'>
-            <input
-              type='checkbox'
-              className='mt-0.5 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-400 cursor-pointer'
-              {...register('softDelete')}
-            />
-            <div className='flex-1'>
-              <div className='text-sm font-medium text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors'>
-                Soft Delete
-              </div>
-              <div className='text-xs text-slate-600 dark:text-slate-400 mt-0.5'>
-                Records are marked as deleted instead of being permanently
-                removed from the database
-              </div>
-            </div>
-          </label>
+          <Checkbox
+            label='Soft Delete'
+            helperText='Records are marked as deleted instead of being permanently removed from the database'
+            {...register('softDelete')}
+          />
 
-          <label className='flex items-start gap-3 cursor-pointer group'>
-            <input
-              type='checkbox'
-              className='mt-0.5 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-400 cursor-pointer'
-              {...register('auditTrail')}
-            />
-            <div className='flex-1'>
-              <div className='text-sm font-medium text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors'>
-                Audit Trail
-              </div>
-              <div className='text-xs text-slate-600 dark:text-slate-400 mt-0.5'>
-                Automatically track creation and update timestamps (createdAt,
-                updatedAt)
-              </div>
-            </div>
-          </label>
+          <Checkbox
+            label='Audit Trail'
+            helperText='Automatically track creation and update timestamps (createdAt, updatedAt)'
+            {...register('auditTrail')}
+          />
+
+          <Checkbox
+            label='Draft & Publish Workflow'
+            helperText='Enable content status management (Draft/Published/Archived) and scheduling'
+            {...register('draftPublish')}
+          />
         </div>
       </div>
     </WizardStep>

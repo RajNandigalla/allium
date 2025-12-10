@@ -35,6 +35,8 @@ export const Checkbox = forwardRef<
       indeterminate,
       size = 'md',
       disabled,
+      name,
+      onChange,
       ...props
     },
     ref
@@ -52,14 +54,25 @@ export const Checkbox = forwardRef<
     };
 
     const handleCheckedChange = (value: boolean | 'indeterminate') => {
-      if (onCheckedChange && typeof value === 'boolean') {
-        onCheckedChange(value);
+      if (typeof value === 'boolean') {
+        if (onChange) {
+          // react-hook-form only needs target.checked for checkboxes
+          (
+            onChange as unknown as (e: { target: { checked: boolean } }) => void
+          )({
+            target: { checked: value },
+          });
+        }
+        if (onCheckedChange) {
+          onCheckedChange(value);
+        }
       }
     };
 
     const checkboxElement = (
       <CheckboxPrimitive.Root
         ref={ref}
+        name={name}
         checked={indeterminate ? 'indeterminate' : checked}
         onCheckedChange={handleCheckedChange}
         disabled={disabled}

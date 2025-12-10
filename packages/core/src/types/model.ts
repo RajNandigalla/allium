@@ -165,6 +165,11 @@ export interface ModelDefinition {
   softDelete?: boolean;
   auditTrail?: boolean;
   constraints?: ModelConstraints;
+  /**
+   * Enable Draft/Publish workflow
+   * Adds `status` (DRAFT/PUBLISHED/ARCHIVED) and `publishedAt` fields
+   */
+  draftPublish?: boolean;
 }
 
 export interface AlliumSchema {

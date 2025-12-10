@@ -220,7 +220,7 @@
 
 **Content Workflows**
 
-- [ ] Draft & Publish Workflow (status management, scheduling)
+- [x] Draft & Publish Workflow (status management, scheduling)
 
 ---
 
@@ -228,9 +228,9 @@
 
 **VSCode Extension**
 
-- [/] IntelliSense for model JSON files
-- [/] Auto-complete for field types
-- [/] Relationship validation in editor
+- [-] IntelliSense for model JSON files
+- [-] Auto-complete for field types
+- [-] Relationship validation in editor
 - [ ] Model visualization
 
 **CLI Enhancements**
@@ -306,7 +306,7 @@
 
 - [x] Health check endpoints
 - [x] Prometheus metrics (via OpenTelemetry)
-- [x] OpenTelemetry Integration (Tracing)
+- [-] OpenTelemetry Integration (Tracing)
 - [x] Logging configuration (Winston/Pino) [Doc](../../docs/guides/LOGGING.md)
 - [x] Crash analytics (Sentry/Datadog)
 
@@ -316,14 +316,14 @@
 
 **Web UI for Model Management**
 
-- [ ] Visual model designer
+- [-] Visual model designer (Form-based wizard implemented)
 - [ ] Drag-and-drop relationship builder
 - [ ] Live preview of generated code
 - [x] Model import/export
 
 **Admin Panel Generation**
 
-- [ ] Auto-generated CRUD admin UI
+- [-] Auto-generated CRUD admin UI (Basic implementation)
 - [x] Dashboard with analytics (API usage, latency, errors)
 - [ ] User management interface
 - [ ] File upload support

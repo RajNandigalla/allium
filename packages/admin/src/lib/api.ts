@@ -117,6 +117,7 @@ export interface CreateModelInput {
   service?: ServiceConfig;
   softDelete?: boolean;
   auditTrail?: boolean;
+  draftPublish?: boolean;
   constraints?: ModelConstraints;
 }
 

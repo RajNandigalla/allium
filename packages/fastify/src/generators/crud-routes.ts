@@ -107,7 +107,7 @@ function parsePrismaValidationError(
 /**
  * Build Prisma query from request parameters
  */
-function buildPrismaQuery(
+export function buildPrismaQuery(
   model: ModelDefinition,
   params: Record<string, any>
 ): any {
@@ -250,6 +250,12 @@ function buildPrismaQuery(
         where[field] = typedValue;
       }
     }
+  }
+
+  // 4. Handle Draft/Publish (Public API only) - MUST be before 'where' assignment
+  if (model.draftPublish) {
+    where.status = 'PUBLISHED';
+    where.publishedAt = { lte: new Date() };
   }
 
   if (Object.keys(where).length > 0) {
@@ -661,6 +667,12 @@ export async function generateModelRoutes(
         const findOptions: any = {
           where: { id: parsedId },
         };
+
+        // Handle Draft/Publish (Public API)
+        if (model.draftPublish) {
+          findOptions.where.status = 'PUBLISHED';
+          findOptions.where.publishedAt = { lte: new Date() };
+        }
 
         // Handle populate
         if (query.populate) {

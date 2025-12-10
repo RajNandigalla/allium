@@ -34,6 +34,11 @@
             "type": "boolean",
             "default": false
         },
+        "draftPublish": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enable Draft/Publish workflow (adds status and publishedAt fields)"
+        },
         "constraints": {
             "type": "object",
             "properties": {
