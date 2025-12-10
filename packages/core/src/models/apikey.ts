@@ -9,6 +9,9 @@ export const ApiKeyModel: ModelDefinition = {
   name: 'ApiKey',
   softDelete: false,
   auditTrail: true,
+  api: {
+    prefix: '/_admin/apikey',
+  },
   fields: [
     {
       name: 'name',

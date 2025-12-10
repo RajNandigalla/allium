@@ -3,6 +3,8 @@ import { FastifyInstance } from 'fastify';
 import {
   ApiKeyModel,
   ApiMetricModel,
+  WebhookModel,
+  CronJobModel,
   ModelDefinition,
   SchemaIntrospector,
 } from '@allium/core';
@@ -14,6 +16,8 @@ import { generateResolvers } from '../generators/graphql-resolvers';
 import { ApolloServer } from '@apollo/server';
 import { fastifyApolloHandler } from '@as-integrations/fastify';
 import analyticsPlugin from '../framework/analytics';
+import webhooksPlugin from '../framework/webhooks';
+import cronPlugin from '../framework/cron';
 
 export interface AlliumPluginOptions {
   /**
@@ -143,6 +147,19 @@ export default fp<AlliumPluginOptions>(
       models = [...models, ApiMetricModel]; // Use spread to create new array
     }
 
+    // Always inject Webhook and CronJob models
+    const hasWebhookModel = models.some((m) => m.name === 'Webhook');
+    if (!hasWebhookModel) {
+      fastify.log.info('Injecting built-in Webhook model');
+      models = [...models, WebhookModel];
+    }
+
+    const hasCronJobModel = models.some((m) => m.name === 'CronJob');
+    if (!hasCronJobModel) {
+      fastify.log.info('Injecting built-in CronJob model');
+      models = [...models, CronJobModel];
+    }
+
     // 0. Introspect models to populate metadata
     // This must be done before registering schemas
     const introspector = new SchemaIntrospector();
@@ -160,7 +177,11 @@ export default fp<AlliumPluginOptions>(
     // 2. Register Analytics
     await fastify.register(analyticsPlugin);
 
-    // 3. Generate CRUD routes
+    // 3. Register Webhooks and Cron
+    await fastify.register(webhooksPlugin);
+    await fastify.register(cronPlugin);
+
+    // 4. Generate CRUD routes
     await fastify.register(modelRoutesPlugin, {
       models,
       routePrefix,

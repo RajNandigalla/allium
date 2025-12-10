@@ -10,6 +10,8 @@ import {
   Database,
   ArrowLeftRight,
   TrendingUp,
+  Zap,
+  Clock,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { ThemeToggle } from '../ui/ThemeToggle';
@@ -34,6 +36,8 @@ const navigation = [
   { name: 'API Keys', href: '/api-keys', icon: Key },
   { name: 'Data', href: '/data', icon: Database },
   { name: 'Import / Export', href: '/import-export', icon: ArrowLeftRight },
+  { name: 'Webhooks', href: '/data/Webhook', icon: Zap },
+  { name: 'Cron Jobs', href: '/data/CronJob', icon: Clock },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

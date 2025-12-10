@@ -29,6 +29,7 @@ export class CacheService {
   private defaultTTL: number;
   private enabled: boolean;
   private isConnected: boolean = false;
+  private hasLoggedError: boolean = false;
 
   constructor(options: CacheServiceOptions = {}) {
     this.keyPrefix = options.keyPrefix || 'allium:';
@@ -46,25 +47,50 @@ export class CacheService {
       if (redisConfig) {
         // Handle string URL or RedisOptions object
         if (typeof redisConfig === 'string') {
-          this.redis = new Redis(redisConfig);
+          // Add retry strategy for URL-based connections
+          this.redis = new Redis(redisConfig, {
+            retryStrategy: (times) => {
+              // Stop retrying after 3 attempts
+              if (times > 3) {
+                if (!this.hasLoggedError) {
+                  console.warn(
+                    '⚠️  Redis connection failed after 3 attempts, cache disabled'
+                  );
+                  this.hasLoggedError = true;
+                }
+                return null;
+              }
+              // Exponential backoff
+              return Math.min(times * 100, 3000);
+            },
+            maxRetriesPerRequest: 3,
+          });
         } else {
           this.redis = new Redis(redisConfig);
         }
 
         this.redis.on('connect', () => {
           this.isConnected = true;
+          this.hasLoggedError = false;
           console.log('✅ Redis cache connected');
         });
 
         this.redis.on('error', (error) => {
           this.isConnected = false;
-          console.warn('⚠️  Redis connection error:', error.message);
-          console.warn('   Cache will be disabled, using database directly');
+          // Only log the error once to avoid spam
+          if (!this.hasLoggedError) {
+            console.warn('⚠️  Redis connection error:', error.message);
+            console.warn('   Cache will be disabled, using database directly');
+            this.hasLoggedError = true;
+          }
         });
 
         this.redis.on('close', () => {
           this.isConnected = false;
-          console.warn('⚠️  Redis connection closed');
+          // Only log close if we haven't already logged an error
+          if (!this.hasLoggedError) {
+            console.warn('⚠️  Redis connection closed');
+          }
         });
       } else {
         console.log('ℹ️  No Redis configuration provided, caching disabled');

@@ -92,6 +92,7 @@ datasource db {
   if (!hasApiKey) {
     output += `model ApiKey {
   id        String   @id @default(uuid())
+  uuid      String   @unique @default(uuid())
   name      String
   key       String   @unique
   service   String
@@ -100,6 +101,9 @@ datasource db {
   lastUsedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
 }
 `;
   }
@@ -109,6 +113,7 @@ datasource db {
   if (!hasApiMetric) {
     output += `model ApiMetric {
   id          String   @id @default(uuid())
+  uuid        String   @unique @default(uuid())
   endpoint    String
   method      String
   statusCode  Int
@@ -116,9 +121,51 @@ datasource db {
   timestamp   DateTime @default(now())
   errorType   String?
   errorMessage String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([endpoint, timestamp])
   @@index([timestamp])
+}
+`;
+  }
+
+  // Check if Webhook model is present, if not append it
+  const hasWebhook = models.some((m) => m.name === 'Webhook');
+  if (!hasWebhook) {
+    output += `model Webhook {
+  id        String   @id @default(uuid())
+  uuid      String   @unique @default(uuid())
+  name      String
+  url       String
+  events    Json
+  active    Boolean  @default(true)
+  secret    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+}
+`;
+  }
+
+  // Check if CronJob model is present, if not append it
+  const hasCronJob = models.some((m) => m.name === 'CronJob');
+  if (!hasCronJob) {
+    output += `model CronJob {
+  id        String   @id @default(uuid())
+  uuid      String   @unique @default(uuid())
+  name      String   @unique
+  schedule  String
+  endpoint  String
+  method    String   @default("POST")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
 }
 `;
   }

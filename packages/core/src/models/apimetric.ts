@@ -8,6 +8,9 @@ export const ApiMetricModel: ModelDefinition = {
   name: 'ApiMetric',
   softDelete: false,
   auditTrail: false,
+  api: {
+    prefix: '/_admin/apimetric',
+  },
   fields: [
     {
       name: 'endpoint',

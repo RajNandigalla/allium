@@ -13,6 +13,8 @@ A powerful, opinionated Fastify framework for building type-safe REST APIs with 
 - 📝 **Audit Trails**: Automatic tracking of `createdBy`, `updatedBy`, and `deletedBy`.
 - ⚡ **Built-in Caching**: Redis-backed caching for high performance.
 - 🕸️ **GraphQL Support**: Optional GraphQL endpoint integration.
+- 📢 **Webhooks**: Built-in event system to notify external services.
+- ⏰ **Cron Jobs**: Database-backed job scheduler.
 
 ## Installation
 

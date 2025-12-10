@@ -31,6 +31,8 @@ export type { CacheServiceOptions } from './services/cache-service';
 // Built-in models
 export { ApiKeyModel, generateApiKey } from './models/apikey';
 export { ApiMetricModel } from './models/apimetric';
+export { WebhookModel } from './models/webhook';
+export { CronJobModel } from './models/cronjob';
 
 // Existing exports (generators, validators, etc.)
 export { ModelValidator } from './validators/model-validator';

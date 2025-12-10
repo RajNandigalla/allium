@@ -344,8 +344,8 @@
 - [ ] File storage (S3, local)
 - [ ] Email service integration
 - [ ] Payment gateway integration (Stripe, PayPal)
-- [ ] Outgoing Webhooks (Event subscriptions)
-- [ ] Cron Jobs / Scheduled Tasks
+- [x] Outgoing Webhooks (Event subscriptions)
+- [x] Cron Jobs / Scheduled Tasks
 
 ### Performance
 

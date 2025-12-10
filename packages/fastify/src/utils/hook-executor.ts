@@ -38,6 +38,12 @@ export async function executeAfterCreate(
 ): Promise<void> {
   const context = buildContext(request);
   await executor.executeAfterCreate(model, record, context);
+
+  // Trigger webhook
+  const webhooks = (request.server as any).webhooks;
+  if (webhooks) {
+    webhooks.trigger(`${model.name.toLowerCase()}.create`, record);
+  }
 }
 
 /**
@@ -64,6 +70,15 @@ export async function executeAfterUpdate(
 ): Promise<void> {
   const context = buildContext(request);
   await executor.executeAfterUpdate(model, record, previousData, context);
+
+  // Trigger webhook
+  const webhooks = (request.server as any).webhooks;
+  if (webhooks) {
+    webhooks.trigger(`${model.name.toLowerCase()}.update`, {
+      ...record,
+      _previous: previousData,
+    });
+  }
 }
 
 /**
@@ -89,6 +104,12 @@ export async function executeAfterDelete(
 ): Promise<void> {
   const context = buildContext(request);
   await executor.executeAfterDelete(model, id, deletedData, context);
+
+  // Trigger webhook
+  const webhooks = (request.server as any).webhooks;
+  if (webhooks) {
+    webhooks.trigger(`${model.name.toLowerCase()}.delete`, deletedData);
+  }
 }
 
 /**

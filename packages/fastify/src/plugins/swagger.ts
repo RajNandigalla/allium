@@ -58,10 +58,6 @@ export default fp(
             description: 'Manage API keys for service authentication',
           },
           {
-            name: 'Admin - Database',
-            description: 'Database operations (seed, reset, stats)',
-          },
-          {
             name: 'Admin - Data Explorer',
             description: 'Generic CRUD operations for any model',
           },
