@@ -96,10 +96,17 @@ export default function WebhookForm({
       <Input
         label='Name'
         value={formData.name}
-        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        onChange={(e) => {
+          // Auto-format: lowercase, replace spaces with hyphens, remove invalid chars
+          const formatted = e.target.value
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '');
+          setFormData({ ...formData, name: formatted });
+        }}
         disabled={isEdit}
         placeholder='user-events'
-        helperText='Lowercase, alphanumeric, hyphens only'
+        helperText='Lowercase, alphanumeric, hyphens only (auto-formatted)'
         required
       />
 
