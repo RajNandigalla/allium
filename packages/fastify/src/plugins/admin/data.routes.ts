@@ -210,7 +210,13 @@ Use query parameters in the format: \`filters[fieldName][$operator]=value\`
           200: {
             type: 'object',
             properties: {
-              data: { type: 'array', items: { type: 'object' } },
+              data: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  additionalProperties: true,
+                },
+              },
               meta: {
                 type: 'object',
                 properties: {
