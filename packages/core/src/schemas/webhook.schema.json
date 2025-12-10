@@ -16,7 +16,7 @@
         },
         "url": {
             "type": "string",
-            "pattern": "^(https?://|\\${[A-Z_]+}).*$",
+            "pattern": "^(https?://|\\$\\{[A-Z_]+\\}).*$",
             "description": "Webhook URL or environment variable reference"
         },
         "events": {
