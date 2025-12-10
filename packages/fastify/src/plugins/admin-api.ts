@@ -13,6 +13,8 @@ import {
   registerDataRoutes,
   registerSystemRoutes,
   registerAnalyticsRoutes,
+  registerWebhooksRoutes,
+  registerCronJobsRoutes,
 } from './admin';
 
 const execAsync = util.promisify(exec);
@@ -78,6 +80,9 @@ const adminApi = async (fastify: FastifyInstance, opts: AdminApiOptions) => {
       await registerDataRoutes(routes, alliumDir);
       await registerSystemRoutes(routes);
       await registerAnalyticsRoutes(routes);
+
+      await registerWebhooksRoutes(routes);
+      await registerCronJobsRoutes(routes);
     },
     { prefix: '/_admin' }
   );

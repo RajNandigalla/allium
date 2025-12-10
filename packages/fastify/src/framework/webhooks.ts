@@ -2,6 +2,8 @@ import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
 import axios from 'axios';
 import crypto from 'crypto';
+import fs from 'fs-extra';
+import path from 'path';
 
 interface WebhookPayload {
   event: string;
@@ -9,8 +11,77 @@ interface WebhookPayload {
   data: any;
 }
 
+interface WebhookConfig {
+  name: string;
+  url: string;
+  events: string[];
+  active: boolean;
+  secret?: string;
+}
+
 export class WebhookService {
+  private webhooks: WebhookConfig[] = [];
+
   constructor(private fastify: FastifyInstance) {}
+
+  /**
+   * Load webhooks from JSON files in .allium/webhooks/
+   */
+  async loadWebhooksFromFiles() {
+    const webhooksDir = path.join(process.cwd(), '.allium', 'webhooks');
+
+    if (!(await fs.pathExists(webhooksDir))) {
+      this.fastify.log.info(
+        'No webhooks directory found, skipping webhook loading'
+      );
+      return;
+    }
+
+    try {
+      const files = await fs.readdir(webhooksDir);
+      const jsonFiles = files.filter((f) => f.endsWith('.json'));
+
+      this.webhooks = await Promise.all(
+        jsonFiles.map(async (file) => {
+          const content = await fs.readJson(path.join(webhooksDir, file));
+          return this.interpolateEnvVars(content);
+        })
+      );
+
+      this.fastify.log.info(
+        `Loaded ${this.webhooks.length} webhooks from .allium/webhooks`
+      );
+    } catch (error) {
+      this.fastify.log.error({ error }, 'Failed to load webhooks from files');
+    }
+  }
+
+  /**
+   * Interpolate environment variables in webhook config
+   * Replaces ${VAR_NAME} with process.env.VAR_NAME
+   */
+  private interpolateEnvVars(webhook: WebhookConfig): WebhookConfig {
+    return {
+      ...webhook,
+      url: this.interpolateString(webhook.url),
+      secret: webhook.secret
+        ? this.interpolateString(webhook.secret)
+        : undefined,
+    };
+  }
+
+  private interpolateString(str: string): string {
+    return str.replace(/\$\{([A-Z_]+)\}/g, (_, varName) => {
+      return process.env[varName] || `\${${varName}}`;
+    });
+  }
+
+  /**
+   * Reload webhooks from files (called after admin changes)
+   */
+  async reload() {
+    await this.loadWebhooksFromFiles();
+  }
 
   /**
    * Trigger a webhook event
@@ -18,23 +89,11 @@ export class WebhookService {
    * @param payload data associated with the event
    */
   async trigger(event: string, payload: any) {
-    const prisma = (this.fastify as any).prisma;
-    if (!prisma || !prisma.webhook) return;
-
     try {
-      // Find all active webhooks that subscribe to this event
-      // We'll fetch all and filter in memory because 'events' is a JSON array
-      // Ideally we'd use database filtering if supported (e.g. Postgres @>)
-      const webhooks = await prisma.webhook.findMany({
-        where: { active: true },
-      });
-
-      const matchingWebhooks = webhooks.filter((wh: any) => {
-        const events = Array.isArray(wh.events)
-          ? wh.events
-          : JSON.parse(wh.events || '[]');
-        return events.includes(event) || events.includes('*');
-      });
+      const activeWebhooks = this.webhooks.filter((w) => w.active);
+      const matchingWebhooks = activeWebhooks.filter(
+        (w) => w.events.includes(event) || w.events.includes('*')
+      );
 
       if (matchingWebhooks.length === 0) return;
 
@@ -43,7 +102,7 @@ export class WebhookService {
       );
 
       // Fire and forget (or queue)
-      matchingWebhooks.forEach((wh: any) => {
+      matchingWebhooks.forEach((wh) => {
         this.send(wh, event, payload).catch((err) =>
           this.fastify.log.error({ err }, `Failed to send webhook to ${wh.url}`)
         );
@@ -53,7 +112,7 @@ export class WebhookService {
     }
   }
 
-  private async send(webhook: any, event: string, data: any) {
+  private async send(webhook: WebhookConfig, event: string, data: any) {
     const timestamp = new Date().toISOString();
     const payloadBody: WebhookPayload = {
       event,
@@ -87,10 +146,14 @@ export default fp(
   async (fastify: FastifyInstance) => {
     const service = new WebhookService(fastify);
     fastify.decorate('webhooks', service);
+
+    // Load webhooks on startup
+    fastify.addHook('onReady', async () => {
+      await service.loadWebhooksFromFiles();
+    });
   },
   {
     name: 'allium-webhooks',
-    dependencies: ['prisma'],
   }
 );
 

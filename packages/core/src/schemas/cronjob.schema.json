@@ -1,0 +1,44 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "CronJob",
+    "type": "object",
+    "required": [
+        "name",
+        "schedule",
+        "endpoint",
+        "method",
+        "active"
+    ],
+    "properties": {
+        "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$",
+            "description": "Cron job identifier (lowercase, alphanumeric, hyphens)"
+        },
+        "schedule": {
+            "type": "string",
+            "pattern": "^(\\*|[0-9,\\-/]+)\\s+(\\*|[0-9,\\-/]+)\\s+(\\*|[0-9,\\-/]+)\\s+(\\*|[0-9,\\-/]+)\\s+(\\*|[0-9,\\-/]+)$",
+            "description": "Cron expression (e.g., '0 2 * * *')"
+        },
+        "endpoint": {
+            "type": "string",
+            "description": "API endpoint to call (relative or absolute URL)"
+        },
+        "method": {
+            "type": "string",
+            "enum": [
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE"
+            ],
+            "description": "HTTP method"
+        },
+        "active": {
+            "type": "boolean",
+            "description": "Whether the cron job is enabled"
+        }
+    },
+    "additionalProperties": false
+}

@@ -23,6 +23,8 @@ export const generate = async (
         message: 'What would you like to generate?',
         choices: [
           { name: 'Model', value: 'model' },
+          { name: 'Webhook', value: 'webhook' },
+          { name: 'Cron Job', value: 'cronjob' },
           { name: 'Override (Service/Controller/Routes)', value: 'override' },
           { name: 'Controller', value: 'controller' },
           { name: 'Route', value: 'route' },
@@ -36,6 +38,12 @@ export const generate = async (
     case 'model':
       await generateModel(options);
       break;
+    case 'webhook':
+      await generateWebhook(options);
+      break;
+    case 'cronjob':
+      await generateCronJob(options);
+      break;
     case 'override':
       await generateOverride(options);
       break;
@@ -48,7 +56,9 @@ export const generate = async (
     default:
       console.log(chalk.red(`Unknown generator type: ${genType}`));
       console.log(
-        chalk.yellow('Available types: model, override, controller, route')
+        chalk.yellow(
+          'Available types: model, webhook, cronjob, override, controller, route'
+        )
       );
   }
 };
@@ -538,4 +548,219 @@ export async function ${modelLower}Routes(app: FastifyInstance) {
   // Add custom routes here
 }
 `;
+}
+
+// Webhook generation
+async function generateWebhook(options: { definition?: string }) {
+  const { WebhookValidator } = await import('@allium/core');
+
+  let webhookDef: any;
+
+  if (options.definition) {
+    webhookDef = JSON.parse(options.definition);
+  } else {
+    // Load available models
+    const projectRoot = process.cwd();
+    const modelsDir = path.join(projectRoot, '.allium', 'models');
+    let modelChoices: Array<{ name: string; value: string }> = [];
+
+    if (fs.existsSync(modelsDir)) {
+      const modelFiles = fs
+        .readdirSync(modelsDir)
+        .filter((f) => f.endsWith('.json'));
+
+      modelChoices = modelFiles.map((file) => {
+        const modelName = path.basename(file, '.json');
+        return { name: modelName, value: modelName.toLowerCase() };
+      });
+    }
+
+    const answers = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'name',
+        message: 'Webhook Name (e.g., user-events):',
+        validate: (input) =>
+          /^[a-z0-9-]+$/.test(input) ||
+          'Use lowercase, alphanumeric, hyphens only',
+      },
+      {
+        type: 'input',
+        name: 'url',
+        message: 'Webhook URL (or ${ENV_VAR}):',
+        validate: (input) => !!input || 'URL is required',
+      },
+      {
+        type: 'list',
+        name: 'eventScope',
+        message: 'Event scope:',
+        choices: [
+          { name: 'All events (*)', value: 'all' },
+          { name: 'Specific models', value: 'models' },
+          { name: 'Custom events', value: 'custom' },
+        ],
+      },
+      {
+        type: 'checkbox',
+        name: 'selectedModels',
+        message: 'Select models:',
+        choices: modelChoices,
+        when: (answers) => answers.eventScope === 'models',
+        validate: (input) => input.length > 0 || 'Select at least one model',
+      },
+      {
+        type: 'checkbox',
+        name: 'eventTypes',
+        message: 'Select event types:',
+        choices: [
+          { name: 'created', value: 'created' },
+          { name: 'updated', value: 'updated' },
+          { name: 'deleted', value: 'deleted' },
+        ],
+        when: (answers) => answers.eventScope === 'models',
+        validate: (input) => input.length > 0 || 'Select at least one event type',
+      },
+      {
+        type: 'input',
+        name: 'customEvents',
+        message: 'Custom events (comma-separated):',
+        when: (answers) => answers.eventScope === 'custom',
+        validate: (input) => !!input || 'Enter at least one event',
+      },
+      {
+        type: 'confirm',
+        name: 'active',
+        message: 'Active?',
+        default: true,
+      },
+      {
+        type: 'input',
+        name: 'secret',
+        message: 'Secret (optional, or ${ENV_VAR}):',
+      },
+    ]);
+
+    // Build events array based on selection
+    let allEvents: string[] = [];
+    if (answers.eventScope === 'all') {
+      allEvents = ['*'];
+    } else if (answers.eventScope === 'models') {
+      // Generate events for selected models and event types
+      for (const model of answers.selectedModels) {
+        for (const eventType of answers.eventTypes) {
+          allEvents.push(`${model}.${eventType}`);
+        }
+      }
+    } else if (answers.eventScope === 'custom') {
+      allEvents = answers.customEvents.split(',').map((e: string) => e.trim());
+    }
+
+
+    webhookDef = {
+      name: answers.name,
+      url: answers.url,
+      events: allEvents,
+      active: answers.active,
+    };
+
+    if (answers.secret) {
+      webhookDef.secret = answers.secret;
+    }
+  }
+
+  const validator = new WebhookValidator();
+  const validation = validator.validate(webhookDef);
+  if (!validation.valid) {
+    console.error(chalk.red('Validation failed:'));
+    validation.errors.forEach((err) => console.error(chalk.red(`  - ${err}`)));
+    return;
+  }
+
+  const webhooksDir = path.join(process.cwd(), '.allium', 'webhooks');
+  fs.ensureDirSync(webhooksDir);
+
+  const fileName = `${webhookDef.name}.json`;
+  const filePath = path.join(webhooksDir, fileName);
+
+  if (fs.existsSync(filePath)) {
+    console.log(chalk.yellow(`Webhook already exists: ${fileName}`));
+    return;
+  }
+
+  fs.writeJsonSync(filePath, webhookDef, { spaces: 2 });
+  console.log(chalk.green(`✓ Created webhook: .allium/webhooks/${fileName}`));
+}
+
+// Cron job generation
+async function generateCronJob(options: { definition?: string }) {
+  const { CronJobValidator } = await import('@allium/core');
+  const cron = await import('node-cron');
+
+  let cronDef: any;
+
+  if (options.definition) {
+    cronDef = JSON.parse(options.definition);
+  } else {
+    const answers = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'name',
+        message: 'Cron Job Name (e.g., daily-cleanup):',
+        validate: (input) =>
+          /^[a-z0-9-]+$/.test(input) ||
+          'Use lowercase, alphanumeric, hyphens only',
+      },
+      {
+        type: 'input',
+        name: 'schedule',
+        message: 'Cron Schedule (e.g., 0 2 * * *):',
+        validate: (input) => {
+          return cron.validate(input) || 'Invalid cron expression';
+        },
+      },
+      {
+        type: 'input',
+        name: 'endpoint',
+        message: 'Endpoint to call (e.g., /api/cleanup):',
+        validate: (input) => !!input || 'Endpoint is required',
+      },
+      {
+        type: 'list',
+        name: 'method',
+        message: 'HTTP Method:',
+        choices: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+        default: 'POST',
+      },
+      {
+        type: 'confirm',
+        name: 'active',
+        message: 'Active?',
+        default: true,
+      },
+    ]);
+
+    cronDef = answers;
+  }
+
+  const validator = new CronJobValidator();
+  const validation = validator.validate(cronDef);
+  if (!validation.valid) {
+    console.error(chalk.red('Validation failed:'));
+    validation.errors.forEach((err) => console.error(chalk.red(`  - ${err}`)));
+    return;
+  }
+
+  const cronjobsDir = path.join(process.cwd(), '.allium', 'cronjobs');
+  fs.ensureDirSync(cronjobsDir);
+
+  const fileName = `${cronDef.name}.json`;
+  const filePath = path.join(cronjobsDir, fileName);
+
+  if (fs.existsSync(filePath)) {
+    console.log(chalk.yellow(`Cron job already exists: ${fileName}`));
+    return;
+  }
+
+  fs.writeJsonSync(filePath, cronDef, { spaces: 2 });
+  console.log(chalk.green(`✓ Created cron job: .allium/cronjobs/${fileName}`));
 }

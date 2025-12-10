@@ -4,85 +4,213 @@ Allium comes with a built-in webhook system that allows your application to noti
 
 ## Overview
 
+Webhooks are stored as **JSON files** in `.allium/webhooks/` directory, making them version-controlled and easy to deploy across environments.
+
 The Webhook system consists of:
 
-1.  **Webhook Model**: A database model to store webhook subscriptions.
-2.  **Webhook Service**: A service to trigger events and dispatch webhooks.
-3.  **Delivery Mechanism**: Asynchronous HTTP POST requests with retry capabilities (implementation dependent).
+1. **JSON Configuration**: Webhook definitions stored in `.allium/webhooks/*.json`
+2. **Webhook Service**: A service to trigger events and dispatch webhooks
+3. **Admin API**: CRUD operations via `/_admin/webhooks`
+4. **CLI Tool**: Generate webhooks with `allium generate webhook`
 
-## Usage
+## Quick Start
 
-### 1. Registering a Webhook
+### 1. Generate a Webhook
 
-You can register a webhook via the Admin Panel, the API, or programmatically using Prisma.
-
-#### Option A: Admin Panel / API
-
-`POST /_admin/webhook`
-
-> **Note**: Webhook routes are under `/_admin` for security. These routes should be protected in production.
-
-#### Option B: Programmatic (Prisma)
-
-You can seed or manage webhooks directly in your code (e.g. in `src/app.ts` after initialization, or in a seed script).
-
-> **Note**: Ensure you have run `allium sync` and `allium db push` so that the `Webhook` table and types exist.
-
-```typescript
-// Example: Registering a webhook on startup in src/app.ts
-const app = await initAllium({ ... });
-
-// Wait for ready
-await app.ready();
-
-// Use the Prisma instance attached to the app
-await app.prisma.webhook.create({
-  data: {
-    url: 'https://api.example.com/webhooks/users',
-    events: ['user.created'],
-    secret: 'whsec_...',
-    active: true,
-  },
-});
+```bash
+allium generate webhook
 ```
 
-**Fields:**
+This creates a JSON file in `.allium/webhooks/`:
 
-- `url` (String, required): The endpoint URL to receive the webhook.
-- `events` (Json, required): Array of event names to subscribe to (e.g., `['user.created', 'order.paid']`) or `['*']` for all events.
-- `secret` (String, optional): A secret key to sign the webhook payload for security.
-- `active` (Boolean): whether the webhook is enabled.
+```json
+{
+  "name": "user-events",
+  "url": "${WEBHOOK_USER_EVENTS_URL}",
+  "events": ["user.created", "user.updated", "user.deleted"],
+  "active": true,
+  "secret": "${WEBHOOK_SECRET}"
+}
+```
 
-### 2. Triggering an Event
+### 2. Environment Variables
 
-Inject `webhooks` service and call the `trigger` method.
+Set webhook URLs and secrets in your `.env`:
+
+```bash
+WEBHOOK_USER_EVENTS_URL=https://api.example.com/webhooks/users
+WEBHOOK_SECRET=whsec_your_secret_key
+```
+
+Environment variables are interpolated at runtime using `${VAR_NAME}` syntax.
+
+### 3. Trigger Events
 
 ```typescript
 // Inside a route or service
 fastify.post('/users', async (req, reply) => {
   const user = await fastify.prisma.user.create({ ... });
 
-  // Trigger event
-  // Fire-and-forget; does not block the response
+  // Trigger webhook event (fire-and-forget)
   fastify.webhooks.trigger('user.created', user);
 
   return user;
 });
 ```
 
-### 3. Receiving Webhooks
+
+## JSON Structure Reference
+
+### Complete Schema
+
+```json
+{
+  "name": "string (required)",
+  "url": "string (required)",
+  "events": ["array of strings (required)"],
+  "active": "boolean (required)",
+  "secret": "string (optional)"
+}
+```
+
+### Field Descriptions
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | ✅ | Unique identifier (lowercase, alphanumeric, hyphens only) |
+| `url` | string | ✅ | Webhook endpoint URL or environment variable (`${VAR_NAME}`) |
+| `events` | array | ✅ | Event names to subscribe to (e.g., `["user.created"]` or `["*"]` for all) |
+| `active` | boolean | ✅ | Whether the webhook is enabled |
+| `secret` | string | ❌ | Secret key for HMAC signature verification (optional) |
+
+### Example Files
+
+**Basic webhook:**
+```json
+{
+  "name": "slack-notifications",
+  "url": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+  "events": ["*"],
+  "active": true
+}
+```
+
+**With environment variables:**
+```json
+{
+  "name": "user-events",
+  "url": "${WEBHOOK_USER_EVENTS_URL}",
+  "events": ["user.created", "user.updated", "user.deleted"],
+  "active": true,
+  "secret": "${WEBHOOK_SECRET}"
+}
+```
+
+**Specific events:**
+```json
+{
+  "name": "order-notifications",
+  "url": "https://api.example.com/webhooks/orders",
+  "events": ["order.created", "order.paid", "order.shipped"],
+  "active": true
+}
+```
+
+
+## Managing Webhooks
+
+### Via CLI
+
+```bash
+# Generate new webhook
+allium generate webhook
+
+# Validate all webhooks
+allium validate
+```
+
+### Via Admin API
+
+All webhook routes are under `/_admin/webhooks`:
+
+```bash
+# List all webhooks
+GET /_admin/webhooks
+
+# Get specific webhook
+GET /_admin/webhooks/:name
+
+# Create webhook
+POST /_admin/webhooks
+{
+  "name": "order-notifications",
+  "url": "https://api.example.com/webhooks/orders",
+  "events": ["order.created", "order.paid"],
+  "active": true
+}
+
+# Update webhook
+PUT /_admin/webhooks/:name
+
+# Delete webhook
+DELETE /_admin/webhooks/:name
+```
+
+> **Note**: Admin routes should be protected in production.
+
+### Directly Editing JSON Files
+
+You can also manually create/edit files in `.allium/webhooks/`:
+
+```json
+{
+  "name": "slack-notifications",
+  "url": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+  "events": ["*"],
+  "active": true
+}
+```
+
+After editing, the webhook service automatically reloads on the next request or you can call:
+
+```typescript
+await fastify.webhooks.reload();
+```
+
+## Webhook Configuration
+
+### Fields
+
+- **name** (required): Unique identifier (lowercase, alphanumeric, hyphens)
+- **url** (required): Endpoint URL or environment variable reference
+- **events** (required): Array of event names or `["*"]` for all events
+- **active** (required): Boolean to enable/disable
+- **secret** (optional): Secret key for HMAC signature verification
+
+### Event Names
+
+Use dot notation for event names:
+
+- `user.created`
+- `user.updated`
+- `user.deleted`
+- `post.created`
+- `order.paid`
+- `*` (all events)
+
+## Receiving Webhooks
 
 Allium sends a `POST` request to the registered URL.
 
-**Headers:**
+### Headers
 
 - `Content-Type`: `application/json`
 - `User-Agent`: `Allium-Webhook/1.0`
-- `X-Allium-Event`: The name of the event (e.g., `user.created`)
-- `X-Allium-Delivery`: A unique UUID for this delivery attempt
-- `X-Allium-Signature`: (If secret provided) HMAC-SHA256 signature of the payload
+- `X-Allium-Event`: Event name (e.g., `user.created`)
+- `X-Allium-Delivery`: Unique UUID for this delivery
+- `X-Allium-Signature`: HMAC-SHA256 signature (if secret provided)
 
-**Payload:**
+### Payload
 
 ```json
 {
@@ -96,13 +224,11 @@ Allium sends a `POST` request to the registered URL.
 }
 ```
 
-### 4. Verifying Signatures
+## Security
 
-If you set a `secret` for your webhook, you should verify the `X-Allium-Signature` header to ensure the request came from your Allium application.
+### Verifying Signatures
 
-The signature is a `sha256` HMAC of the raw request body.
-
-**Node.js Example:**
+If you set a `secret`, verify the `X-Allium-Signature` header:
 
 ```javascript
 const crypto = require('crypto');
@@ -117,3 +243,44 @@ function verifySignature(payload, signature, secret) {
   );
 }
 ```
+
+## Environment Promotion
+
+To deploy webhooks to a new environment:
+
+1. **Copy configuration files:**
+
+   ```bash
+   cp -r .allium/webhooks /path/to/new/environment/.allium/
+   ```
+
+2. **Set environment variables:**
+
+   ```bash
+   # In new environment's .env
+   WEBHOOK_USER_EVENTS_URL=https://staging.example.com/webhooks
+   WEBHOOK_SECRET=staging_secret
+   ```
+
+3. **Deploy and restart** - webhooks load automatically
+
+## Migration from Database
+
+If you have existing database-stored webhooks:
+
+1. **Export to JSON:**
+
+   ```sql
+   SELECT * FROM Webhook;
+   ```
+
+2. **Create JSON files** in `.allium/webhooks/` for each webhook
+
+3. **Remove database table:**
+
+   ```bash
+   # Webhook model is no longer auto-injected
+   allium db push
+   ```
+
+4. **Restart application** - webhooks now load from JSON files

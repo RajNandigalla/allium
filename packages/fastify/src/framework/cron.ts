@@ -2,6 +2,16 @@ import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
 import cron, { ScheduledTask } from 'node-cron';
 import axios from 'axios';
+import fs from 'fs-extra';
+import path from 'path';
+
+interface CronJobConfig {
+  name: string;
+  schedule: string;
+  endpoint: string;
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  active: boolean;
+}
 
 export class CronService {
   private jobs: Map<string, ScheduledTask> = new Map();
@@ -9,7 +19,7 @@ export class CronService {
   constructor(private fastify: FastifyInstance) {}
 
   /**
-   * Start the cron service: load jobs from DB and schedule them
+   * Start the cron service: load jobs from JSON files and schedule them
    */
   async start() {
     await this.reload();
@@ -24,22 +34,34 @@ export class CronService {
   }
 
   /**
-   * Reload jobs from database
+   * Reload jobs from JSON files in .allium/cronjobs/
    */
   async reload() {
     this.stop();
 
-    const prisma = (this.fastify as any).prisma;
-    if (!prisma || !prisma.cronJob) return;
+    const cronjobsDir = path.join(process.cwd(), '.allium', 'cronjobs');
+
+    if (!(await fs.pathExists(cronjobsDir))) {
+      this.fastify.log.info(
+        'No cronjobs directory found, skipping cron job loading'
+      );
+      return;
+    }
 
     try {
-      const cronJobs = await prisma.cronJob.findMany({
-        where: { active: true },
-      });
+      const files = await fs.readdir(cronjobsDir);
+      const jsonFiles = files.filter((f) => f.endsWith('.json'));
 
-      this.fastify.log.info(`Scheduling ${cronJobs.length} cron jobs`);
+      const cronJobs: CronJobConfig[] = await Promise.all(
+        jsonFiles.map((file) => fs.readJson(path.join(cronjobsDir, file)))
+      );
 
-      cronJobs.forEach((job: any) => {
+      const active = cronJobs.filter((job) => job.active);
+      this.fastify.log.info(
+        `Scheduling ${active.length} cron jobs from .allium/cronjobs`
+      );
+
+      active.forEach((job) => {
         if (!cron.validate(job.schedule)) {
           this.fastify.log.warn(
             `Invalid cron schedule '${job.schedule}' for job '${job.name}'`
@@ -73,10 +95,10 @@ export class CronService {
           }
         });
 
-        this.jobs.set(job.id, task);
+        this.jobs.set(job.name, task);
       });
     } catch (error) {
-      this.fastify.log.error({ error }, 'Failed to load cron jobs');
+      this.fastify.log.error({ error }, 'Failed to load cron jobs from files');
     }
   }
 }
@@ -96,7 +118,6 @@ export default fp(
   },
   {
     name: 'allium-cron',
-    dependencies: ['prisma'],
   }
 );
 

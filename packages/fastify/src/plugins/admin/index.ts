@@ -8,3 +8,5 @@ export * from './apikeys.routes';
 export * from './data.routes';
 export * from './system.routes';
 export * from './analytics.routes';
+export * from './webhooks.routes';
+export * from './cronjobs.routes';

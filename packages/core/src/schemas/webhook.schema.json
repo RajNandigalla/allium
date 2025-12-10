@@ -1,0 +1,40 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Webhook",
+    "type": "object",
+    "required": [
+        "name",
+        "url",
+        "events",
+        "active"
+    ],
+    "properties": {
+        "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$",
+            "description": "Webhook identifier (lowercase, alphanumeric, hyphens)"
+        },
+        "url": {
+            "type": "string",
+            "pattern": "^(https?://|\\${[A-Z_]+}).*$",
+            "description": "Webhook URL or environment variable reference"
+        },
+        "events": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "minItems": 1,
+            "description": "Array of event names to subscribe to (use '*' for all)"
+        },
+        "active": {
+            "type": "boolean",
+            "description": "Whether the webhook is enabled"
+        },
+        "secret": {
+            "type": "string",
+            "description": "Secret for HMAC signature verification (optional)"
+        }
+    },
+    "additionalProperties": false
+}

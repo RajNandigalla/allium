@@ -3,8 +3,6 @@ import { FastifyInstance } from 'fastify';
 import {
   ApiKeyModel,
   ApiMetricModel,
-  WebhookModel,
-  CronJobModel,
   ModelDefinition,
   SchemaIntrospector,
 } from '@allium/core';
@@ -147,18 +145,7 @@ export default fp<AlliumPluginOptions>(
       models = [...models, ApiMetricModel]; // Use spread to create new array
     }
 
-    // Always inject Webhook and CronJob models
-    const hasWebhookModel = models.some((m) => m.name === 'Webhook');
-    if (!hasWebhookModel) {
-      fastify.log.info('Injecting built-in Webhook model');
-      models = [...models, WebhookModel];
-    }
-
-    const hasCronJobModel = models.some((m) => m.name === 'CronJob');
-    if (!hasCronJobModel) {
-      fastify.log.info('Injecting built-in CronJob model');
-      models = [...models, CronJobModel];
-    }
+    // Note: Webhook and CronJob are now file-based (no database models)
 
     // 0. Introspect models to populate metadata
     // This must be done before registering schemas
