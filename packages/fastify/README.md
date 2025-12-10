@@ -812,6 +812,29 @@ Allium includes a built-in, low-overhead analytics system.
 
 👉 [**Read the full Analytics Guide**](../../docs/guides/ANALYTICS.md)
 
+## Health Checks
+
+Allium comes with a built-in health check endpoint to monitor the application status and its dependencies (database, cache).
+
+**Endpoint:** `GET /health`
+
+**Response:**
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2023-10-27T10:00:00.000Z",
+  "uptime": 123.45,
+  "checks": {
+    "database": "connected",
+    "cache": "connected"
+  }
+}
+```
+
+- **status**: `ok` if everything is running, `error` if there are issues.
+- **checks**: Detailed status of dependencies.
+
 ## Cursor-based Pagination
 
 Efficient pagination for large datasets. **Cursor-based pagination is now the default** for all list endpoints.

@@ -19,3 +19,4 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - Schema editor
 - **Analytics Dashboard**: Performance monitoring with charts and custom date filtering
 - Dynamic admin UI
+- **Health Check**: Monitor UI status via `/api/health`

@@ -304,7 +304,7 @@
 
 **Monitoring**
 
-- [ ] Health check endpoints
+- [x] Health check endpoints
 - [ ] Prometheus metrics
 - [ ] OpenTelemetry Integration (Tracing)
 - [ ] Logging configuration (Winston/Pino)
@@ -326,8 +326,9 @@
 - [x] Dashboard with analytics (API usage, latency, errors)
 - [ ] User management interface
 - [ ] File upload support
-- [ ] Webhook management UI (list, create, edit, delete)
-- [ ] Cron job management UI (list, create, edit, delete, cron expression helper)
+- [x] Webhook management UI (list, create, edit, delete)
+- [x] Cron job management UI (list, create, edit, delete, cron expression helper)
+- [x] Admin Health Check endpoint (`/api/health`)
 
 ---
 
@@ -404,4 +405,4 @@ Want to help build Allium? Check out our [Contributing Guide](CONTRIBUTING.md) (
 - Features may be added, removed, or reprioritized
 - Version numbers are tentative
 
-**Last Updated:** 2025-11-26
+**Last Updated:** 2025-12-10
