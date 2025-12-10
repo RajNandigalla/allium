@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 import { z } from 'zod';
 import { Wizard, WizardStepConfig } from '../ui/Wizard';
 import { BasicInfoStep } from './BasicInfoStep';
@@ -222,7 +222,7 @@ export function ModelWizard({
     getValues,
     setValue,
   } = useForm<ModelWizardFormData>({
-    resolver: zodResolver(modelWizardSchema) as any,
+    resolver: standardSchemaResolver(modelWizardSchema) as any,
     defaultValues,
     mode: 'onChange',
   });

@@ -282,6 +282,8 @@
 - [ ] Husky pre-commit hooks
 - [ ] TypeScript strict mode
 - [ ] Data Seeding & Fixtures (faker.js integration)
+- [ ] Auto-generate TypeScript types from JSON schemas (json-schema-to-typescript)
+- [ ] Shared types between backend and frontend (single source of truth)
 
 ---
 
@@ -324,6 +326,8 @@
 - [x] Dashboard with analytics (API usage, latency, errors)
 - [ ] User management interface
 - [ ] File upload support
+- [ ] Webhook management UI (list, create, edit, delete)
+- [ ] Cron job management UI (list, create, edit, delete, cron expression helper)
 
 ---
 

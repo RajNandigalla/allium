@@ -123,7 +123,9 @@ export function RelationsStep({
                       <Input
                         label='Relation Name'
                         placeholder='e.g., author, posts'
-                        error={errors.relations?.[index]?.name?.message}
+                        error={
+                          (errors.relations as any)?.[index]?.name?.message
+                        }
                         {...register(`relations.${index}.name`)}
                       />
                       <div className='space-y-1.5'>

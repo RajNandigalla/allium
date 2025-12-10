@@ -117,7 +117,7 @@ export function FieldsStep({ register, control, errors }: FieldsStepProps) {
                     <Input
                       label='Field Name'
                       placeholder='e.g., email, age'
-                      error={errors.fields?.[index]?.name?.message}
+                      error={(errors.fields as any)?.[index]?.name?.message}
                       {...register(`fields.${index}.name`)}
                     />
                     <div className='space-y-1.5'>

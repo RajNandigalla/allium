@@ -7,7 +7,7 @@ import { SidePanel } from '../../components/ui/SidePanel';
 import { Input } from '../../components/ui/Input';
 import { Plus, Copy, Trash2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import { adminApi } from '../../lib/api';
@@ -46,7 +46,7 @@ export default function ApiKeysPage() {
     formState: { errors, isSubmitting },
     reset,
   } = useForm<GenerateKeyForm>({
-    resolver: zodResolver(generateKeySchema) as any,
+    resolver: standardSchemaResolver(generateKeySchema),
   });
 
   const fetchApiKeys = async () => {

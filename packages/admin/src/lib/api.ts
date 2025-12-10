@@ -352,4 +352,110 @@ export const adminApi = {
     if (to) query.set('to', to);
     return fetchAdmin<AnalyticsChartData[]>(`/analytics/chart?${query}`);
   },
+
+  // Webhooks
+  listWebhooks: () =>
+    fetchAdmin<
+      Array<{
+        name: string;
+        url: string;
+        events: string[];
+        active: boolean;
+        secret?: string;
+      }>
+    >('/webhooks'),
+
+  getWebhook: (name: string) =>
+    fetchAdmin<{
+      name: string;
+      url: string;
+      events: string[];
+      active: boolean;
+      secret?: string;
+    }>(`/webhooks/${name}`),
+
+  createWebhook: (data: {
+    name: string;
+    url: string;
+    events: string[];
+    active: boolean;
+    secret?: string;
+  }) =>
+    fetchAdmin<{ success: boolean; webhook: any }>('/webhooks', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateWebhook: (
+    name: string,
+    data: {
+      name: string;
+      url: string;
+      events: string[];
+      active: boolean;
+      secret?: string;
+    }
+  ) =>
+    fetchAdmin<{ success: boolean; webhook: any }>(`/webhooks/${name}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  deleteWebhook: (name: string) =>
+    fetchAdmin<{ success: boolean }>(`/webhooks/${name}`, {
+      method: 'DELETE',
+    }),
+
+  // Cron Jobs
+  listCronJobs: () =>
+    fetchAdmin<
+      Array<{
+        name: string;
+        schedule: string;
+        endpoint: string;
+        method: string;
+        active: boolean;
+      }>
+    >('/cronjobs'),
+
+  getCronJob: (name: string) =>
+    fetchAdmin<{
+      name: string;
+      schedule: string;
+      endpoint: string;
+      method: string;
+      active: boolean;
+    }>(`/cronjobs/${name}`),
+
+  createCronJob: (data: {
+    name: string;
+    schedule: string;
+    endpoint: string;
+    method: string;
+    active: boolean;
+  }) =>
+    fetchAdmin<{ success: boolean; cronjob: any }>('/cronjobs', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateCronJob: (
+    name: string,
+    data: {
+      name: string;
+      schedule: string;
+      endpoint: string;
+      method: string;
+      active: boolean;
+    }
+  ) =>
+    fetchAdmin<{ success: boolean; cronjob: any }>(`/cronjobs/${name}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  deleteCronJob: (name: string) =>
+    fetchAdmin<{ success: boolean }>(`/cronjobs/${name}`, {
+      method: 'DELETE',
+    }),
 };
