@@ -308,7 +308,7 @@
 - [ ] Prometheus metrics
 - [ ] OpenTelemetry Integration (Tracing)
 - [x] Logging configuration (Winston/Pino) [Doc](../../docs/guides/LOGGING.md)
-- [ ] Crash analytics (Sentry/Datadog)
+- [x] Crash analytics (Sentry/Datadog)
 
 ---
 

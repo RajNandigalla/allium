@@ -13,6 +13,8 @@ import { RateLimitPluginOptions } from '@fastify/rate-limit';
 import { FastifyCompressOptions } from '@fastify/compress';
 import { FastifySensibleOptions } from '@fastify/sensible';
 import { FastifySwaggerOptions } from '@fastify/swagger';
+import * as Sentry from '@sentry/node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
 
 import { FastifyPluginAsync, FastifyPluginCallback } from 'fastify';
 
@@ -212,6 +214,16 @@ export interface AlliumServerConfig extends AlliumPluginOptions {
   };
 
   /**
+   * Sentry metadata
+   */
+  sentry?: {
+    dsn: string;
+    environment?: string;
+    tracesSampleRate?: number;
+    profilesSampleRate?: number;
+  };
+
+  /**
    * Automatically generate Prisma schema and sync database on startup
    * @default false
    */
@@ -265,6 +277,17 @@ export async function initAllium(config: AlliumServerConfig) {
     await syncDatabase(config);
   }
 
+  // Initialize Sentry
+  if (alliumConfig.sentry) {
+    Sentry.init({
+      dsn: alliumConfig.sentry.dsn,
+      environment: alliumConfig.sentry.environment || 'development',
+      tracesSampleRate: alliumConfig.sentry.tracesSampleRate ?? 1.0,
+      profilesSampleRate: alliumConfig.sentry.profilesSampleRate ?? 1.0,
+      integrations: [nodeProfilingIntegration()],
+    });
+  }
+
   // Configure logger
   const loggerConfig: FastifyServerOptions['logger'] = alliumConfig.server
     ?.logger
@@ -303,6 +326,11 @@ export async function initAllium(config: AlliumServerConfig) {
         await fastify.register(plugin as any);
       }
     }
+  }
+
+  // Register Sentry error handler
+  if (alliumConfig.sentry) {
+    Sentry.setupFastifyErrorHandler(fastify);
   }
 
   return fastify;

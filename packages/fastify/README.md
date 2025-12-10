@@ -850,6 +850,32 @@ initAllium({
 });
 ```
 
+## Crash Analytics
+
+Allium supports built-in integration with [Sentry](https://sentry.io/) for error tracking and performance monitoring.
+
+### Configuration
+
+Add your Sentry DSN to the configuration:
+
+```typescript
+initAllium({
+  // ... other config
+  sentry: {
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV, // 'production', 'development'
+    tracesSampleRate: 1.0, // 0.0 to 1.0
+    profilesSampleRate: 1.0, // 0.0 to 1.0 (requires @sentry/profiling-node)
+  },
+});
+```
+
+This automatically:
+
+- Initializes the Sentry SDK.
+- Registers the Sentry Fastify error handler to capture unhandled exceptions.
+- Enables performance tracing and profiling (if configured).
+
 ## Health Checks
 
 Allium comes with a built-in health check endpoint to monitor the application status and its dependencies (database, cache).

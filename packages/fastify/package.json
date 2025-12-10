@@ -35,6 +35,8 @@
         "@fastify/swagger-ui": "^5.0.1",
         "@prisma/adapter-better-sqlite3": "^7.0.0",
         "@prisma/client": "^7.0.0",
+        "@sentry/node": "^10.29.0",
+        "@sentry/profiling-node": "^10.29.0",
         "axios": "^1.13.2",
         "better-sqlite3": "^12.4.6",
         "fastify": "^5.0.0",
