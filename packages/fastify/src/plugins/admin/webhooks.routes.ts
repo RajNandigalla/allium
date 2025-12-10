@@ -3,6 +3,14 @@ import path from 'path';
 import fs from 'fs-extra';
 import { WebhookValidator } from '@allium/core';
 
+interface WebhookDTO {
+  name: string;
+  url: string;
+  events: string[];
+  active: boolean;
+  secret?: string;
+}
+
 export async function registerWebhooksRoutes(fastify: FastifyInstance) {
   const webhooksDir = path.join(process.cwd(), '.allium', 'webhooks');
   const validator = new WebhookValidator();
@@ -75,7 +83,7 @@ export async function registerWebhooksRoutes(fastify: FastifyInstance) {
   );
 
   // POST /_admin/webhooks
-  fastify.post<{ Body: any }>(
+  fastify.post<{ Body: WebhookDTO }>(
     '/webhooks',
     {
       schema: {
@@ -125,7 +133,7 @@ export async function registerWebhooksRoutes(fastify: FastifyInstance) {
   );
 
   // PUT /_admin/webhooks/:name
-  fastify.put<{ Params: { name: string }; Body: any }>(
+  fastify.put<{ Params: { name: string }; Body: WebhookDTO }>(
     '/webhooks/:name',
     {
       schema: {

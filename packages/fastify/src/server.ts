@@ -189,6 +189,29 @@ export interface AlliumServerConfig extends AlliumPluginOptions {
   [key: string]: any;
 
   /**
+   * Logging configuration
+   */
+  logging?: {
+    /**
+     * Log level (debug, info, warn, error, fatal)
+     * @default 'info'
+     */
+    level?: string;
+
+    /**
+     * Enable pretty printing (requires pino-pretty)
+     * @default false (json)
+     */
+    pretty?: boolean;
+
+    /**
+     * Fields to redact from logs
+     * @default ['req.headers.authorization', 'req.body.password']
+     */
+    redact?: string[];
+  };
+
+  /**
    * Automatically generate Prisma schema and sync database on startup
    * @default false
    */
@@ -242,7 +265,31 @@ export async function initAllium(config: AlliumServerConfig) {
     await syncDatabase(config);
   }
 
-  const fastify = Fastify(server || { logger: true });
+  // Configure logger
+  const loggerConfig: FastifyServerOptions['logger'] = alliumConfig.server
+    ?.logger
+    ? alliumConfig.server.logger
+    : {
+        level: alliumConfig.logging?.level || 'info',
+        transport: alliumConfig.logging?.pretty
+          ? {
+              target: 'pino-pretty',
+              options: {
+                translateTime: 'HH:MM:ss Z',
+                ignore: 'pid,hostname',
+              },
+            }
+          : undefined,
+        redact: alliumConfig.logging?.redact || [
+          'req.headers.authorization',
+          'req.body.password',
+        ],
+      };
+
+  const fastify = Fastify({
+    ...(server || {}),
+    logger: loggerConfig,
+  });
 
   // Register Allium core
   await fastify.register(app, alliumConfig);

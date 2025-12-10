@@ -809,8 +809,46 @@ Allium includes a built-in, low-overhead analytics system.
 - **Automatic Tracking**: Capture data on every request (Method, Path, Status, Latency).
 - **Zero Config**: Works automatically if the `ApiMetric` model exists.
 - **Async Logging**: Does not impact API response time.
+- **Async Logging**: Does not impact API response time.
 
 👉 [**Read the full Analytics Guide**](../../docs/guides/ANALYTICS.md)
+
+## Logging
+
+Allium uses Pino for logging, offering high performance and built-in support for structured logs.
+
+### Configuration
+
+You can configure logging via `initAllium`:
+
+```typescript
+initAllium({
+  // ... other config
+  logging: {
+    level: 'debug', // 'debug', 'info', 'warn', 'error', 'fatal'
+    pretty: process.env.NODE_ENV !== 'production', // Enable colors
+    redact: ['req.headers.authorization', 'req.body.password'], // Hide secrets
+  },
+});
+```
+
+### Custom Logger (e.g., Winston)
+
+You can bring your own logger instance if preferred:
+
+```typescript
+import winston from 'winston';
+
+const logger = winston.createLogger({
+  // ... winston config
+});
+
+initAllium({
+  server: {
+    logger: logger, // Override default Pino logger
+  },
+});
+```
 
 ## Health Checks
 

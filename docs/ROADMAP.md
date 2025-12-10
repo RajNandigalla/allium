@@ -307,7 +307,8 @@
 - [x] Health check endpoints
 - [ ] Prometheus metrics
 - [ ] OpenTelemetry Integration (Tracing)
-- [ ] Logging configuration (Winston/Pino)
+- [x] Logging configuration (Winston/Pino)
+- [ ] Crash analytics (Sentry/Datadog)
 
 ---
 

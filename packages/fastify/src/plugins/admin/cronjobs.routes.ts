@@ -4,6 +4,14 @@ import fs from 'fs-extra';
 import { CronJobValidator } from '@allium/core';
 import cron from 'node-cron';
 
+interface CronJobDTO {
+  name: string;
+  schedule: string;
+  endpoint: string;
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  active: boolean;
+}
+
 export async function registerCronJobsRoutes(fastify: FastifyInstance) {
   const cronjobsDir = path.join(process.cwd(), '.allium', 'cronjobs');
   const validator = new CronJobValidator();
@@ -76,7 +84,7 @@ export async function registerCronJobsRoutes(fastify: FastifyInstance) {
   );
 
   // POST /_admin/cronjobs
-  fastify.post<{ Body: any }>(
+  fastify.post<{ Body: CronJobDTO }>(
     '/cronjobs',
     {
       schema: {
@@ -134,7 +142,7 @@ export async function registerCronJobsRoutes(fastify: FastifyInstance) {
   );
 
   // PUT /_admin/cronjobs/:name
-  fastify.put<{ Params: { name: string }; Body: any }>(
+  fastify.put<{ Params: { name: string }; Body: CronJobDTO }>(
     '/cronjobs/:name',
     {
       schema: {
