@@ -105,6 +105,12 @@ export async function registerAnalyticsRoutes(fastify: FastifyInstance) {
   // GET /_admin/analytics/usage
   fastify.get<{ Querystring: AnalyticsQuery }>(
     '/analytics/usage',
+    {
+      schema: {
+        tags: ['Admin - Analytics'],
+        description: 'Get API usage statistics by endpoint',
+      },
+    },
     async (req, reply) => {
       const prisma = (fastify as any).prisma;
       if (!prisma?.apiMetric) return [];
@@ -133,6 +139,12 @@ export async function registerAnalyticsRoutes(fastify: FastifyInstance) {
   // GET /_admin/analytics/errors
   fastify.get<{ Querystring: AnalyticsQuery }>(
     '/analytics/errors',
+    {
+      schema: {
+        tags: ['Admin - Analytics'],
+        description: 'Get recent API errors',
+      },
+    },
     async (req, reply) => {
       const prisma = (fastify as any).prisma;
       if (!prisma?.apiMetric) return [];
@@ -164,6 +176,12 @@ export async function registerAnalyticsRoutes(fastify: FastifyInstance) {
   // GET /_admin/analytics/chart
   fastify.get<{ Querystring: AnalyticsQuery }>(
     '/analytics/chart',
+    {
+      schema: {
+        tags: ['Admin - Analytics'],
+        description: 'Get time-series chart data for analytics',
+      },
+    },
     async (req, reply) => {
       const prisma = (fastify as any).prisma;
       if (!prisma?.apiMetric) return [];

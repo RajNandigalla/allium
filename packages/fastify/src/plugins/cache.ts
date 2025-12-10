@@ -178,24 +178,51 @@ export default fp<CachePluginOptions>(
       }
     );
 
-    // Add cache management endpoints
-    fastify.get('/_cache/stats', async () => {
-      return await cacheService.getStats();
-    });
+    // Add cache management endpoints (admin-only)
+    fastify.get(
+      '/_admin/cache/stats',
+      {
+        schema: {
+          tags: ['Admin - Cache'],
+          description: 'Get cache statistics and status',
+        },
+      },
+      async () => {
+        return await cacheService.getStats();
+      }
+    );
 
-    fastify.post('/_cache/clear', async () => {
-      await cacheService.clear();
-      return { success: true, message: 'Cache cleared' };
-    });
+    fastify.post(
+      '/_admin/cache/clear',
+      {
+        schema: {
+          tags: ['Admin - Cache'],
+          description: 'Clear all cache entries',
+        },
+      },
+      async () => {
+        await cacheService.clear();
+        return { success: true, message: 'Cache cleared' };
+      }
+    );
 
-    fastify.delete('/_cache/:pattern', async (request) => {
-      const { pattern } = request.params as { pattern: string };
-      await cacheService.deletePattern(pattern);
-      return {
-        success: true,
-        message: `Cleared cache for pattern: ${pattern}`,
-      };
-    });
+    fastify.delete(
+      '/_admin/cache/:pattern',
+      {
+        schema: {
+          tags: ['Admin - Cache'],
+          description: 'Clear cache entries matching a pattern',
+        },
+      },
+      async (request) => {
+        const { pattern } = request.params as { pattern: string };
+        await cacheService.deletePattern(pattern);
+        return {
+          success: true,
+          message: `Cleared cache for pattern: ${pattern}`,
+        };
+      }
+    );
 
     // Cleanup on server close
     fastify.addHook('onClose', async () => {

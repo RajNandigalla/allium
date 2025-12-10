@@ -65,6 +65,14 @@ export default fp(
             name: 'Admin - System',
             description: 'System information and health status',
           },
+          {
+            name: 'Admin - Analytics',
+            description: 'API usage analytics and metrics',
+          },
+          {
+            name: 'Admin - Cache',
+            description: 'Cache management and statistics',
+          },
         ],
         components: {
           securitySchemes: {
