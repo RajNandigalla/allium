@@ -876,6 +876,31 @@ This automatically:
 - Registers the Sentry Fastify error handler to capture unhandled exceptions.
 - Enables performance tracing and profiling (if configured).
 
+## OpenTelemetry
+
+Allium supports vendor-neutral distributed tracing via [OpenTelemetry](https://opentelemetry.io/). We use `@fastify/otel` for official Fastify instrumentation.
+
+### Configuration
+
+```typescript
+initAllium({
+  // ... other config
+  opentelemetry: {
+    serviceName: 'my-allium-service',
+    // Optional: Defaults to http://localhost:4318/v1/traces
+    otlpEndpoint: 'http://jaeger:4318/v1/traces',
+  },
+});
+```
+
+This will automatically instrument:
+
+- Incoming HTTP requests (Fastify)
+- Database queries (Prisma)
+- Outgoing HTTP requests
+
+You can visualize traces using tools like [Jaeger](https://www.jaegertracing.io/), [Zipkin](https://zipkin.io/), or any OTLP-compatible APM (Datadog, Honeycomb, New Relic).
+
 ## Health Checks
 
 Allium comes with a built-in health check endpoint to monitor the application status and its dependencies (database, cache).

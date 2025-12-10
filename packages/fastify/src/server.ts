@@ -15,6 +15,11 @@ import { FastifySensibleOptions } from '@fastify/sensible';
 import { FastifySwaggerOptions } from '@fastify/swagger';
 import * as Sentry from '@sentry/node';
 import { nodeProfilingIntegration } from '@sentry/profiling-node';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+
+import FastifyOtelInstrumentation from '@fastify/otel';
 
 import { FastifyPluginAsync, FastifyPluginCallback } from 'fastify';
 
@@ -224,6 +229,14 @@ export interface AlliumServerConfig extends AlliumPluginOptions {
   };
 
   /**
+   * OpenTelemetry configuration
+   */
+  opentelemetry?: {
+    serviceName: string;
+    otlpEndpoint?: string;
+  };
+
+  /**
    * Automatically generate Prisma schema and sync database on startup
    * @default false
    */
@@ -285,6 +298,37 @@ export async function initAllium(config: AlliumServerConfig) {
       tracesSampleRate: alliumConfig.sentry.tracesSampleRate ?? 1.0,
       profilesSampleRate: alliumConfig.sentry.profilesSampleRate ?? 1.0,
       integrations: [nodeProfilingIntegration()],
+    });
+  }
+
+  // Initialize OpenTelemetry
+  if (alliumConfig.opentelemetry) {
+    const sdk = new NodeSDK({
+      serviceName: alliumConfig.opentelemetry.serviceName,
+      traceExporter: new OTLPTraceExporter({
+        url:
+          alliumConfig.opentelemetry.otlpEndpoint ||
+          'http://localhost:4318/v1/traces',
+      }),
+      instrumentations: [
+        getNodeAutoInstrumentations({
+          // Disable deprecated fastify instrumentation in favor of @fastify/otel
+          '@opentelemetry/instrumentation-fastify': { enabled: false },
+          // Keep http enabled for outgoing requests and other http interactions
+          '@opentelemetry/instrumentation-http': { enabled: true },
+        }),
+        new FastifyOtelInstrumentation({ registerOnInitialization: true }),
+      ],
+    });
+
+    sdk.start();
+
+    // Ensure clean shutdown
+    process.on('SIGTERM', () => {
+      sdk
+        .shutdown()
+        .then(() => console.log('Tracing terminated'))
+        .catch((error) => console.log('Error terminating tracing', error));
     });
   }
 
