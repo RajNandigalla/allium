@@ -144,8 +144,8 @@ async function fetchAdmin<T>(
   const url = `${BASE_URL}${endpoint}`;
 
   // Only set Content-Type header if there's a body
-  const headers: HeadersInit = {
-    ...options?.headers,
+  const headers: Record<string, string> = {
+    ...(options?.headers as Record<string, string>),
   };
 
   if (options?.body) {

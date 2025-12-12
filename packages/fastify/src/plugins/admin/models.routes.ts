@@ -27,6 +27,7 @@ export async function registerModelsRoutes(
                 relations: { type: 'array' },
                 routes: { type: 'object' },
               },
+              additionalProperties: true,
             },
           },
         },
